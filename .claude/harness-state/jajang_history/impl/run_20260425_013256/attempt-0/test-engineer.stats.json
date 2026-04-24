@@ -1,0 +1,1 @@
+{"tools": {"Read": 3, "Glob": 1}, "files_read": ["/Users/dc.kim/project/jajang/.claude/agent-config/test-engineer.md", "/Users/dc.kim/project/jajang/docs/milestones/v1/epics/epic-01-auth/impl/00-project-scaffold.md", "/Users/dc.kim/project/jajang/.claude/harness-state/jajang_handoffs/attempt-0/engineer-to-test-engineer.md", "**/vitest.config*"], "in_tok": 9, "out_tok": 1871}

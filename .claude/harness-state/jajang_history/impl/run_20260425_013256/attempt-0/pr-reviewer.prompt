@@ -1,0 +1,303 @@
+@MODE:PR_REVIEWER:REVIEW
+@PARAMS: { "impl_path": "docs/milestones/v1/epics/epic-01-auth/impl/00-project-scaffold.md", "src_files": ".claude/harness-memory.md .claude/harness-state/.issues/jajang_0/lock .claude/harness-state/.jajang_events .claude/harness-state/.jajang_hud .claude/harness-state/.session-id .claude/harness-state/.sessions/09848d29-bb9c-432c-802b-fe017a3190a5/live.json .claude/harness-state/.sessions/6712a5c9-39cb-4de0-9344-55538c08cfc7/live.json .claude/harness-state/.sessions/a71d39e9-e315-485d-a2fe-c14c9a9e1268/flags/jajang_0/jajang_harness_active .claude/harness-state/.sessions/a71d39e9-e315-485d-a2fe-c14c9a9e1268/flags/jajang_0/jajang_plan_validation_passed .claude/harness-state/.sessions/a71d39e9-e315-485d-a2fe-c14c9a9e1268/live.json .claude/harness-state/.sessions/ccb443a4-589f-4591-9184-6f2d2d039956/live.json .claude/harness-state/.sessions/faf9645c-76e5-4097-996e-191eeb266980/live.json .claude/harness-state/_hud_debug.log .claude/harness-state/agent_boundary_debug.log .claude/harness-state/jajang_0_harness_active .claude/harness-state/jajang_history/impl/run_20260425_013256/attempt-0/engineer.out .claude/harness-state/jajang_history/impl/run_20260425_013256/attempt-0/engineer.prompt .claude/harness-state/jajang_history/impl/run_20260425_013256/attempt-0/engineer.stats.json .claude/harness-state/jajang_hook_rate.json .gitignore apps/api/.env.example apps/api/alembic.ini apps/api/alembic/env.py apps/api/alembic/script.py.mako apps/api/app/__init__.py apps/api/app/api/__init__.py apps/api/app/api/v1/__init__.py apps/api/app/core/__init__.py apps/api/app/core/config.py apps/api/app/core/db.py apps/api/app/core/security.py apps/api/app/main.py apps/api/app/models/__init__.py apps/api/app/schemas/__init__.py apps/api/app/services/__init__.py apps/api/app/tasks/__init__.py apps/api/pyproject.toml apps/mobile/.env.example apps/mobile/App.tsx apps/mobile/app.json apps/mobile/babel.config.js apps/mobile/index.js apps/mobile/metro.config.js apps/mobile/package.json apps/mobile/src/types/index.ts apps/mobile/tsconfig.json docs/milestones/v1/epics/epic-01-auth/impl/00-project-scaffold.md package.json" }
+변경 diff:
+diff --git a/.claude/harness-memory.md b/.claude/harness-memory.md
+new file mode 100644
+index 0000000..97b10f1
+--- /dev/null
++++ b/.claude/harness-memory.md
+@@ -0,0 +1,13 @@
++# Harness Memory
++
++## impl 패턴
++
++## design 패턴
++
++## bugfix 패턴
++
++## Auto-Promoted Rules
++
++## Known Failure Patterns
++
++## Success Patterns
+diff --git a/.claude/harness-state/.issues/jajang_0/lock b/.claude/harness-state/.issues/jajang_0/lock
+new file mode 100644
+index 0000000..e455cfc
+--- /dev/null
++++ b/.claude/harness-state/.issues/jajang_0/lock
+@@ -0,0 +1 @@
++{"session_id": "a71d39e9-e315-485d-a2fe-c14c9a9e1268", "pid": 16057, "mode": "impl", "prefix": "jajang", "issue_num": "0", "started": 1777048376, "heartbeat": 1777048976, "_meta": {"written_at": 1777048976, "mode": "issue-lock", "sessionId": "a71d39e9-e315-485d-a2fe-c14c9a9e1268"}}
+\ No newline at end of file
+diff --git a/.claude/harness-state/.jajang_events b/.claude/harness-state/.jajang_events
+index b81c0f8..b536cef 100644
+--- a/.claude/harness-state/.jajang_events
++++ b/.claude/harness-state/.jajang_events
+@@ -1,178 +1,343 @@
+-[00:15:43] ══════════════════════════════════════════════════
+-[00:15:43] 루프 시작 | mode=plan depth=plan
+-[00:15:43] product-planner 시작
+-┌── product-planner 출력 (37줄) ────────────────────────────
+-prd.md 10개 변경 완료. backlog.md는 agent-boundary 정책으로 product-planner 수정 불가 — 메인 Claude에게 위임합니다.
++[01:32:56] ══════════════════════════════════════════════════
++[01:32:56] 루프 시작 | mode=impl depth=auto #0
++[01:32:56] plan-validation 시작
++┌── validator 출력 (116줄) ────────────────────────────
++이제 검증에 필요한 정보가 모두 확보됐습니다. 분석을 진행합니다.
+ 
+ ---
+ 
+-PRODUCT_PLAN_UPDATED
++## PLAN_VALIDATION 분석 — impl/00-project-scaffold.md
+ 
+-## 생성/수정 파일
+-- `prd.md` (수정) — 승인된 10개 변경사항 전체 반영
++### 체크 기준 (5-Point)
+ 
+-## 적용된 변경 요약
+-| # | 위치 | 내용 |
++| 항목 | 확인 대상 | 결과 |
+ |---|---|---|
+-| 1 | §서비스 개요 | "8~12주" → "10~14주 (앱스토어 심사 포함)" |
+-| 2 | §시장 맥락 | 경쟁 리서치 → M0 병행 수행으로 변경 |
+-| 3 | §마일스톤 0 | 경쟁 리서치 체크리스트 + 모델 상업 라이선스 확인 블록 추가 |
+-| 4 | §타임라인 | 단계별 타임라인 (M0 1주 → 개발 7~10주 → 베타 1주 → 심사 1~2주) 추가 |
+-| 5 | §주요 리스크 | 모델 라이선스 제약 + 앱스토어 심사 거절 2행 추가 |
+-| 6 | F8 수용 기준 | 알림 권한 거부 시 화면 배너 대체 기준 추가 |
+-| 7 | F14 수용 기준 | 알림 권한 거부 시 인앱 배너 대체 기준 추가 |
+-| 8 | F4 수용 기준 | S14 팝업 dismiss → S11 복귀 + 버튼 비활성 기준 추가 |
+-| 9 | 화면 인벤토리 | S11 횟수 소진 상태 / S13 알림 권한 요청 / S16 알림 토글 보강 |
+-| 10 | 대략적 플로우 | 알림 권한 분기 + S14→S11 복귀 분기 + 트라이얼 만료 분기 추가 |
+-
+-## 다음 단계
+-⚠️ 메인 Claude에게: 아래 추가 작업이 필요합니다.
+-
+-1. **backlog.md 업데이트** — product-planner 권한 밖. 메인 Claude가 직접 처리:
+-   - `## 마일스톤 0` 섹션 추가 (경쟁 리서치 / 모델 라이선스 확인 / 보이스 모델 벤치마크 체크리스트)
+-
+-2. **ux-architect (UX_FLOW_PATCH)** — docs/ux-flow.md 업데이트:
+-   - S13 첫 진입 알림 권한 동선
+-   - S11 횟수 소진 상태 (생성하기 비활성 + 업그레이드 가이드)
+-   - S14 dismiss → S11 복귀 분기
+-   - S16 알림 토글 (OS 설정 deep link)
+-   - 트라이얼 D-1 알림 권한 분기
+-
+-3. **validator(UX) 재검증** → **plan-reviewer 최종 판정**
+-└────────────────────────────────────────────────────────────
+-[00:18:56] product-planner 완료 (193s, $0.57)
+-[00:18:56] product-planner -> PRODUCT_PLAN_UPDATED
+-[00:18:56] ux-architect 시작
+-┌── ux-architect 출력 (31줄) ────────────────────────────
+-`docs/ux-flow.md` 작성 완료.
++| 파일 목록 완전성 | PRD/TRD 기반 생성·수정 파일 전체 | ⚠️ |
++| 인터페이스 정의 | 타입·props·반환값 명시 | ✅ (스캐폴드 특성상 생략 허용) |
++| 핵심 로직 | 의사코드·스니펫 포함 | ⚠️ |
++| 결정 근거 | 대안 검토 + 채택 이유 | ✅ |
++| 주의사항 (경계) | 다른 impl과의 경계 | ✅ |
+ 
+ ---
+ 
++### 발견된 문제
++
++#### ❌ FAIL-1 — `apps/mobile/src/utils/` 디렉토리 누락
++
++**근거**: TRD §2 프로젝트 구조
+ ```
+----MARKER:UX_FLOW_READY---
+-ux_flow_doc: /Users/dc.kim/project/jajang/docs/ux-flow.md
+-screen_count: 18
+-design_table_count: 18
++apps/mobile/src/
++├── screens/
++├── components/
++├── store/
++├── services/
++├── audio/
++└── utils/   ← "클라이언트 품질 검증 (RMS, 피크)" 명시
+ ```
++impl/00 §1 파일 목록에 `utils/` 디렉토리 생성이 없음. F3 품질 검증 로직의 홈 디렉토리로 TRD에 명시된 경로이며, 후속 impl에서 이 경로를 전제하고 코드를 작성할 경우 디렉토리 부재로 혼란 발생. 스캐폴드 단계에서 반드시 포함해야 할 항목.
+ 
+ ---
+ 
+-**작업 요약**
++#### ❌ FAIL-2 — `main.py` 스니펫 `settings` import 누락
++
++**근거**: impl/00 §4, `apps/api/app/main.py` 코드 스니펫 (라인 기준 약 362~387)
+ 
+-기존 파일(`docs/ux-flow.md`)이 있었으나 **전면 재작성** 했습니다. PRD v1.1 기준 전체 반영.
++```python
++# 현재 impl 스니펫 — from app.core.config import settings 없음
++from contextlib import asynccontextmanager
++from fastapi import FastAPI
++from fastapi.middleware.cors import CORSMiddleware
++import structlog
++from app.core.db import init_db
+ 
+-### 주요 결정 사항
++@asynccontextmanager
++async def lifespan(app: FastAPI):
++│ ··· (46줄 중략) ···
++WARN으로 분류한 이유: impl/07에서 AdMob 초기화를 담당하므로 해당 impl에서 처리할 여지가 있으나, `app.json`은 스캐폴드(impl/00) 산출물이므로 여기서 선언하는 것이 맞음.
+ 
+-**디자인 방향 (Anti-AI-Smell 적용)**
+-- 보라/인디고 그라디언트 배제 → 다크 미드나이트(`#0D0F1A`) + 웜 앰버(`#F5C97A`) 조합
+-- 야간 수면 앱 특성 반영 — 낮은 채도 다크, 낮은 밀도, 큰 터치 타겟
+-- DM Sans/Nunito 계열 (시스템 기본 Inter 금지)
++---
++
++### 판정
+ 
+-**화면별 핵심 결정**
+-- `S06 홈`: 백그라운드 생성 완료 재진입 카드 별도 상태 정의 (PRD F4 요구사항)
+-- `S07~S10`: 무료 유저 `생성 N/3` 칩 노출 위치 통일 (PRD F4 횟수 표시 스펙)
+-- `S11`: 횟수 소진 상태 — CTA 비활성 + 구독 유도 배너 (PRD F4 수용 기준 직결)
+-- `S13`: Rewarded Ad 언락 상태 별도 정의 (무료 UI 유지 + 백그라운드 동작만 Premium과 동일)
+-- `S14`: 백그라운드 분기(A)와 생성 소진 분기(B) — 2종 팝업 구조로 명확 분리
+-- `C06 미니 플레이어`: Premium/Trial 전용, 무료 유저 미노출 (PRD F7)
++```
++---MARKER:PLAN_VALIDATION_FAIL---
++```
++
++**fail_items 요약**
++
++| # | 수준 | 항목 | 위치 |
++|---|---|---|---|
++| 1 | FAIL | `apps/mobile/src/utils/` 디렉토리 누락 (TRD §2 drift) | impl/00 §1 파일 목록 |
++| 2 | FAIL | `main.py` 스니펫 `from app.core.config import settings` import 누락 | impl/00 §4 |
++| 3 | FAIL | `db.py` 스니펫 `from sqlalchemy import text` import 누락 | impl/00 §4 |
++| 4 | WARN | `app.json` plugins에 `react-native-google-mobile-ads` 미선언 | impl/00 §3 |
++
++**합격 항목**: 모노레포 레이아웃 결정 근거(§2), 버전 선택 근거, 수용 기준(§8), 모듈 경계 주의사항(§9), Alembic async-aware 설계는 모두 충분하고 TRD/PRD와 일치함.
+ └────────────────────────────────────────────────────────────
+-[00:28:10] ux-architect 완료 (553s, $1.10)
+-[00:28:10] ux-architect -> UX_FLOW_READY
+-[00:28:10] ux-validation 시작
+-┌── validator 출력 (96줄) ────────────────────────────
+-두 파일을 모두 읽었습니다. 전체 기능(F1~F14)과 화면 인벤토리(S01~S17, C06)에 대해 체계적으로 교차 검증합니다.
++┌── architect 출력 (14줄) ────────────────────────────
++4개 항목 모두 반영 완료.
+ 
+----
++---MARKER:SPEC_GAP_RESOLVED---
++- **impl_path**: `docs/milestones/v1/epics/epic-01-auth/impl/00-project-scaffold.md`
++- **depth**: `std` (변경 없음, import 보강 + 디렉토리 추가는 std 유지)
++
++**반영 내역**
++
++| # | 수준 | 항목 | 조치 |
++|---|---|---|---|
++| 1 | FAIL | `apps/mobile/src/utils/` 디렉토리 누락 | §1 파일 목록에 `utils/` 행 추가 |
++| 2 | FAIL | `main.py` `from app.core.config import settings` 누락 | §4 main.py 스니펫 import 블록에 추가 |
++| 3 | FAIL | `db.py` `from sqlalchemy import text` 누락 | §4 db.py 스니펫 import 블록에 추가 |
++| 4 | WARN | `app.json` plugins에 `react-native-google-mobile-ads` 미선언 | §3 app.json plugins 배열에 AdMob plugin 엔트리 추가 (placeholder App ID 포함, 실제 값은 .env.example 참조) |
++└────────────────────────────────────────────────────────────
++┌── validator 출력 (66줄) ────────────────────────────
++## PLAN_VALIDATION — impl/00-project-scaffold.md
+ 
+-## UX Validation Report — 자장(Jajang)
++### 검증 기준
+ 
+-**검증 기준**: PRD v1.1 (2026-04-24) ↔ UX Flow Doc (2026-04-25)  
+-**검증 범위**: 기능 커버리지 · 화면 인벤토리 · 플로우 로직 · 상태 정의 · 엣지 케이스
++| 체크 항목 | 기준 출처 |
++|---|---|
++| 필수 섹션 완비 | CLAUDE.md §4단계 impl 계획 파일 요건 |
++| 기술 스택 버전 일치 | TRD §1 |
++| 프로젝트 구조 정합 | TRD §2 |
++| 보안 요건 반영 | TRD §1 보안 + architecture.md §8 |
++| 환경변수 선언 완비 | TRD §8 |
++| 모듈 경계 명시 | CLAUDE.md §4단계 주의사항 요건 |
++| 수용 기준 정의 | CLAUDE.md §4단계 요건 |
+ 
+ ---
+ 
+-### ✅ PASS 항목 (발췌)
++### ✅ PASS 항목
+ 
+ | 항목 | 근거 |
+ |---|---|
+-| F1~F14 전 기능 화면 매핑 | 모든 PRD 기능이 최소 1개 이상의 화면에 매핑됨 |
+-| 화면 인벤토리 일치 | PRD 18개(S01~S17+C06) = UX Flow 18개 ✓ |
+-| S01 세션 분기 | 첫실행→S02 / 세션유효→S06 / 세션만료→S05 — PRD F1과 일치 |
+-| S07/S08/S10/S14 생성 횟수 칩 | PRD F4 "무료 유저 S07·S08·S10·S14에 생성 N/3 표시" 전체 커버 |
+-| S14 B형 → S11 복귀 + CTA 비활성 | PRD F4 수용 기준 "지금은 괜찮아요 탭 → S11 복귀 + 비활성 + 가이드" 일치 |
+-| S13 Premium/무료 뒤로 탭 분기 | PRD F7 두 경로 모두 커버 (C06 미니 플레이어 포함) |
+-| S13 crossfade loop / 10시간 자동 종료 | PRD F6 300ms crossfade · 10시간 종료 명시 |
+-| S12 재시도 횟수 차감 없음 | PRD F4 "재시도 = 차감 없음" 인터랙션에 명시 |
+-| S13 첫 진입 알림 권한 요청 | PRD 대략적 플로우 "S13 첫 진입 → OS 알림 권한 요청" 일치 |
+-| S13 타이머 만료 1분 전 알림 거부 → 인앱 배너 | PRD F8 수용 기준 일치 |
+-| S02 미동의 앱 종료 | PRD F13 "미동의 → 앱 사용 불가" 일치 |
+-| S11 음량 미달 / SNR 잡음 실패 상태 | PRD F3 검증 기준 2종 커버 |
++| 필수 섹션 전체 존재 | §1 파일목록, §2 결정근거, §3~6 핵심 코드 스니펫, §7 환경변수, §8 수용기준, §9 주의사항 — 모두 충족 |
++| Expo SDK 52 / RN 0.76 | TRD §1 "SDK 52+ (Bare workflow)" 일치 |
++| React Navigation v7 | TRD §1 "React Navigation v7" 일치 |
++| Zustand v4 / RNTP v4 / RevenueCat v7 / AdMob v13 | TRD §1 버전 기준 전부 일치 |
++| SQLAlchemy 2.x async + Alembic async-aware | TRD §1 "SQLAlchemy 2.x (async)" 정합, env.py async 구현 제공 |
++| JWT RS256 (RSA 키 쌍) | TRD §1 보안 "JWT (RS256)" + architecture.md §8 일치 |
++| MOCK_GPU=true 개발 분기 | TRD §8 "MOCK_GPU=true" 환경변수 반영 |
++| iOS UIBackgroundModes audio + Android FOREGROUND_SERVICE | architecture.md §10 앱스토어 주의사항 반영 |
++| 모듈 경계 명시 | §9에서 impl/01~07 경계 명확히 서술 |
++| 루트 `apps/` 분리 구조 | TRD §2 `apps/mobile/` + `apps/api/` 일치, 선택 근거 §2에 포함 |
+ 
+ ---
+ 
+-### ❌ FAIL 항목
++### ⚠️ 개선 권고 (Non-blocker)
++
++**1. `@utils/*` path alias 누락**
++- 위치: `apps/mobile/tsconfig.json` L156~166, `apps/mobile/babel.config.js` L183~194
++- `src/utils/` 디렉토리가 파일 목록에 존재하지만 tsconfig paths와 babel alias 양쪽에서 `@utils/*`가 빠져 있음
++- 향후 `utils/` 내 파일 import 시 상대경로만 가능 → 다른 alias와 일관성 깨짐
++
++**2. `security.py` 최소 인터페이스 미정의**
++- 위치: §1 파일목록 L46 `security.py [신규] (JWT stub)`, §4 FastAPI 서버 골격에 내용 없음
++- `impl/02-server-auth-api.md`가 의존할 `create_access_token()`, `verify_token()` 등 함수 시그니처가 이 impl에 없음
++- stub 수준이라도 함수 시그니처는 선언해야 impl/02가 인터페이스 계약을 확인할 수 있음
++
++**3. `get_db()` 반환 타입 힌트 부정확**
++- 위치: `apps/api/app/core/db.py` (§4, L413~415)
++- `yield`가 있으므로 실제 반환 타입은 `AsyncGenerator[AsyncSession, None]`이지만 `-> AsyncSession`으로 선언됨
++- FastAPI Depends() 런타임에 영향은 없으나, mypy/pyright 정적 분석 시 오류 발생 가능
++
++**4. TRD §2 구조 편차 근거 미서술**
++- TRD §2: `apps/api/routers/` (flat 구조)
++- impl/00: `apps/api/app/api/v1/` (package wrapper 구조)
++- §2 구조 선택 근거에서 모바일 레이아웃 변경만 설명하고 FastAPI `app/` 패키지 래퍼 채택 이유가 없음
++- 실제 선택(importable package, `from app.core.config import settings`)은 올바르나 근거 기록 부재
+ 
+ ---
+ 
+-#### FAIL-1 · S06/S13 — 트라이얼 D-1 알림 거부 시 인앱 배너 상태 미정의
+-**PRD 근거**: F14 수용 기준  
+-> "Given 알림 권한 거부 / When 트라이얼 D-1 / Then 푸시 미발송 + **앱 열 때 인앱 배너로 만료 예정 안내**"  
+-> PRD 대략적 플로우: "D-1 [알림 거부] → 앱 열 때 인앱 배너로 만료 예정 안내 → 트라이얼 만료 화면"
++### 판정
+ 
+-**UX Flow 상태**: S06 홈 상태 표(ux-flow.md L446~452) — 빈상태/로딩/음원있음/생성완료카드 4종만 정의. **D-1 만료 예정 인앱 배너 상태 없음.** S13에도 해당 상태 없음.
++```
++---MARKER:PLAN_VALIDATION_PASS---
++```
+ 
+-**요구 조치**: S06(또는 S13) 상태 표에 `트라이얼 D-1 알림 거부 | 인앱 배너 "내일 트라이얼이 끝나요"` 상태 추가 필요.
++**4개 Non-blocker 권고사항 동반 PASS.**  
++구현 진행 가능. 권고 1·2는 impl/00 실행 시 또는 impl/02 착수 전 반영 권장.
++└────────────────────────────────────────────────────────────
++[01:37:06] plan-validation 완료 (250s, $0.00)
++[01:37:06] Plan Validation → PASS
++[01:37:06] depth: std
++[01:37:06] engineer 시작
++┌── engineer 출력 (43줄) ────────────────────────────
++모든 파일 완전 일치. 완료 보고를 작성합니다.
+ 
+ ---
+ 
+-#### FAIL-2 · S07 — 기존 음원 보유 유저가 다른 곡 선택 시 안내 케이스 누락
+-**PRD 근거**: F5 수용 기준  
+-> "Given 기존에 생성한 음원 있음 / When 다른 곡 선택 / Then **새 녹음 필요 안내**"
++## 구현 완료: 00-project-scaffold
++
++**생성/수정 파일:**
++- `.gitignore` — React Native/Expo/Python/공통 ignore 패턴
++- `package.json` — 루트 workspaces 선언 (`apps/mobile`)
++- `apps/mobile/package.json` — Expo 52 + RN 0.76 핵심 의존성 (RNTP v4, RevenueCat, AdMob, navigation v7, zustand v4)
++- `apps/mobile/app.json` — Expo config (다크 UI, audio 권한, RNTP/AdMob 플러그인)
++- `apps/mobile/tsconfig.json` — strict + path aliases (@screens, @components, @store 등)

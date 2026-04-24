@@ -1,0 +1,77 @@
+충분한 증거 확보. 판정을 내립니다.
+
+---
+
+## CODE_VALIDATION 결과
+
+### §1 파일 목록 대조 — 28개 항목 검증
+
+| 파일 | 기대 | 실제 | 판정 |
+|---|---|---|---|
+| `apps/mobile/package.json` | [신규] | ✅ 존재 | PASS |
+| `apps/mobile/app.json` | [신규] | ✅ 존재 | PASS |
+| `apps/mobile/tsconfig.json` | [신규] | ✅ 존재 | PASS |
+| `apps/mobile/babel.config.js` | [신규] | ✅ 존재 | PASS |
+| `apps/mobile/metro.config.js` | [신규] | ✅ 존재 | PASS |
+| `apps/mobile/index.js` | [신규] | ✅ 존재 | PASS |
+| `apps/mobile/App.tsx` | [신규] | ✅ 존재 | PASS |
+| `apps/mobile/.env.example` | [신규] | ✅ 존재 | PASS |
+| `apps/mobile/src/types/index.ts` | [신규] | ✅ 존재 | PASS |
+| `src/` 하위 8개 디렉토리 | [디렉토리] | ✅ (빈 디렉토리, Glob 미출력은 정상) | PASS |
+| `apps/api/pyproject.toml` | [신규] | ✅ 존재 | PASS |
+| `apps/api/app/__init__.py` + 하위 6개 `__init__.py` | [신규] | ✅ 존재 | PASS |
+| `apps/api/app/main.py` | [신규] | ✅ 존재 | PASS |
+| `apps/api/app/core/config.py` | [신규] | ✅ 존재 | PASS |
+| `apps/api/app/core/security.py` | [신규] | ✅ 존재 | PASS |
+| `apps/api/app/core/db.py` | [신규] | ✅ 존재 | PASS |
+| `apps/api/alembic/env.py` | [신규] | ✅ 존재 | PASS |
+| `apps/api/alembic/script.py.mako` | [신규] | ✅ 존재 | PASS |
+| `apps/api/alembic.ini` | [신규] | ✅ 존재 | PASS |
+| `apps/api/.env.example` | [신규] | ✅ 존재 | PASS |
+| `.gitignore` | [수정] | ✅ 존재 | PASS |
+| `package.json` (루트) | [신규] | ✅ 존재 | PASS |
+
+### 콘텐츠 정확도 검증
+
+**`apps/mobile/package.json`**  
+- Expo `~52.0.0`, react `18.3.2`, RN `0.76.x` — 스펙 일치  
+- `babel-plugin-module-resolver` devDependencies 추가 (스펙 텍스트는 별도 install 안내, engineer가 package.json에 선언 — 스펙 의도 충족, 개선으로 판단)
+
+**`apps/mobile/App.tsx`**  
+- `SafeAreaProvider` + `StatusBar style="light"` 골격 일치  
+- impl/03, impl/07 경계 주석 유지 — 스펙 §9 준수
+
+**`apps/mobile/tsconfig.json`** — 8개 path alias 모두 스펙 일치
+
+**`apps/mobile/babel.config.js`** — module-resolver alias 8개 일치
+
+**`apps/api/app/core/config.py`** — 필드 전체 스펙 일치
+
+**`apps/api/app/main.py`**  
+- `from typing import AsyncGenerator` 및 타입 어노테이션 추가 — 기능 동일, 타입 개선
+
+**`apps/api/app/core/db.py`** — `# type: ignore[return]` 추가 (yield 함수 타입 억제) — 기능 동일
+
+**`apps/api/alembic/env.py`**  
+- `fileConfig(config.config_file_name)` 조건부 블록 추가 (lines 16-17) — 표준 Alembic 패턴, 스펙 요구 기능 모두 포함
+
+**`.gitignore`** — §6 패턴 전체 일치
+
+**`apps/mobile/.env.example`, `apps/api/.env.example`** — §7 내용 일치
+
+### 스펙 경계 준수 (§9)
+
+- `App.tsx`: `NavigationContainer` 미추가 (impl/03 경계 ✅)
+- `Purchases.configure`, `mobileAds()`: 미추가 (impl/07 경계 ✅)  
+- `apps/api/app/models/`: `__init__.py`만 존재, ORM 모델 없음 (impl/01 경계 ✅)
+- `alembic/versions/`: 빈 디렉토리 (impl/01 경계 ✅)
+
+### 부록: test-engineer SPEC_GAP 처리
+
+test-engineer가 `SPEC_GAP_FOUND` 발행 — impl §8 수용 기준 전체가 MANUAL CLI 검증이며 `(TEST)` 항목 없음. 이는 스캐폴드 특성상 단위 테스트 가능 로직이 없는 impl이므로 **코드 구현 자체의 결함이 아님**. 해당 SPEC_GAP은 impl 문서 보강 요청이며 코드 검증 판정에 영향 없음.
+
+---
+
+```
+---MARKER:PASS---
+```

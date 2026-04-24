@@ -1,10 +1,10 @@
 {
   "depth": "std",
-  "attempt": 0,
+  "attempt": 1,
   "max_attempts": 3,
-  "cost": 0.7743,
+  "cost": 0.9089,
   "budget": 20.0,
-  "elapsed": 445,
+  "elapsed": 795,
   "start_ts": 1777048376,
   "issue": "0",
   "log": [
@@ -27,25 +27,28 @@
     },
     {
       "name": "test-engineer",
-      "status": "pending",
+      "status": "skip",
       "elapsed": 0,
-      "cost": 0.0
+      "cost": 0.0,
+      "reason": "attempt 1 -- 테스트 이미 작성됨"
     },
     {
       "name": "engineer",
       "status": "done",
-      "elapsed": 195,
-      "cost": 0.77432835
+      "elapsed": 28,
+      "cost": 0.13459365
     },
     {
       "name": "validator",
-      "status": "pending",
+      "status": "running",
+      "start": 1777048855.021054,
       "elapsed": 0,
       "cost": 0.0
     },
     {
       "name": "pr-reviewer",
-      "status": "pending",
+      "status": "running",
+      "start": 1777048981.58189,
       "elapsed": 0,
       "cost": 0.0
     },
