@@ -1,10 +1,10 @@
 {
   "depth": "std",
-  "attempt": 1,
+  "attempt": 2,
   "max_attempts": 3,
-  "cost": 0.9089,
+  "cost": 1.0426,
   "budget": 20.0,
-  "elapsed": 795,
+  "elapsed": 958,
   "start_ts": 1777048376,
   "issue": "0",
   "log": [
@@ -30,25 +30,25 @@
       "status": "skip",
       "elapsed": 0,
       "cost": 0.0,
-      "reason": "attempt 1 -- 테스트 이미 작성됨"
+      "reason": "attempt 2 -- 테스트 이미 작성됨"
     },
     {
       "name": "engineer",
       "status": "done",
-      "elapsed": 28,
-      "cost": 0.13459365
+      "elapsed": 26,
+      "cost": 0.13370595
     },
     {
       "name": "validator",
       "status": "running",
-      "start": 1777048855.021054,
+      "start": 1777049171.608042,
       "elapsed": 0,
       "cost": 0.0
     },
     {
       "name": "pr-reviewer",
       "status": "running",
-      "start": 1777048981.58189,
+      "start": 1777049282.039404,
       "elapsed": 0,
       "cost": 0.0
     },
