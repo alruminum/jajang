@@ -1,0 +1,6 @@
+{
+  "env": {
+    "HARNESS_DOC_NAME": "voice-pipeline"
+  },
+  "allowedTools": []
+}
