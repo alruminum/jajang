@@ -1,0 +1,12 @@
+{
+  "name": "jajang",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/mobile"
+  ],
+  "scripts": {
+    "mobile": "cd apps/mobile && npm run start",
+    "api": "cd apps/api && uvicorn app.main:app --reload"
+  }
+}

@@ -1,3 +1,8 @@
+impl: docs/milestones/v1/epics/epic-01-auth/impl/00-project-scaffold.md
+issue: #0
+task:
+impl 파일의 구현 명세 전체 이행
+context:
 ---
 depth: std
 ---
@@ -562,3 +567,123 @@ ENV=development
 - `apps/api/app/models/` 디렉토리는 이 impl에서 `__init__.py`만 생성. 실제 ORM 모델 정의는 **impl/01** 담당.
 - `alembic/versions/`는 이 impl에서 빈 디렉토리. 첫 마이그레이션 파일은 **impl/01** 담당.
 - native 모듈(RNTP, RevenueCat, AdMob, Apple Auth, Google Sign-in)은 `npm install` 후 `npx expo prebuild` 또는 `npx expo run:ios`가 필요. 초기 scaffold에서는 `package.json` 선언까지만. 실제 네이티브 빌드 연동 검증은 impl/05 이후.
+
+constraints:
+
+[SUCCESS PATTERNS — 이전 성공에서 배운 접근법, 참고]:
+- 2026-04-07 | early_spec_check | engineer Phase 1에서 SPEC_GAP 조기 발견 → 루프 재시도 0회로 완료. 스펙 검토 체크리스트 완주가 핵심
+- 2026-04-07 | atomic_impl | impl 파일을 파일 1~2개 단위로 쪼개면 engineer 성공률 상승. 5개 이상 파일 변경 impl은 실패율 3배
+# Harness Memory — Global
+
+프로젝트를 넘어 반복되는 공통 실패/성공 패턴. 모든 프로젝트의 harness/executor.sh / harness/impl_helpers.sh가 읽는다.
+
+> 쓰기 금지 (에이전트 자동 기록 불가). 수동 프로모션만 허용.
+> 프로젝트 로컬 `.claude/harness-memory.md`에서 공통 패턴 발견 시 직접 옮길 것.
+
+## Known Failure Patterns (Cross-Project)
+<!-- 형식: YYYY-MM-DD | 패턴 유형 | 구체적 내용 -->
+- 2026-04-07 | import_path | engineer가 docs/sdk.md 확인 없이 추측으로 import 경로 작성 → 빌드 실패. MUST: .d.ts 또는 실제 소스에서 확인 후 사용
+- 2026-04-07 | test_mock_drift | test-engineer가 실제 API와 다른 mock 작성 → 테스트 통과하지만 런타임 실패. MUST: 실제 함수 시그니처 확인 후 mock 작성
+- 2026-04-07 | stale_impl | architect impl 파일이 설계 변경을 반영하지 않아 engineer가 구 스펙으로 구현. MUST: architect Mode C(SPEC_GAP) 후 impl 갱신 확인
+
+## Success Patterns (Cross-Project)
+<!-- 형식: YYYY-MM-DD | 패턴 유형 | 구체적 내용 -->
+- 2026-04-07 | early_spec_check | engineer Phase 1에서 SPEC_GAP 조기 발견 → 루프 재시도 0회로 완료. 스펙 검토 체크리스트 완주가 핵심
+- 2026-04-07 | atomic_impl | impl 파일을 파일 1~2개 단위로 쪼개면 engineer 성공률 상승. 5개 이상 파일 변경 impl은 실패율 3배
+# Harness Memory
+
+## impl 패턴
+
+## design 패턴
+
+## bugfix 패턴
+
+## Auto-Promoted Rules
+
+## Known Failure Patterns
+
+## Success Patterns
+## 개발 명령어
+
+```bash
+# [초기화] 예: npm install / pnpm install
+npm install
+
+# [개발] 예: npm run dev / next dev
+npm run dev
+
+# [빌드] 예: npm run build / next build
+npm run build
+
+# [테스트] 예: npx vitest run / npm test
+npx vitest run
+```
+
+## 환경변수 (`.env`)
+
+```
+# [키=값] 예:
+# DATABASE_URL=postgresql://...
+# NEXT_PUBLIC_API_URL=http://localhost:3000
+```
+
+
+## 작업 순서 (반드시 준수)
+
+### 버그픽스 작업 순서 (`bug` 레이블 이슈인 경우)
+
+> 신규 기능(feat)과 다른 경로. 아래 규칙 준수.
+
+1. **원래 이슈 번호 유지** — 새 이슈 등록 금지. 추가 수정은 원래 이슈 체크리스트에 항목 추가
+2. architect 호출 시 프롬프트 첫 줄에 반드시 `버그픽스 —` 명시
+3. 구현 중 추가 수정 발생 → 별개 이슈 등록 금지 → 원래 이슈에 통합
+4. 커밋 메시지: 원래 이슈 번호 참조 (`Related to #NNN` 또는 `Closes #NNN`)
+
+
+## GitHub Issues 마일스톤
+
+| 용도 | 마일스톤 |
+|---|---|
+| 버그 (동작 오류) | `Bugs` |
+| 기능 추가·개선 | `Feature` |
+| 스토리 이슈 | `Story` |
+| 에픽 | `Epics` |
+| 현재 버전 레이블 | `v01` |
+
+> 버전이 올라가면 "현재 버전 레이블" 항목만 업데이트.
+
+### 이슈 생성 시 마일스톤 처리 규칙
+
+`mcp__github__create_issue`의 `milestone` 파라미터는 **이름이 아닌 숫자(number)**를 요구한다.  
+이슈 생성 전 반드시 아래 명령으로 마일스톤 이름 → 번호를 조회한다:
+
+```bash
+gh api repos/{owner}/{repo}/milestones --jq '.[] | {number: .number, title: .title}'
+```
+
+조회 결과에서 위 표의 마일스톤 이름에 해당하는 `number`를 `milestone` 파라미터에 전달한다.
+
+### 이슈 등록 필수 항목
+
+버그 이슈:
+
+| 항목 | 값 |
+|---|---|
+| 레이블 | `bug` + 현재 버전 레이블 |
+| 마일스톤 | `Bugs` |
+
+기능/개선 이슈:
+
+| 항목 | 값 |
+|---|---|
+| 레이블 | `feat` + 현재 버전 레이블 |
+| 마일스톤 | `Feature` |
+
+스토리 이슈:
+
+| 항목 | 값 |
+|---|---|
+| 레이블 | 해당 에픽 레이블 + 현재 버전 레이블 |
+| 마일스톤 | `Story` |
+
+

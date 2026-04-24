@@ -1,33 +1,58 @@
 {
-  "depth": "plan",
+  "depth": "std",
   "attempt": 0,
-  "max_attempts": 1,
-  "cost": 1.6741,
+  "max_attempts": 3,
+  "cost": 0.7743,
   "budget": 20.0,
-  "elapsed": 1570,
-  "start_ts": 1777043743,
-  "issue": "",
+  "elapsed": 445,
+  "start_ts": 1777048376,
+  "issue": "0",
   "log": [
-    "product-planner -> PRODUCT_PLAN_UPDATED",
-    "ux-architect -> UX_FLOW_READY"
+    "Plan Validation → PASS",
+    "depth: std"
   ],
   "agents": [
     {
-      "name": "product-planner",
-      "status": "done",
-      "elapsed": 193,
-      "cost": 0.57305505
+      "name": "architect",
+      "status": "skip",
+      "elapsed": 0,
+      "cost": 0.0,
+      "reason": "impl 파일 이미 존재"
     },
     {
-      "name": "ux-architect",
+      "name": "plan-validation",
       "status": "done",
-      "elapsed": 553,
-      "cost": 1.1010607499999998
+      "elapsed": 250,
+      "cost": 0.0
     },
     {
-      "name": "ux-validation",
-      "status": "fail",
-      "elapsed": 823,
+      "name": "test-engineer",
+      "status": "pending",
+      "elapsed": 0,
+      "cost": 0.0
+    },
+    {
+      "name": "engineer",
+      "status": "done",
+      "elapsed": 195,
+      "cost": 0.77432835
+    },
+    {
+      "name": "validator",
+      "status": "pending",
+      "elapsed": 0,
+      "cost": 0.0
+    },
+    {
+      "name": "pr-reviewer",
+      "status": "pending",
+      "elapsed": 0,
+      "cost": 0.0
+    },
+    {
+      "name": "merge",
+      "status": "pending",
+      "elapsed": 0,
       "cost": 0.0
     }
   ]
