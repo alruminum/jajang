@@ -9,6 +9,7 @@
 |---|---|---|
 | v1.0 | 2026-04-24 | 최초 작성 — PRD v1.1 기반 System Design |
 | v1.1 | 2026-04-25 | §8 환경변수: GOOGLE_CLIENT_ID 추가 (소셜 인증 aud 검증) |
+| v1.2 | 2026-04-24 | Epic 03: §2 서버 구조 확장 (inference/, generations, tracks), §3 카운터 상태머신 보완, §8 MOCK_GPU 등 환경변수 추가 |
 
 ---
 
@@ -61,7 +62,7 @@ jajang/
 │       ├── src/
 │       │   ├── screens/           # S01~S17
 │       │   ├── components/        # C06 미니플레이어, 공용 UI
-│       │   ├── store/             # Zustand slices (auth, player, subscription)
+│       │   ├── store/             # Zustand slices (auth, player, subscription, generation)
 │       │   ├── services/          # API 클라이언트, RevenueCat, AdMob 래퍼
 │       │   ├── audio/             # AudioEngine (RNTP 래퍼, crossfade, timer)
 │       │   └── utils/             # 클라이언트 품질 검증 (RMS, 피크)
@@ -70,12 +71,13 @@ jajang/
 │
 ├── apps/
 │   └── api/                       # FastAPI 백엔드
-│       ├── routers/               # auth, voices, tracks, subscriptions
-│       ├── models/                # SQLAlchemy ORM
+│       ├── api/v1/                # auth, voices, recordings, generations, tracks
+│       ├── models/                # SQLAlchemy ORM (User, VoiceSample, GeneratedTrack, GenerationCounter, ...)
 │       ├── schemas/               # Pydantic v2 request/response
 │       ├── services/              # VoicePipeline, StorageService, CounterService
+│       │   └── inference/         # VoiceInferenceClient ABC + MockClient + factory
 │       ├── tasks/                 # Celery tasks (sample_cleanup, generation)
-│       └── core/                  # config, security, db session
+│       └── core/                  # config, security, db session (async + sync)
 │
 ├── docs/                          # 설계 문서
 └── backlog.md
@@ -105,7 +107,7 @@ CHECK counter (SELECT FOR UPDATE) — 업로드 전
                                   단, 클라이언트 '재시도' = 동일 job_id 재사용 → 차감 없음
 ```
 
-**설계 결정**: enforcement는 업로드 전 체크. 생성 실패(서버 오류/타임아웃) 시 카운터 증가하지 않음 — 단 최종 성공 시에만 +1. 재시도는 동일 `job_id` 기준으로 중복 차감 방지.
+**설계 결정**: enforcement는 업로드 전 check_and_reserve()에서 SELECT FOR UPDATE로 처리. 생성 실패(서버 오류/타임아웃) 시 카운터 증가하지 않음 — 최종 성공(Celery task completed) 시에만 increment_on_success()로 +1. 재시도는 동일 `job_id`로 is_new=false 반환 — 이중 차감 원천 차단. status='failed' 재시도는 새 job_id 생성 필요.
 
 ### crossfade 상태머신
 ```
@@ -234,8 +236,11 @@ ADMOB_BANNER_UNIT_ID=...
 ADMOB_REWARDED_UNIT_ID=...
 
 # 개발 환경
-ENV=development  # development | staging | production
-MOCK_GPU=true    # 개발환경 GPU 추론 mock 분기
+ENV=development           # development | staging | production
+MOCK_GPU=true             # 개발환경 GPU 추론 mock 분기 (M0 전 반드시 true)
+INFERENCE_PROVIDER=mock   # mock | replicate | modal (M0 이후 변경)
+MOCK_LATENCY_MS=3000      # MockInferenceClient 대기 시간
+MOCK_FAIL_RATE=0.0        # MockInferenceClient 실패율 테스트용 (0.0~1.0)
 ```
 
 ---
