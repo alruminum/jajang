@@ -8,6 +8,7 @@
 | 버전 | 날짜 | 요약 |
 |---|---|---|
 | v1.0 | 2026-04-24 | 최초 작성 — PRD v1.1 기반 System Design |
+| v1.1 | 2026-04-25 | §8 환경변수: GOOGLE_CLIENT_ID 추가 (소셜 인증 aud 검증) |
 
 ---
 
@@ -220,6 +221,9 @@ CLOUDFLARE_R2_ENDPOINT=...   # R2 선택 시
 REPLICATE_API_TOKEN=...
 MODAL_TOKEN_ID=...
 RUNPOD_API_KEY=...
+
+# 소셜 인증
+GOOGLE_CLIENT_ID=...    # Google OAuth 클라이언트 ID (aud 검증용)
 
 # 모바일 (앱 빌드 시)
 REVENUECAT_IOS_API_KEY=...
