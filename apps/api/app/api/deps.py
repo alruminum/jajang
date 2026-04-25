@@ -13,15 +13,7 @@ def require_auth(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
 ) -> str:
     """JWT 검증 공통 의존성 — user_id(sub) 반환."""
-    if credentials is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="인증이 필요해요")
-    try:
-        payload = decode_token(credentials.credentials)
-        if payload.get("type") != "access":
-            raise JWTError("invalid token type")
-        return payload["sub"]
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="인증이 필요해요")
+    return require_auth_with_entitlement(credentials)["sub"]
 
 
 def require_auth_with_entitlement(
