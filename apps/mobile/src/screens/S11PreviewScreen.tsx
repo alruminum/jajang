@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Audio } from 'expo-av';
+import * as FileSystem from 'expo-file-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { recordingsApi } from '@services/api/recordings';
@@ -108,6 +109,10 @@ export default function S11PreviewScreen({ navigation }: Props) {
   // 다시 녹음
   const handleReRecord = async () => {
     await soundRef.current?.unloadAsync();
+    // 로컬 파일 삭제 (재녹음 시 기존 파일 정리)
+    if (localAudioUri) {
+      await FileSystem.deleteAsync(localAudioUri, { idempotent: true });
+    }
     resetRecordingFlow();
     navigation.navigate('Record', {
       songKey: selectedSongKey ?? '',
