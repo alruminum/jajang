@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import CheckConstraint, DateTime, Index, Integer, Text, UniqueConstraint
+from sqlalchemy import CheckConstraint, DateTime, Index, Integer, Text
 from sqlalchemy import UUID as SA_UUID
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -33,7 +33,6 @@ class GeneratedTrack(Base):
             "status IN ('pending', 'processing', 'completed', 'failed')",
             name="chk_track_status",
         ),
-        UniqueConstraint("job_id", name="uq_generated_track_job_id"),
         Index("idx_generated_tracks_user", "user_id"),
         Index("idx_generated_tracks_job", "job_id"),
         # S06 홈 "생성 완료 카드" 쿼리 최적화 (db-schema.md §2 DDL 기준)

@@ -62,7 +62,6 @@ def upgrade() -> None:
             "status IN ('pending', 'processing', 'completed', 'failed')",
             name="chk_track_status",
         ),
-        sa.UniqueConstraint("job_id", name="uq_generated_track_job_id"),
     )
 
     op.create_index("idx_generated_tracks_user", "generated_tracks", ["user_id"])
