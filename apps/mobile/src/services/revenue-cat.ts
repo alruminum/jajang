@@ -1,5 +1,6 @@
 import Purchases, { CustomerInfo, LOG_LEVEL } from 'react-native-purchases';
 import { Platform } from 'react-native';
+import { useAuthStore } from '@store/auth-store';
 
 // 개발환경 로그 활성화
 if (__DEV__) {
@@ -51,6 +52,21 @@ export function extractEntitlement(
     entitlement: isTrial ? 'trial' : 'premium',
     trialExpiresAt: isTrial ? expiresAt : null,
   };
+}
+
+/**
+ * 로그인/가입 완료 직후 RevenueCat 연동 + Zustand entitlement 업데이트
+ * S04SignupScreen, S05LoginScreen 4곳 공통 호출 — 이 함수 하나로 대체
+ * 실패 시 console.warn만 출력하고 기존 entitlement 유지 (페일-오픈)
+ */
+export async function syncEntitlementAfterLogin(userId: string): Promise<void> {
+  try {
+    const customerInfo = await revenueCatLogin(userId);
+    const { entitlement, trialExpiresAt } = extractEntitlement(customerInfo);
+    useAuthStore.getState().setEntitlement(entitlement, trialExpiresAt);
+  } catch (e) {
+    console.warn('RevenueCat logIn failed:', e);
+  }
 }
 
 /**

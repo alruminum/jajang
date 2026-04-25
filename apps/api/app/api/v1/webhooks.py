@@ -37,6 +37,10 @@ async def revenuecat_webhook(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> dict:
+    # 시크릿 미설정 시 503 — 빈 키로 HMAC 계산하면 서명 위조 가능
+    if not settings.REVENUECAT_WEBHOOK_SECRET:
+        raise HTTPException(status_code=503, detail="Webhook secret not configured")
+
     # 서명 검증 (RevenueCat 대시보드 shared secret)
     body = await request.body()
     signature = request.headers.get("X-RevenueCat-Signature", "")
