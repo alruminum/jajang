@@ -19,6 +19,8 @@ import { RootStackParamList } from '@navigation/types';
 import { emailLogin, socialAuth } from '@services/auth-api';
 import { useAuth } from '@hooks/useAuth';
 import SocialAuthButtons from '@components/SocialAuthButtons';
+import { revenueCatLogin, extractEntitlement } from '@services/revenue-cat';
+import { useAuthStore } from '@store/auth-store';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -41,6 +43,15 @@ export default function S05LoginScreen() {
     try {
       const response = await emailLogin(email, password);
       await saveSession(response);
+      // RevenueCat logIn → 기존 구독 상태 복원 + entitlement 확인
+      try {
+        const customerInfo = await revenueCatLogin(response.user_id);
+        const { entitlement, trialExpiresAt } = extractEntitlement(customerInfo);
+        useAuthStore.getState().setEntitlement(entitlement, trialExpiresAt);
+      } catch (e) {
+        console.warn('RevenueCat logIn failed:', e);
+        // 실패 시 서버 응답 entitlement 유지
+      }
       navigation.replace('Main');
     } catch (e) {
       if (e instanceof AxiosError && e.response?.status === 401) {
@@ -58,6 +69,14 @@ export default function S05LoginScreen() {
     try {
       const response = await socialAuth(provider, idToken);
       await saveSession(response);
+      // RevenueCat logIn → 기존 구독 상태 복원 + entitlement 확인
+      try {
+        const customerInfo = await revenueCatLogin(response.user_id);
+        const { entitlement, trialExpiresAt } = extractEntitlement(customerInfo);
+        useAuthStore.getState().setEntitlement(entitlement, trialExpiresAt);
+      } catch (e) {
+        console.warn('RevenueCat logIn failed:', e);
+      }
       navigation.replace('Main');
     } catch {
       Alert.alert('로그인 실패', '소셜 로그인에 실패했어요. 다시 시도해주세요');
