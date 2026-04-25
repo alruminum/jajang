@@ -2,12 +2,10 @@ import uuid
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import require_auth
 from app.core.db import get_db
-from app.core.security import decode_token
 from app.schemas.recordings import (
     UploadCompleteRequest,
     UploadCompleteResponse,
@@ -17,29 +15,13 @@ from app.schemas.recordings import (
 from app.services.recording_service import complete_upload, init_upload
 
 router = APIRouter(prefix="/recordings", tags=["recordings"])
-bearer_scheme = HTTPBearer(auto_error=False)
 logger = structlog.get_logger()
-
-
-def _require_auth(
-    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
-) -> str:
-    """JWT 검증 공통 헬퍼 — user_id 반환."""
-    if credentials is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="인증이 필요해요")
-    try:
-        payload = decode_token(credentials.credentials)
-        if payload.get("type") != "access":
-            raise JWTError("invalid token type")
-        return payload["sub"]
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="인증이 필요해요")
 
 
 @router.post("/init", response_model=UploadInitResponse, status_code=201)
 async def init_recording_upload(
     body: UploadInitRequest,
-    user_id: str = Depends(_require_auth),
+    user_id: str = Depends(require_auth),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -54,7 +36,7 @@ async def init_recording_upload(
 async def complete_recording_upload(
     sample_id: str,
     body: UploadCompleteRequest,
-    user_id: str = Depends(_require_auth),
+    user_id: str = Depends(require_auth),
     db: AsyncSession = Depends(get_db),
 ):
     """
