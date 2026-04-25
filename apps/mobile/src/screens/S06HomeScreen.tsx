@@ -72,6 +72,7 @@ export default function S06HomeScreen() {
 
   const renderTrackItem = ({ item }: { item: GeneratedTrack }) => (
     <TouchableOpacity
+      testID={item.id}
       style={styles.trackItem}
       onPress={() => navigation.navigate('Play', { trackId: item.id })}
       accessibilityRole="button"
