@@ -109,7 +109,7 @@ export default function S03OnboardingScreen() {
             accessibilityRole="button"
             accessibilityLabel="건너뛰기"
           >
-            <Text style={styles.skipText}>건너뛸게요</Text>
+            <Text style={styles.secondaryLink}>건너뛸게요</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -148,5 +148,4 @@ const styles = StyleSheet.create({
   },
   nextBtnText: { color: '#EEF0F8', fontSize: 16, fontWeight: '500' },
   secondaryLink: { color: '#7B80A0', textAlign: 'center', fontSize: 14, padding: 12 },
-  skipText: { color: '#7B80A0', textAlign: 'center', fontSize: 14, padding: 12 },
 });

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TouchableOpacity, Alert, ScrollView,
-  StyleSheet, Linking,
+  StyleSheet, Linking, Platform, BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -29,8 +29,7 @@ export default function S02PrivacyScreen() {
       [
         { text: '다시 생각해볼게요', style: 'cancel' },
         { text: '앱 종료', style: 'destructive', onPress: () => {
-          // BackHandler.exitApp() — Android 전용. iOS는 앱 강제 종료 불가
-          // iOS에서는 안내만 표시
+          if (Platform.OS === 'android') BackHandler.exitApp();
         }},
       ],
     );
