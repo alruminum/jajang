@@ -32,7 +32,8 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    # 라우터는 impl/02에서 추가
+    from app.api.v1.auth import router as auth_router
+    app.include_router(auth_router, prefix="/api/v1")
     return app
 
 

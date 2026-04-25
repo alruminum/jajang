@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     MOCK_GPU: bool = True
     REPLICATE_API_TOKEN: str | None = None
 
+    # Social Auth
+    GOOGLE_CLIENT_ID: str = ""
+
     # Env
     ENV: str = "development"
 
