@@ -179,6 +179,7 @@ async def increment_on_success(
             last_generated_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
+        .execution_options(synchronize_session=False)
     )
     logger.info("generation.counter.incremented", user_id=str(user_id))
 
