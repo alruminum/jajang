@@ -22,8 +22,8 @@ export type MainStackParamList = {
   HomeTabs: undefined;
   SongSelect: undefined;                  // S07
   RecordMode: undefined;                   // S08
-  RecordGuide: { songKey: string; mode: 'humming' | 'shh' }; // S09
-  Record: { songKey: string; mode: 'humming' | 'shh' };      // S10
+  RecordGuide: { mode: 'humming' | 'shush' };                 // S09
+  Record: { songKey: string; mode: 'humming' | 'shush' };     // S10
   Preview: { recordingUri: string; songKey: string };          // S11
   Generating: { jobId: string; songKey: string };              // S12
   Play: { trackId: string };             // S13
