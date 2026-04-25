@@ -13,6 +13,8 @@ import { View, StyleSheet } from 'react-native';
 const BAR_COUNT = 40;
 const MIN_HEIGHT = 4;
 const MAX_HEIGHT = 60;
+const OPACITY_BASE = 0.5;   // 무음 상태 최소 불투명도
+const OPACITY_RANGE = 0.5;  // 레벨에 따라 추가되는 불투명도 범위
 
 interface WaveformVisualizerProps {
   mode: 'realtime';
@@ -47,7 +49,7 @@ export function WaveformVisualizer({
               height: barHeight,
               backgroundColor: color,
               // 높이에 따라 투명도 조정
-              opacity: 0.5 + (barHeight / MAX_HEIGHT) * 0.5,
+              opacity: OPACITY_BASE + (barHeight / MAX_HEIGHT) * OPACITY_RANGE,
             },
           ]}
         />
