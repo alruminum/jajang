@@ -62,6 +62,10 @@ import { api } from '@services/api';
 import { jwtDecode } from 'jwt-decode';
 import S01SplashScreen from '@screens/S01SplashScreen';
 
+// ─── 상수 ─────────────────────────────────────────────────────────────────────
+
+const SPLASH_DELAY_MS = 1500;
+
 // ─── 헬퍼 ─────────────────────────────────────────────────────────────────────
 
 /** 만료되지 않은 JWT payload를 반환하도록 jwtDecode 설정 */
@@ -92,11 +96,11 @@ describe('S01SplashScreen (REQ-SPLASH)', () => {
 
   // ─── REQ-SPLASH-01: consent 미동의 ─────────────────────────────────────────
   describe('REQ-SPLASH-01: consent 미동의 → Auth 이동', () => {
-    it("consent_given이 null이면 1500ms 후 Auth로 이동한다", async () => {
+    it(`consent_given이 null이면 ${SPLASH_DELAY_MS}ms 후 Auth로 이동한다`, async () => {
       (AsyncStorage.getItem as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
       render(<S01SplashScreen />);
-      await vi.advanceTimersByTimeAsync(1500);
+      await vi.advanceTimersByTimeAsync(SPLASH_DELAY_MS);
 
       await waitFor(() => {
         expect(mockNavigationReplace).toHaveBeenCalledWith('Auth');
@@ -107,7 +111,7 @@ describe('S01SplashScreen (REQ-SPLASH)', () => {
       (AsyncStorage.getItem as ReturnType<typeof vi.fn>).mockResolvedValue('false');
 
       render(<S01SplashScreen />);
-      await vi.advanceTimersByTimeAsync(1500);
+      await vi.advanceTimersByTimeAsync(SPLASH_DELAY_MS);
 
       await waitFor(() => {
         expect(mockNavigationReplace).toHaveBeenCalledWith('Auth');
@@ -118,7 +122,7 @@ describe('S01SplashScreen (REQ-SPLASH)', () => {
       (AsyncStorage.getItem as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
       render(<S01SplashScreen />);
-      await vi.advanceTimersByTimeAsync(1500);
+      await vi.advanceTimersByTimeAsync(SPLASH_DELAY_MS);
 
       await waitFor(() => {
         expect(SecureStore.getItemAsync).not.toHaveBeenCalled();
@@ -136,7 +140,7 @@ describe('S01SplashScreen (REQ-SPLASH)', () => {
       mockValidToken();
 
       render(<S01SplashScreen />);
-      await vi.advanceTimersByTimeAsync(1500);
+      await vi.advanceTimersByTimeAsync(SPLASH_DELAY_MS);
 
       await waitFor(() => {
         expect(mockNavigationReplace).toHaveBeenCalledWith('Main');
@@ -151,7 +155,7 @@ describe('S01SplashScreen (REQ-SPLASH)', () => {
       mockValidToken();
 
       render(<S01SplashScreen />);
-      await vi.advanceTimersByTimeAsync(1500);
+      await vi.advanceTimersByTimeAsync(SPLASH_DELAY_MS);
 
       await waitFor(() => {
         expect(api.post).not.toHaveBeenCalled();
@@ -181,7 +185,7 @@ describe('S01SplashScreen (REQ-SPLASH)', () => {
 
     it('refresh API를 올바른 payload로 호출한다', async () => {
       render(<S01SplashScreen />);
-      await vi.advanceTimersByTimeAsync(1500);
+      await vi.advanceTimersByTimeAsync(SPLASH_DELAY_MS);
 
       await waitFor(() => {
         expect(api.post).toHaveBeenCalledWith('/auth/refresh', {
@@ -192,7 +196,7 @@ describe('S01SplashScreen (REQ-SPLASH)', () => {
 
     it('refresh 성공 후 Main으로 이동한다', async () => {
       render(<S01SplashScreen />);
-      await vi.advanceTimersByTimeAsync(1500);
+      await vi.advanceTimersByTimeAsync(SPLASH_DELAY_MS);
 
       await waitFor(() => {
         expect(mockNavigationReplace).toHaveBeenCalledWith('Main');
@@ -201,7 +205,7 @@ describe('S01SplashScreen (REQ-SPLASH)', () => {
 
     it('새 access_token을 SecureStore에 저장한다', async () => {
       render(<S01SplashScreen />);
-      await vi.advanceTimersByTimeAsync(1500);
+      await vi.advanceTimersByTimeAsync(SPLASH_DELAY_MS);
 
       await waitFor(() => {
         expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
@@ -213,7 +217,7 @@ describe('S01SplashScreen (REQ-SPLASH)', () => {
 
     it('새 refresh_token을 SecureStore에 저장한다', async () => {
       render(<S01SplashScreen />);
-      await vi.advanceTimersByTimeAsync(1500);
+      await vi.advanceTimersByTimeAsync(SPLASH_DELAY_MS);
 
       await waitFor(() => {
         expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
@@ -241,7 +245,7 @@ describe('S01SplashScreen (REQ-SPLASH)', () => {
       );
 
       render(<S01SplashScreen />);
-      await vi.advanceTimersByTimeAsync(1500);
+      await vi.advanceTimersByTimeAsync(SPLASH_DELAY_MS);
 
       await waitFor(() => {
         expect(mockClearAuth).toHaveBeenCalledTimes(1);
@@ -262,7 +266,7 @@ describe('S01SplashScreen (REQ-SPLASH)', () => {
       (api.post as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network Error'));
 
       render(<S01SplashScreen />);
-      await vi.advanceTimersByTimeAsync(1500);
+      await vi.advanceTimersByTimeAsync(SPLASH_DELAY_MS);
 
       await waitFor(() => {
         expect(mockNavigationReplace).not.toHaveBeenCalledWith('Main');
@@ -277,7 +281,7 @@ describe('S01SplashScreen (REQ-SPLASH)', () => {
       (SecureStore.getItemAsync as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
       render(<S01SplashScreen />);
-      await vi.advanceTimersByTimeAsync(1500);
+      await vi.advanceTimersByTimeAsync(SPLASH_DELAY_MS);
 
       await waitFor(() => {
         expect(mockClearAuth).toHaveBeenCalledTimes(1);
@@ -290,7 +294,7 @@ describe('S01SplashScreen (REQ-SPLASH)', () => {
       (SecureStore.getItemAsync as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
       render(<S01SplashScreen />);
-      await vi.advanceTimersByTimeAsync(1500);
+      await vi.advanceTimersByTimeAsync(SPLASH_DELAY_MS);
 
       await waitFor(() => {
         expect(api.post).not.toHaveBeenCalled();
