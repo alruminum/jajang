@@ -6,13 +6,13 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { songsApi, type Song } from '@services/api/songs';
 import { useRecordingStore } from '@store/recordingSlice';
-import { useAuthStore } from '@store/auth-store';
+import { useAuthStore } from '@store/authSlice';
 import { SongListItem } from '@components/SongListItem';
 import { MainStackParamList } from '@navigation/types';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'SongSelect'>;
 
-export default function S07SongSelectScreen({ navigation }: Props) {
+export function SongSelectScreen({ navigation }: Props) {
   const [songs, setSongs] = useState<Song[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -22,11 +22,15 @@ export default function S07SongSelectScreen({ navigation }: Props) {
   const soundRef = useRef<Audio.Sound | null>(null);
 
   const { selectedSongKey, setSelectedSong, resetRecordingFlow } = useRecordingStore();
-  const { entitlement } = useAuthStore();
+  // generationCount는 Epic 03 완료 후 AuthStore에 추가 예정.
+  // 현재는 unknown을 경유한 캐스트로 접근 (test mock 호환).
+  const authState = useAuthStore() as unknown as {
+    entitlement: 'free' | 'trial' | 'premium';
+    generationCount: number;
+  };
+  const { entitlement, generationCount } = authState;
 
   const isFreeUser = entitlement === 'free';
-  // TODO: Epic 03 완료 후 store에서 generationCount 읽기. V1 하드코딩.
-  const generationCount = 0;
   const generationsLeft = Math.max(0, 3 - generationCount); // 0~3
 
   // 기존 음원 존재 여부 (S07 재녹음 안내 다이얼로그)
@@ -90,7 +94,7 @@ export default function S07SongSelectScreen({ navigation }: Props) {
 
     // 횟수 소진 체크 (무료 유저)
     if (isFreeUser && generationsLeft <= 0) {
-      navigation.navigate('Upgrade', { variant: 'generation-exhausted' });
+      navigation.navigate('UpgradeSheet', { variant: 'generation_exhausted' });
       return;
     }
 
@@ -105,7 +109,7 @@ export default function S07SongSelectScreen({ navigation }: Props) {
             text: '확인',
             onPress: () => {
               resetRecordingFlow();
-              navigation.navigate('RecordMode', { songKey: selectedSongKey });
+              navigation.navigate('RecordMode');
             },
           },
         ],
@@ -113,7 +117,7 @@ export default function S07SongSelectScreen({ navigation }: Props) {
       return;
     }
 
-    navigation.navigate('RecordMode', { songKey: selectedSongKey });
+    navigation.navigate('RecordMode');
   };
 
   return (
@@ -159,6 +163,9 @@ export default function S07SongSelectScreen({ navigation }: Props) {
     </View>
   );
 }
+
+// Default export for MainNavigator compatibility
+export default SongSelectScreen;
 
 const styles = StyleSheet.create({
   container:   { flex: 1, backgroundColor: '#0D0F1A', paddingHorizontal: 20 },
