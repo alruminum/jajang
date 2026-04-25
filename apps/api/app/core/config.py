@@ -21,9 +21,18 @@ class Settings(BaseSettings):
     S3_SECRET_KEY: str
     S3_ENDPOINT_URL: str | None = None  # R2 선택 시
 
-    # GPU (M0 이후 확정)
-    MOCK_GPU: bool = True
-    REPLICATE_API_TOKEN: str | None = None
+    # GPU 추론 분기
+    MOCK_GPU: bool = True                   # 기본 True (개발환경 mock)
+    INFERENCE_PROVIDER: str = "mock"        # mock | replicate | modal
+    MOCK_LATENCY_MS: int = 3000             # MockClient 대기 시간 (ms)
+    MOCK_FAIL_RATE: float = 0.0             # MockClient 실패 확률 (0~1)
+
+    # Replicate (M0 이후)
+    REPLICATE_API_TOKEN: str = ""
+
+    # Modal (M0 이후)
+    MODAL_TOKEN_ID: str = ""
+    MODAL_TOKEN_SECRET: str = ""
 
     # Social Auth
     GOOGLE_CLIENT_ID: str = ""
