@@ -70,7 +70,7 @@ function meteringToLevel(metering: number | undefined): number {
 }
 
 export default function S10RecordScreen({ navigation, route }: Props) {
-  const { setLocalAudioUri } = useRecordingStore();
+  const { setLocalAudioUri, setRecordingLevels } = useRecordingStore();
   const { songKey } = route.params;
 
   // 화면 단계
@@ -86,6 +86,7 @@ export default function S10RecordScreen({ navigation, route }: Props) {
   const recordingRef = useRef<Audio.Recording | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const silentSecRef = useRef(0); // 연속 무음 누적 시간 (0.1초 단위)
+  const levelsRef = useRef<number[]>([]); // levels 최신값 추적 (stopAndNavigate에서 사용)
 
   // ── iOS swipe-back 제스처 비활성화 ──
   useEffect(() => {
@@ -117,6 +118,7 @@ export default function S10RecordScreen({ navigation, route }: Props) {
     const uri = await cleanupRecording();
     if (uri) {
       setLocalAudioUri(uri);
+      setRecordingLevels([...levelsRef.current]); // S11 정적 파형용 levels 저장
       navigation.navigate('Preview', { recordingUri: uri, songKey });
     }
   };
@@ -134,7 +136,9 @@ export default function S10RecordScreen({ navigation, route }: Props) {
     const level = meteringToLevel(status.metering);
 
     // levels 배열 최대 40개 유지 (메모리 무한 증가 방지)
-    setLevels((prev) => [...prev.slice(-39), level]);
+    const nextLevels = [...levelsRef.current.slice(-39), level];
+    levelsRef.current = nextLevels; // ref 동기화 (stopAndNavigate에서 최신값 읽기 위함)
+    setLevels(nextLevels);
 
     // 무음 감지 (연속 무음만 카운트)
     if (level < SILENCE_THRESHOLD) {
