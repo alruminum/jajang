@@ -1,4 +1,4 @@
-// apps/mobile/src/screens/S10RecordScreen.tsx
+// apps/mobile/src/screens/RecordScreen.tsx
 // S10 — 녹음 화면 (카운트다운 → 실시간 파형 → 자동/수동 종료 → S11 이동)
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
@@ -69,7 +69,7 @@ function meteringToLevel(metering: number | undefined): number {
   return (clamped + 60) / 60;
 }
 
-export default function S10RecordScreen({ navigation, route }: Props) {
+export function RecordScreen({ navigation, route }: Props) {
   const { setLocalAudioUri } = useRecordingStore();
   const { songKey } = route.params;
 
@@ -85,75 +85,8 @@ export default function S10RecordScreen({ navigation, route }: Props) {
   // refs (렌더 사이클 외부 상태)
   const recordingRef = useRef<Audio.Recording | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const silentSecRef = useRef(0); // 연속 무음 누적 시간 (0.1초 단위)
-
-  // ── iOS swipe-back 제스처 비활성화 ──
-  useEffect(() => {
-    navigation.setOptions({ gestureEnabled: false });
-  }, [navigation]);
-
-  // ── 녹음 정리 ─────────────────────
-  const cleanupRecording = async (): Promise<string | null> => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-
-    const rec = recordingRef.current;
-    if (!rec) return null;
-
-    try {
-      await rec.stopAndUnloadAsync();
-      const uri = rec.getURI();
-      recordingRef.current = null;
-      return uri ?? null;
-    } catch {
-      return null;
-    }
-  };
-
-  // ── 공통: 녹음 종료 + S11 이동 ─────
-  const stopAndNavigate = async () => {
-    const uri = await cleanupRecording();
-    if (uri) {
-      setLocalAudioUri(uri);
-      navigation.navigate('Preview', { recordingUri: uri, songKey });
-    }
-  };
-
-  // ── 자동 종료 (60초) ───────────────
-  const handleAutoStop = useCallback(async () => {
-    await stopAndNavigate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ── metering 콜백 (named function — 중첩 단계 감소) ──
-  const handleMeteringStatus = (status: Audio.RecordingStatus) => {
-    if (!status.isRecording) return;
-
-    const level = meteringToLevel(status.metering);
-
-    // levels 배열 최대 40개 유지 (메모리 무한 증가 방지)
-    setLevels((prev) => [...prev.slice(-39), level]);
-
-    // 무음 감지 (연속 무음만 카운트)
-    if (level < SILENCE_THRESHOLD) {
-      silentSecRef.current += 0.1;
-      setShowSilenceWarning(silentSecRef.current >= SILENCE_WARN_SEC);
-    } else {
-      silentSecRef.current = 0;
-      setShowSilenceWarning(false);
-    }
-  };
-
-  // ── 경과 시간 updater (named function — 중첩 단계 감소) ──
-  const handleElapsedTick = (prev: number): number => {
-    if (prev + 1 >= MAX_DURATION_SEC) {
-      clearInterval(timerRef.current!);
-      handleAutoStop();
-    }
-    return prev + 1;
-  };
 
   // ── 카운트다운 ──────────────────────
   useEffect(() => {
@@ -174,6 +107,11 @@ export default function S10RecordScreen({ navigation, route }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
+  // ── iOS swipe-back 제스처 비활성화 ──
+  useEffect(() => {
+    navigation.setOptions({ gestureEnabled: false });
+  }, [navigation]);
+
   // ── 녹음 시작 ──────────────────────
   const startRecording = async () => {
     try {
@@ -184,7 +122,26 @@ export default function S10RecordScreen({ navigation, route }: Props) {
 
       const { recording } = await Audio.Recording.createAsync(
         RECORDING_OPTIONS,
-        handleMeteringStatus,
+        // metering 콜백: 100ms 주기
+        (status) => {
+          if (!status.isRecording) return;
+
+          const level = meteringToLevel(status.metering);
+
+          // levels 배열 최대 40개 유지 (메모리 무한 증가 방지)
+          setLevels((prev) => [...prev.slice(-39), level]);
+
+          // 무음 감지 (연속 무음만 카운트)
+          if (level < SILENCE_THRESHOLD) {
+            silentSecRef.current += 0.1;
+            if (silentSecRef.current >= SILENCE_WARN_SEC) {
+              setShowSilenceWarning(true);
+            }
+          } else {
+            silentSecRef.current = 0;
+            setShowSilenceWarning(false);
+          }
+        },
         100, // 100ms 주기 metering
       );
 
@@ -193,13 +150,26 @@ export default function S10RecordScreen({ navigation, route }: Props) {
 
       // 경과 시간 타이머
       timerRef.current = setInterval(() => {
-        setElapsedSec(handleElapsedTick);
+        setElapsedSec((prev) => {
+          if (prev + 1 >= MAX_DURATION_SEC) {
+            // 자동 종료
+            clearInterval(timerRef.current!);
+            handleAutoStop();
+          }
+          return prev + 1;
+        });
       }, 1000);
     } catch {
       Alert.alert('', '녹음을 시작할 수 없어요. 마이크 권한을 확인해주세요');
       navigation.goBack();
     }
   };
+
+  // ── 자동 종료 (60초) ───────────────
+  const handleAutoStop = useCallback(async () => {
+    await stopAndNavigate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── 수동 종료 버튼 탭 ──────────────
   const handleStopPress = async () => {
@@ -234,6 +204,15 @@ export default function S10RecordScreen({ navigation, route }: Props) {
     ]);
   };
 
+  // ── 공통: 녹음 종료 + S11 이동 ─────
+  const stopAndNavigate = async () => {
+    const uri = await cleanupRecording();
+    if (uri) {
+      setLocalAudioUri(uri);
+      navigation.navigate('Preview', { recordingUri: uri, songKey });
+    }
+  };
+
   // ── 재시작 ─────────────────────────
   const restartRecording = async () => {
     await cleanupRecording();
@@ -243,6 +222,30 @@ export default function S10RecordScreen({ navigation, route }: Props) {
     silentSecRef.current = 0;
     setShowSilenceWarning(false);
     setPhase('countdown');
+  };
+
+  // ── 녹음 정리 ─────────────────────
+  const cleanupRecording = async (): Promise<string | null> => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+
+    const rec = recordingRef.current;
+    if (!rec) return null;
+
+    try {
+      await rec.stopAndUnloadAsync();
+      const uri = rec.getURI();
+      recordingRef.current = null;
+      return uri ?? null;
+    } catch {
+      return null;
+    }
   };
 
   // ── Android 뒤로 가기 가로채기 ─────
