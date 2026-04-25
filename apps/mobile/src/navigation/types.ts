@@ -21,14 +21,17 @@ export type AuthStackParamList = {
 export type MainStackParamList = {
   HomeTabs: undefined;
   SongSelect: undefined;                  // S07
-  RecordMode: { songKey: string };        // S08
+  RecordMode: undefined;                   // S08
   RecordGuide: { songKey: string; mode: 'humming' | 'shh' }; // S09
   Record: { songKey: string; mode: 'humming' | 'shh' };      // S10
   Preview: { recordingUri: string; songKey: string };          // S11
   Generating: { jobId: string; songKey: string };              // S12
   Play: { trackId: string };             // S13
-  Upgrade: {                             // S14
+  Upgrade: {                             // S14 (legacy)
     variant: 'background' | 'generation-exhausted';
+  };
+  UpgradeSheet: {                        // S14 alias used by S07
+    variant: 'background' | 'generation_exhausted';
   };
   Subscribe: undefined;                  // S15
   TrialExpired: undefined;               // S17
