@@ -156,7 +156,10 @@ export default function S04SignupScreen() {
             <View style={styles.dividerLine} />
           </View>
 
-          <SocialAuthButtons onSuccess={handleSocialSuccess} />
+          <SocialAuthButtons
+            onSuccess={handleSocialSuccess}
+            onError={() => Alert.alert('가입 실패', '소셜 로그인에 실패했어요. 다시 시도해주세요')}
+          />
 
           <TouchableOpacity
             onPress={() => navigation.navigate('Auth', { screen: 'Login' } as any)}
