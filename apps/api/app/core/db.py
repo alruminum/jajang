@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -20,6 +22,13 @@ class Base(DeclarativeBase):
 
 
 async def get_db() -> AsyncSession:  # type: ignore[return]
+    async with AsyncSessionLocal() as session:
+        yield session
+
+
+@asynccontextmanager
+async def get_db_session() -> AsyncSession:  # type: ignore[return]
+    """Celery task 등 FastAPI DI 외부에서 DB 세션이 필요할 때 사용하는 컨텍스트 매니저."""
     async with AsyncSessionLocal() as session:
         yield session
 
