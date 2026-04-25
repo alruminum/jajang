@@ -19,6 +19,7 @@ import { RootStackParamList } from '@navigation/types';
 import { emailLogin, socialAuth } from '@services/auth-api';
 import { useAuth } from '@hooks/useAuth';
 import SocialAuthButtons from '@components/SocialAuthButtons';
+import { syncEntitlementAfterLogin } from '@services/revenue-cat';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -41,6 +42,7 @@ export default function S05LoginScreen() {
     try {
       const response = await emailLogin(email, password);
       await saveSession(response);
+      await syncEntitlementAfterLogin(response.user_id);
       navigation.replace('Main');
     } catch (e) {
       if (e instanceof AxiosError && e.response?.status === 401) {
@@ -58,6 +60,7 @@ export default function S05LoginScreen() {
     try {
       const response = await socialAuth(provider, idToken);
       await saveSession(response);
+      await syncEntitlementAfterLogin(response.user_id);
       navigation.replace('Main');
     } catch {
       Alert.alert('로그인 실패', '소셜 로그인에 실패했어요. 다시 시도해주세요');

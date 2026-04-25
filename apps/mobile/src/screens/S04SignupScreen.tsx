@@ -19,6 +19,7 @@ import { RootStackParamList } from '@navigation/types';
 import { emailSignup, socialAuth } from '@services/auth-api';
 import { useAuth } from '@hooks/useAuth';
 import SocialAuthButtons from '@components/SocialAuthButtons';
+import { syncEntitlementAfterLogin } from '@services/revenue-cat';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -55,7 +56,7 @@ export default function S04SignupScreen() {
     try {
       const response = await emailSignup(email, password);
       await saveSession(response);
-      // impl/07에서 RevenueCat logIn 호출 추가
+      await syncEntitlementAfterLogin(response.user_id);
       navigation.replace('Main');
     } catch (e) {
       if (e instanceof AxiosError) {
@@ -76,6 +77,7 @@ export default function S04SignupScreen() {
     try {
       const response = await socialAuth(provider, idToken);
       await saveSession(response);
+      await syncEntitlementAfterLogin(response.user_id);
       navigation.replace('Main');
     } catch {
       Alert.alert('가입 실패', '소셜 로그인에 실패했어요. 다시 시도해주세요');
