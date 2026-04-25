@@ -11,7 +11,7 @@ import S16SettingsScreen from '@screens/S16SettingsScreen';
 import S07SongSelectScreen from '@screens/S07SongSelectScreen';
 import S08RecordModeScreen from '@screens/S08RecordModeScreen';
 import S09RecordGuideScreen from '@screens/S09RecordGuideScreen';
-import S10RecordScreen from '@screens/S10RecordScreen';
+import { RecordScreen } from '@screens/RecordScreen';
 import S11PreviewScreen from '@screens/S11PreviewScreen';
 import S12GeneratingScreen from '@screens/S12GeneratingScreen';
 import S13PlayScreen from '@screens/S13PlayScreen';
@@ -53,7 +53,7 @@ export default function MainNavigator() {
       <Stack.Screen name="SongSelect" component={S07SongSelectScreen} />
       <Stack.Screen name="RecordMode" component={S08RecordModeScreen} />
       <Stack.Screen name="RecordGuide" component={S09RecordGuideScreen} />
-      <Stack.Screen name="Record" component={S10RecordScreen} />
+      <Stack.Screen name="Record" component={RecordScreen} />
       <Stack.Screen name="Preview" component={S11PreviewScreen} />
       <Stack.Screen name="Generating" component={S12GeneratingScreen} />
       <Stack.Screen name="Play" component={S13PlayScreen} />
