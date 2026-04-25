@@ -1,0 +1,13 @@
+.claude/harness-state/
+.claude/harness-memory.md
+node_modules/
+__pycache__/
+*.pyc
+.env
+.env.local
+ios/
+android/
+build/
+dist/
+.expo/
+.expo-shared/

@@ -32,6 +32,7 @@ jajang/                              ← 프로젝트 루트 (이미 존재)
 │   │       ├── audio/               [디렉토리 생성]
 │   │       ├── navigation/          [디렉토리 생성]
 │   │       ├── hooks/               [디렉토리 생성]
+│   │       ├── utils/               [디렉토리 생성]
 │   │       └── types/               [디렉토리 생성]
 │   │           └── index.ts         [신규] (공용 타입 exports)
 │   └── api/                         ← FastAPI 백엔드
@@ -264,6 +265,13 @@ export default function App() {
         {
           "iosCapabilities": ["audio"]
         }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-xxx~xxx",
+          "iosAppId": "ca-app-pub-xxx~xxx"
+        }
       ]
     ]
   }
@@ -357,6 +365,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import structlog
 
+from app.core.config import settings
 from app.core.db import init_db
 
 logger = structlog.get_logger()
@@ -390,6 +399,7 @@ app = create_app()
 ### apps/api/app/core/db.py (골격)
 
 ```python
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase
 from app.core.config import settings
