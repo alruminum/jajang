@@ -1,19 +1,13 @@
-# React Native / Expo
-apps/mobile/node_modules/
-apps/mobile/.expo/
-apps/mobile/ios/build/
-apps/mobile/android/build/
-apps/mobile/.env
-apps/mobile/*.keystore
-
-# Python / FastAPI
-apps/api/.venv/
-apps/api/__pycache__/
-apps/api/**/__pycache__/
-apps/api/.env
-apps/api/*.egg-info/
-apps/api/dist/
-
-# 공통
-.DS_Store
-*.log
+.claude/harness-state/
+.claude/harness-memory.md
+node_modules/
+__pycache__/
+*.pyc
+.env
+.env.local
+ios/
+android/
+build/
+dist/
+.expo/
+.expo-shared/

@@ -16,6 +16,7 @@ module.exports = function (api) {
             '@audio': './src/audio',
             '@navigation': './src/navigation',
             '@hooks': './src/hooks',
+            '@utils': './src/utils',
             '@types': './src/types',
           },
         },
