@@ -28,7 +28,6 @@ const SLIDES = [
     title: '편안한 수면을',
     body: '오늘 밤부터 시작해요',
     emoji: '🍃',
-    isLast: true,
   },
 ];
 
