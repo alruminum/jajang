@@ -32,5 +32,5 @@ class UploadCompleteRequest(BaseModel):
 
 class UploadCompleteResponse(BaseModel):
     sample_id: str
-    status: Literal["uploaded"]
+    status: Literal["uploaded"] = "uploaded"
     message: str = "업로드가 완료됐어요. 품질을 확인할게요."
