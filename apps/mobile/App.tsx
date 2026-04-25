@@ -1,11 +1,41 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { NavigationContainer, DarkTheme } from '@react-navigation/native';
+import { NavigationContainer, DarkTheme, createNavigationContainerRef } from '@react-navigation/native';
 import RootNavigator from '@navigation/RootNavigator';
+import { sessionEvents, SESSION_EXPIRED_EVENT } from '@lib/session-events';
+import { useAuth } from '@hooks/useAuth';
+import { RootStackParamList } from '@navigation/types';
 
 // impl/07에서 Purchases.configure 추가
 // impl/07에서 mobileAds().initialize() 추가
+
+export const navigationRef = createNavigationContainerRef<RootStackParamList>();
+
+/**
+ * 세션 만료 이벤트 구독 컴포넌트
+ * NavigationContainer 밖에 위치 — navigationRef로 직접 리셋
+ * (useNavigation은 Navigator 컨텍스트가 필요하므로 ref 패턴 사용)
+ */
+function SessionExpiredListener() {
+  const { handleSessionExpired } = useAuth();
+
+  useEffect(() => {
+    const handler = async () => {
+      await handleSessionExpired();
+      if (navigationRef.isReady()) {
+        navigationRef.reset({
+          index: 0,
+          routes: [{ name: 'Auth' }],
+        });
+      }
+    };
+    sessionEvents.on(SESSION_EXPIRED_EVENT, handler);
+    return () => { sessionEvents.off(SESSION_EXPIRED_EVENT, handler); };
+  }, []);
+
+  return null;
+}
 
 const AppTheme = {
   ...DarkTheme,
@@ -24,7 +54,8 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style="light" backgroundColor="#0D0F1A" />
-      <NavigationContainer theme={AppTheme}>
+      <SessionExpiredListener />
+      <NavigationContainer ref={navigationRef} theme={AppTheme}>
         <RootNavigator />
       </NavigationContainer>
     </SafeAreaProvider>

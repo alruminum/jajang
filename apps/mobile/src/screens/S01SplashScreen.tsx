@@ -3,14 +3,17 @@ import { View, Image, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as SecureStore from 'expo-secure-store';
-import { RootStackParamList } from '@navigation/types';
 import { jwtDecode } from 'jwt-decode';
+import { RootStackParamList } from '@navigation/types';
 import { getConsentFlag } from '@hooks/useConsentFlag';
+import { useAuthStore } from '@store/auth-store';
+import { api } from '@services/api';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList, 'Splash'>;
 
 export default function S01SplashScreen() {
   const navigation = useNavigation<NavProp>();
+  const { clearAuth } = useAuthStore();
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -18,16 +21,33 @@ export default function S01SplashScreen() {
 
       const consentGiven = await getConsentFlag();
       if (!consentGiven) {
-        navigation.replace('Auth');  // AuthNavigator의 첫 화면 = Privacy
+        navigation.replace('Auth');
         return;
       }
 
+      // SecureStore에서 토큰 검증 (Zustand persist는 참고용)
       const accessToken = await SecureStore.getItemAsync('access_token');
+      const refreshToken = await SecureStore.getItemAsync('refresh_token');
+
       if (accessToken && isTokenValid(accessToken)) {
+        // 유효한 access_token → Main 이동
         navigation.replace('Main');
+      } else if (refreshToken) {
+        // access 만료 + refresh 존재 → refresh 시도
+        try {
+          const { data } = await api.post('/auth/refresh', { refresh_token: refreshToken });
+          await SecureStore.setItemAsync('access_token', data.access_token);
+          await SecureStore.setItemAsync('refresh_token', data.refresh_token);
+          // Zustand isAuthenticated는 persist 복원으로 이미 true; 토큰만 SecureStore 갱신
+          navigation.replace('Main');
+        } catch {
+          clearAuth();
+          navigation.replace('Auth');
+        }
       } else {
+        clearAuth();
+        // consent는 있는데 로그인 안 된 상태 → Auth(Login)으로
         navigation.replace('Auth');
-        // AuthNavigator 내부에서 Login으로 이동은 S02에서 처리
       }
     };
     bootstrap();

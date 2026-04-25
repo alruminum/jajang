@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
+import { sessionEvents, SESSION_EXPIRED_EVENT } from '@lib/session-events';
 
 const API_BASE_URL =
   process.env.API_BASE_URL ??
@@ -39,9 +40,9 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
         return api(originalRequest);
       } catch {
-        // refresh 실패 → 세션 만료 처리는 impl/06에서
         await SecureStore.deleteItemAsync('access_token');
         await SecureStore.deleteItemAsync('refresh_token');
+        sessionEvents.emit(SESSION_EXPIRED_EVENT);  // 이벤트 발행 → SessionExpiredListener
         throw error;
       }
     }
