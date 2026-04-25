@@ -1,33 +1,65 @@
-// STUB — impl/06에서 완전 구현 예정
-// useAuth.ts 컴파일을 위한 최소 인터페이스 제공
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-interface AuthState {
+export interface AuthState {
   userId: string | null;
-  accessToken: string | null;
-  entitlement: 'free' | 'trial' | 'premium' | null;
+  accessToken: string | null;        // SecureStore에 저장 (민감), 여기서는 캐시 용도
+  entitlement: 'free' | 'trial' | 'premium';
+  trialExpiresAt: string | null;     // ISO 8601
+  isAuthenticated: boolean;
+}
+
+interface AuthActions {
   setAuth: (payload: {
     userId: string;
     accessToken: string;
     entitlement: 'free' | 'trial' | 'premium';
+    trialExpiresAt?: string | null;
   }) => void;
+  setEntitlement: (entitlement: 'free' | 'trial' | 'premium', trialExpiresAt?: string | null) => void;
   clearAuth: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+const initialState: AuthState = {
   userId: null,
   accessToken: null,
-  entitlement: null,
-  setAuth: (payload) =>
-    set({
-      userId: payload.userId,
-      accessToken: payload.accessToken,
-      entitlement: payload.entitlement,
+  entitlement: 'free',
+  trialExpiresAt: null,
+  isAuthenticated: false,
+};
+
+export const useAuthStore = create<AuthState & AuthActions>()(
+  persist(
+    (set) => ({
+      ...initialState,
+
+      setAuth: ({ userId, accessToken, entitlement, trialExpiresAt = null }) =>
+        set({
+          userId,
+          accessToken,   // 주의: 민감 데이터. persist에 포함되나 AsyncStorage는 로컬 전용
+          entitlement,
+          trialExpiresAt,
+          isAuthenticated: true,
+        }),
+
+      setEntitlement: (entitlement, trialExpiresAt = null) =>
+        set({ entitlement, trialExpiresAt }),
+
+      clearAuth: () => set(initialState),
     }),
-  clearAuth: () =>
-    set({
-      userId: null,
-      accessToken: null,
-      entitlement: null,
-    }),
-}));
+    {
+      name: 'jajang-auth',
+      storage: createJSONStorage(() => AsyncStorage),
+      // accessToken은 persist에서 제외 — SecureStore 별도 저장
+      // 앱 재시작 시 SecureStore에서 재검증 필수
+      partialize: (state) => ({
+        userId: state.userId,
+        entitlement: state.entitlement,
+        trialExpiresAt: state.trialExpiresAt,
+        isAuthenticated: state.isAuthenticated,
+        // accessToken은 의도적으로 제외 — SecureStore에서 관리
+      }),
+    },
+  ),
+);
