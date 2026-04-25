@@ -1,35 +1,17 @@
 import structlog
 from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError
 
-from app.core.security import decode_token
+from app.api.deps import require_auth
 from app.schemas.songs import PreviewUrlResponse, SongListResponse
 from app.services.songs_service import get_all_songs, get_preview_url
 
 router = APIRouter(prefix="/songs", tags=["songs"])
-bearer_scheme = HTTPBearer(auto_error=False)
 logger = structlog.get_logger()
 
 
-def _require_auth(
-    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
-) -> str:
-    """JWT 검증 공통 헬퍼 — user_id 반환."""
-    if credentials is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="인증이 필요해요")
-    try:
-        payload = decode_token(credentials.credentials)
-        if payload.get("type") != "access":
-            raise JWTError("invalid token type")
-        return payload["sub"]
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="인증이 필요해요")
-
-
 @router.get("", response_model=SongListResponse)
-async def list_songs(user_id: str = Depends(_require_auth)):
+async def list_songs(user_id: str = Depends(require_auth)):
     """
     자장가 6곡 목록 반환.
     인증 필요 (S07 화면은 로그인 후 진입).
@@ -42,7 +24,7 @@ async def list_songs(user_id: str = Depends(_require_auth)):
 @router.get("/{song_key}/preview", response_model=PreviewUrlResponse)
 async def get_song_preview(
     song_key: str,
-    user_id: str = Depends(_require_auth),
+    user_id: str = Depends(require_auth),
 ):
     """
     미리듣기 30초 클립 presigned URL 발급.
