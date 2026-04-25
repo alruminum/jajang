@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     # Social Auth
     GOOGLE_CLIENT_ID: str = ""
 
+    # RevenueCat
+    REVENUECAT_WEBHOOK_SECRET: str = ""
+
     # Env
     ENV: str = "development"
 
