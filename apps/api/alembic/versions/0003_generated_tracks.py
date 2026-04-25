@@ -68,24 +68,15 @@ def upgrade() -> None:
     op.create_index("idx_generated_tracks_user", "generated_tracks", ["user_id"])
     op.create_index("idx_generated_tracks_job", "generated_tracks", ["job_id"])
     op.create_index(
-        "idx_generated_tracks_user_status_completed",
+        "idx_generated_tracks_status",
         "generated_tracks",
         ["user_id", "status", "completed_at"],
         postgresql_where=sa.text("status = 'completed'"),
     )
-    op.create_index(
-        "idx_generated_tracks_user_pending",
-        "generated_tracks",
-        ["user_id", "status"],
-        postgresql_where=sa.text("status IN ('pending', 'processing')"),
-    )
 
 
 def downgrade() -> None:
-    op.drop_index("idx_generated_tracks_user_pending", table_name="generated_tracks")
-    op.drop_index(
-        "idx_generated_tracks_user_status_completed", table_name="generated_tracks"
-    )
+    op.drop_index("idx_generated_tracks_status", table_name="generated_tracks")
     op.drop_index("idx_generated_tracks_job", table_name="generated_tracks")
     op.drop_index("idx_generated_tracks_user", table_name="generated_tracks")
     op.drop_table("generated_tracks")

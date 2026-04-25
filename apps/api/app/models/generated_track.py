@@ -36,20 +36,13 @@ class GeneratedTrack(Base):
         UniqueConstraint("job_id", name="uq_generated_track_job_id"),
         Index("idx_generated_tracks_user", "user_id"),
         Index("idx_generated_tracks_job", "job_id"),
-        # S06 홈 "생성 완료 카드" 쿼리 최적화
+        # S06 홈 "생성 완료 카드" 쿼리 최적화 (db-schema.md §2 DDL 기준)
         Index(
-            "idx_generated_tracks_user_status_completed",
+            "idx_generated_tracks_status",
             "user_id",
             "status",
             "completed_at",
             postgresql_where="status = 'completed'",
-        ),
-        # has_pending 조회 최적화 (impl/05)
-        Index(
-            "idx_generated_tracks_user_pending",
-            "user_id",
-            "status",
-            postgresql_where="status IN ('pending', 'processing')",
         ),
     )
 
