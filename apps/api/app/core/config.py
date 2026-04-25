@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     # RevenueCat
     REVENUECAT_WEBHOOK_SECRET: str = ""
 
+    # Storage — presigned URL
+    S3_PREVIEW_EXPIRY_SECONDS: int = 3600  # presigned URL 유효 시간 (1시간)
+
     # Env
     ENV: str = "development"
 
