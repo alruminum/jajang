@@ -19,21 +19,23 @@ export function useAuth() {
     // impl/07에서 RevenueCat logIn 호출 + trialExpiresAt 업데이트
   };
 
+  const clearStoredTokens = async () => {
+    await SecureStore.deleteItemAsync('access_token');
+    await SecureStore.deleteItemAsync('refresh_token');
+    clearAuth();
+  };
+
   /**
    * 세션 만료 처리 — API 인터셉터 refresh 실패 시 호출
    * 로그인 화면으로 리다이렉트 (음원 데이터 유지 — clearAuth만, 캐시 미삭제)
    */
   const handleSessionExpired = async () => {
-    await SecureStore.deleteItemAsync('access_token');
-    await SecureStore.deleteItemAsync('refresh_token');
-    clearAuth();
+    await clearStoredTokens();
     // 네비게이션은 App.tsx SessionExpiredListener에서 처리
   };
 
   const logout = async () => {
-    await SecureStore.deleteItemAsync('access_token');
-    await SecureStore.deleteItemAsync('refresh_token');
-    clearAuth();
+    await clearStoredTokens();
     // 계정 탈퇴 시 (S16): clearConsentFlag() 추가 호출
   };
 
