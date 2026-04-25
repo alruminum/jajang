@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError
 
 from app.core.db import get_db
-from app.core.security import decode_token
+from app.core.security import decode_token, get_current_user_id
 from app.schemas.auth import (
     EmailSignupRequest, EmailLoginRequest, SocialAuthRequest,
     RefreshTokenRequest, AuthTokenResponse, UserResponse,
@@ -91,10 +91,7 @@ async def get_me(
     if credentials is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="인증이 필요해요")
     try:
-        payload = decode_token(credentials.credentials)
-        if payload.get("type") != "access":
-            raise JWTError("invalid token type")
-        user_id = payload["sub"]
+        user_id = await get_current_user_id(credentials.credentials)
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="인증이 필요해요")
 
