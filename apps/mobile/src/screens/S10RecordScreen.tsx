@@ -85,7 +85,6 @@ export default function S10RecordScreen({ navigation, route }: Props) {
   // refs (렌더 사이클 외부 상태)
   const recordingRef = useRef<Audio.Recording | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const silentSecRef = useRef(0); // 연속 무음 누적 시간 (0.1초 단위)
 
   // ── iOS swipe-back 제스처 비활성화 ──
@@ -98,10 +97,6 @@ export default function S10RecordScreen({ navigation, route }: Props) {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
-    }
-    if (silenceTimerRef.current) {
-      clearTimeout(silenceTimerRef.current);
-      silenceTimerRef.current = null;
     }
 
     const rec = recordingRef.current;
@@ -144,9 +139,7 @@ export default function S10RecordScreen({ navigation, route }: Props) {
     // 무음 감지 (연속 무음만 카운트)
     if (level < SILENCE_THRESHOLD) {
       silentSecRef.current += 0.1;
-      if (silentSecRef.current >= SILENCE_WARN_SEC) {
-        setShowSilenceWarning(true);
-      }
+      setShowSilenceWarning(silentSecRef.current >= SILENCE_WARN_SEC);
     } else {
       silentSecRef.current = 0;
       setShowSilenceWarning(false);
