@@ -13,13 +13,13 @@ from app.models.voice_sample import VoiceSample
 from app.services.inference.factory import get_inference_client
 from app.services.inference.base import InferenceInput
 from app.services import storage_service
+from app.services.counter_service import PAID_ENTITLEMENTS
 
 logger = structlog.get_logger()
 task_logger = get_task_logger(__name__)
 
 SAMPLE_DELETE_DELAY_HOURS = 24     # Story 4: 샘플 삭제 예약 시간
 GENERATION_TIMEOUT_SECONDS = 90    # NFR: 90초 이내 (trd.md §9)
-_PAID_ENTITLEMENTS = {"trial", "premium"}
 
 
 @shared_task(
@@ -123,7 +123,7 @@ def generate_track_task(
 
             # counter +1 (무료 유저만, 성공 시에만)
             # counter_service.increment_on_success는 async이므로 동기 버전을 인라인 처리
-            if entitlement not in _PAID_ENTITLEMENTS:
+            if entitlement not in PAID_ENTITLEMENTS:
                 db.execute(
                     update(GenerationCounter)
                     .where(GenerationCounter.user_id == _user_id)

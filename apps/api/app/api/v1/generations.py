@@ -2,13 +2,11 @@ import uuid
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import require_auth_with_entitlement
 from app.core.db import get_db
-from app.core.security import decode_token
 from app.models.voice_sample import VoiceSample
 from app.schemas.generations import (
     CounterStatusResponse,
@@ -21,33 +19,14 @@ from app.services.generation_service import get_generation_status
 from app.tasks.generation import generate_track_task
 
 router = APIRouter(prefix="/generations", tags=["generations"])
-bearer_scheme = HTTPBearer(auto_error=False)
 logger = structlog.get_logger()
-
-
-def _require_auth(
-    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
-) -> dict:
-    """JWT 검증 → {"sub": user_id, "entitlement": "free"|"trial"|"premium"} 반환"""
-    if credentials is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="인증이 필요해요")
-    try:
-        payload = decode_token(credentials.credentials)
-        if payload.get("type") != "access":
-            raise JWTError("invalid token type")
-        return {
-            "sub": payload["sub"],
-            "entitlement": payload.get("entitlement", "free"),
-        }
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="인증이 필요해요")
 
 
 # 주의: /counter/me 는 /{job_id} 보다 먼저 등록해야 함
 # 순서가 바뀌면 "counter"가 job_id 파라미터로 인식됨
 @router.get("/counter/me", response_model=CounterStatusResponse)
 async def get_my_counter(
-    auth: dict = Depends(_require_auth),
+    auth: dict = Depends(require_auth_with_entitlement),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -63,7 +42,7 @@ async def get_my_counter(
 @router.post("/init", response_model=GenerationInitResponse, status_code=201)
 async def init_generation(
     body: GenerationInitRequest,
-    auth: dict = Depends(_require_auth),
+    auth: dict = Depends(require_auth_with_entitlement),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -125,8 +104,8 @@ async def init_generation(
 
 @router.get("/{job_id}", response_model=GenerationStatusResponse)
 async def get_generation(
-    job_id: str,
-    auth: dict = Depends(_require_auth),
+    job_id: uuid.UUID,
+    auth: dict = Depends(require_auth_with_entitlement),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -135,4 +114,4 @@ async def get_generation(
     completed 시 presigned URL 포함 반환.
     """
     user_id = uuid.UUID(auth["sub"])
-    return await get_generation_status(db, user_id, uuid.UUID(job_id))
+    return await get_generation_status(db, user_id, job_id)
