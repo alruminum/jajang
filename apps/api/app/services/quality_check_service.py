@@ -82,7 +82,7 @@ class QualityCheckResult:
 
 async def validate_sample(
     db: AsyncSession,
-    sample_id: str,
+    sample_id: uuid.UUID,
     user_id: str,
 ) -> QualityCheckResult:
     """
@@ -92,7 +92,7 @@ async def validate_sample(
     """
     result = await db.execute(
         select(VoiceSample).where(
-            VoiceSample.id == uuid.UUID(sample_id),
+            VoiceSample.id == sample_id,
             VoiceSample.user_id == uuid.UUID(user_id),
             VoiceSample.deleted_at.is_(None),
         )

@@ -43,7 +43,7 @@ async def init_recording_upload(
 
 @router.post("/{sample_id}/complete", response_model=UploadCompleteResponse)
 async def complete_recording_upload(
-    sample_id: str,
+    sample_id: uuid.UUID,
     body: UploadCompleteRequest,
     user_id: str = Depends(require_auth),
     db: AsyncSession = Depends(get_db),
@@ -53,14 +53,14 @@ async def complete_recording_upload(
     클라이언트 1차 검증 메타(duration, rms_db, peak_count) 저장.
     서버 2차 품질 검증(SNR)은 별도 /recordings/{id}/validate 엔드포인트 (impl/03).
     """
-    if body.sample_id != sample_id:
+    if body.sample_id != str(sample_id):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="sample_id 불일치"
         )
     return await complete_upload(
         db,
         user_id=uuid.UUID(user_id),
-        sample_id=sample_id,
+        sample_id=str(sample_id),
         duration_seconds=body.duration_seconds,
         rms_db=body.rms_db,
         peak_count=body.peak_count,
@@ -80,7 +80,7 @@ async def validate_recording(
     실패 → passed=False + fail_reason + 재녹음 유도 메시지.
     잘못된 UUID 형식 → FastAPI가 자동으로 422 반환.
     """
-    result = await validate_sample(db, sample_id=str(sample_id), user_id=user_id)
+    result = await validate_sample(db, sample_id=sample_id, user_id=user_id)
 
     message = (
         "품질 확인이 완료됐어요."
