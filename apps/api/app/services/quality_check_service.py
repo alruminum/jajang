@@ -64,7 +64,7 @@ async def _download_from_s3(s3_key: str) -> bytes:
         response = client.get_object(Bucket=settings.S3_BUCKET_NAME, Key=s3_key)
         return response["Body"].read()
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, _sync_download)
 
 
@@ -131,4 +131,8 @@ async def validate_sample(
         passed=passed,
     )
 
-    return QualityCheckResult(passed=passed, snr_db=snr_db)
+    return QualityCheckResult(
+        passed=passed,
+        snr_db=snr_db,
+        fail_reason="snr_too_low" if not passed else None,
+    )
