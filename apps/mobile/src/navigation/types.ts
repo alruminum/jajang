@@ -1,5 +1,4 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 
 // --- Root Stack ---
 // 세션 상태에 따라 Auth / Main 스택 전환
