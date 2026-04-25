@@ -1,10 +1,10 @@
 import base64
-import os
 import random
 import time
 
 import structlog
 
+from app.core.config import settings
 from app.services.inference.base import InferenceInput, InferenceResult, VoiceInferenceClient
 
 logger = structlog.get_logger()
@@ -88,8 +88,8 @@ class MockInferenceClient(VoiceInferenceClient):
     """
 
     def __init__(self):
-        self._latency_ms = int(os.getenv("MOCK_LATENCY_MS", "3000"))
-        self._fail_rate = float(os.getenv("MOCK_FAIL_RATE", "0.0"))
+        self._latency_ms = settings.MOCK_LATENCY_MS
+        self._fail_rate = settings.MOCK_FAIL_RATE
 
     def generate(self, input: InferenceInput) -> InferenceResult:
         logger.info(

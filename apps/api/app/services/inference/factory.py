@@ -1,6 +1,6 @@
 import functools
-import os
 
+from app.core.config import settings
 from app.services.inference.base import VoiceInferenceClient
 
 
@@ -14,8 +14,8 @@ def get_inference_client() -> VoiceInferenceClient:
     lru_cache로 싱글톤 보장.
     Celery worker 프로세스마다 한 번 초기화.
     """
-    mock_gpu = os.getenv("MOCK_GPU", "true").lower() == "true"
-    provider = os.getenv("INFERENCE_PROVIDER", "mock").lower()
+    mock_gpu = settings.MOCK_GPU
+    provider = settings.INFERENCE_PROVIDER.lower()
 
     if mock_gpu or provider == "mock":
         from app.services.inference.mock_client import MockInferenceClient
