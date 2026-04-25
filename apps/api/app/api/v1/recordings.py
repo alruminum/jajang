@@ -11,11 +11,20 @@ from app.schemas.recordings import (
     UploadCompleteResponse,
     UploadInitRequest,
     UploadInitResponse,
+    ValidateResponse,
 )
+from app.services.quality_check_service import validate_sample
 from app.services.recording_service import complete_upload, init_upload
 
 router = APIRouter(prefix="/recordings", tags=["recordings"])
 logger = structlog.get_logger()
+
+FAIL_MESSAGES = {
+    "snr_too_low": "조용한 공간에서 다시 녹음해주세요",
+    "sample_not_found": "녹음 파일을 찾을 수 없어요",
+    "s3_error": "파일을 읽을 수 없어요. 잠시 후 다시 시도해주세요",
+    "analysis_error": "분석 중 오류가 발생했어요. 잠시 후 다시 시도해주세요",
+}
 
 
 @router.post("/init", response_model=UploadInitResponse, status_code=201)
@@ -55,4 +64,33 @@ async def complete_recording_upload(
         duration_seconds=body.duration_seconds,
         rms_db=body.rms_db,
         peak_count=body.peak_count,
+    )
+
+
+@router.post("/{sample_id}/validate", response_model=ValidateResponse)
+async def validate_recording(
+    sample_id: str,
+    user_id: str = Depends(require_auth),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    서버 2차 품질 검증 (SNR).
+    클라이언트가 /complete 호출 후 이 엔드포인트를 연이어 호출.
+    통과 → passed=True, 다음 단계(generations/init) 진행 가능.
+    실패 → passed=False + fail_reason + 재녹음 유도 메시지.
+    """
+    result = await validate_sample(db, sample_id=sample_id, user_id=user_id)
+
+    message = (
+        "품질 확인이 완료됐어요."
+        if result.passed
+        else FAIL_MESSAGES.get(result.fail_reason or "", "다시 시도해주세요")
+    )
+
+    return ValidateResponse(
+        sample_id=sample_id,
+        passed=result.passed,
+        snr_db=result.snr_db,
+        fail_reason=result.fail_reason,
+        message=message,
     )

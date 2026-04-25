@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -34,3 +34,11 @@ class UploadCompleteResponse(BaseModel):
     sample_id: str
     status: Literal["uploaded"] = "uploaded"
     message: str = "업로드가 완료됐어요. 품질을 확인할게요."
+
+
+class ValidateResponse(BaseModel):
+    sample_id: str
+    passed: bool
+    snr_db: Optional[float] = None
+    fail_reason: Optional[str] = None
+    message: str
