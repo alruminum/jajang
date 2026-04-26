@@ -19,6 +19,7 @@ import S14UpgradeSheet from '@screens/S14UpgradeSheet';
 import S15SubscribeScreen from '@screens/S15SubscribeScreen';
 import S17TrialExpiredScreen from '@screens/S17TrialExpiredScreen'
 import AccountDeletionScreen from '@screens/AccountDeletionScreen';
+import LegalScreen from '@screens/LegalScreen';
 
 const Tab = createBottomTabNavigator<HomeTabParamList>();
 const Stack = createNativeStackNavigator<MainStackParamList>();
@@ -75,6 +76,16 @@ export default function MainNavigator() {
         options={{ presentation: 'modal', gestureEnabled: false }}
       />
       <Stack.Screen name="AccountDeletionFlow" component={AccountDeletionScreen} />
+      <Stack.Screen
+        name="Legal"
+        component={LegalScreen}
+        options={{
+          title: '법적 정보',
+          headerShown: true,
+          headerStyle: { backgroundColor: '#0D0F1A' },
+          headerTintColor: '#EEF0F8',
+        }}
+      />
     </Stack.Navigator>
   );
 }

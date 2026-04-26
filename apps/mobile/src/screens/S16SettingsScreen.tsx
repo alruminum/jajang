@@ -46,8 +46,6 @@ import { showToast } from '@utils/toast';
 
 // ─── 상수 ─────────────────────────────────────────────────────────────────────
 
-const PRIVACY_URL = 'https://jajang.app/privacy';
-const TERMS_URL = 'https://jajang.app/terms';
 const APP_VERSION = '1.0.0';
 
 // ─── SettingsRow 컴포넌트 ─────────────────────────────────────────────────────
@@ -322,12 +320,12 @@ export default function S16SettingsScreen({ navigation }: S16SettingsScreenProps
         {/* 법적 */}
         <SettingsRow
           label="개인정보처리방침"
-          onPress={() => Linking.openURL(PRIVACY_URL)}
+          onPress={() => navigation.navigate('Legal')}
           accessibilityLabel="개인정보처리방침"
         />
         <SettingsRow
           label="이용약관"
-          onPress={() => Linking.openURL(TERMS_URL)}
+          onPress={() => navigation.navigate('Legal')}
           accessibilityLabel="이용약관"
         />
 
