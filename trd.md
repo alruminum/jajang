@@ -11,6 +11,7 @@
 | v1.1 | 2026-04-25 | §8 환경변수: GOOGLE_CLIENT_ID 추가 (소셜 인증 aud 검증) |
 | v1.2 | 2026-04-24 | Epic 03: §2 서버 구조 확장 (inference/, generations, tracks), §3 카운터 상태머신 보완, §8 MOCK_GPU 등 환경변수 추가 |
 | v1.3 | 2026-04-24 | Epic 05: §2 서버 구조 확장 (rewarded/, subscription_service), §4 rewarded_ad_usage migration 0004, §6 SubscriptionSlice rewardedAdMonthKey 추가, §7 S15/S16/S17 화면 추가 |
+| v1.4 | 2026-04-24 | Epic 06: §2 audit_log 모델 + AccountDeletionService + LegalScreen/AccountDeletionScreen/DeleteTracksSheet, §3 hard_delete 스케줄 추가, §4 audit_logs 테이블 migration 0005, §6 AuthSlice clearAuthState 추가, §7 신규 화면 3개 추가 |
 
 ---
 
@@ -73,11 +74,11 @@ jajang/
 ├── apps/
 │   └── api/                       # FastAPI 백엔드
 │       ├── api/v1/                # auth, voices, recordings, generations, tracks, rewarded, webhooks
-│       ├── models/                # SQLAlchemy ORM (User, VoiceSample, GeneratedTrack, GenerationCounter, RewardedAdUsage, ...)
-│       ├── schemas/               # Pydantic v2 request/response (webhooks, rewarded 포함)
-│       ├── services/              # VoicePipeline, StorageService, CounterService, SubscriptionService, RewardedService
+│       ├── models/                # SQLAlchemy ORM (User, VoiceSample, GeneratedTrack, GenerationCounter, RewardedAdUsage, AuditLog)
+│       ├── schemas/               # Pydantic v2 request/response (webhooks, rewarded, users 포함)
+│       ├── services/              # VoicePipeline, StorageService, CounterService, SubscriptionService, RewardedService, AccountDeletionService
 │       │   └── inference/         # VoiceInferenceClient ABC + MockClient + factory
-│       ├── tasks/                 # Celery tasks (sample_cleanup, generation)
+│       ├── tasks/                 # Celery tasks (sample_cleanup, generation, hard_delete_users)
 │       └── core/                  # config, security, db session (async + sync)
 │
 ├── docs/                          # 설계 문서
@@ -109,6 +110,31 @@ CHECK counter (SELECT FOR UPDATE) — 업로드 전
 ```
 
 **설계 결정**: enforcement는 업로드 전 check_and_reserve()에서 SELECT FOR UPDATE로 처리. 생성 실패(서버 오류/타임아웃) 시 카운터 증가하지 않음 — 최종 성공(Celery task completed) 시에만 increment_on_success()로 +1. 재시도는 동일 `job_id`로 is_new=false 반환 — 이중 차감 원천 차단. status='failed' 재시도는 새 job_id 생성 필요.
+
+### 계정 탈퇴 삭제 흐름 (계단형 + 30일 hard delete)
+
+```
+DELETE /users/me 수신
+    │
+    ▼
+구독 활성 체크 → is_active=True 이면 422 반환
+    │
+    ▼
+BEGIN TRANSACTION
+  S3 목소리 샘플 삭제 → S3 생성 음원 삭제 (실패 시 로그만)
+  users.deleted_at = NOW()  (CASCADE: 연관 테이블 DB 레코드 삭제)
+  audit_log(account_deletion_requested) 기록
+COMMIT
+→ 202 반환
+
+[30일 후] Celery Beat hard_delete_expired_users (매일 03:00 KST)
+  → users 행 완전 제거 + audit_log(account_hard_deleted)
+  → audit_logs 는 FK 없으므로 유지 (법적 보존)
+```
+
+**audit_logs.user_id**: FK 없음 — 탈퇴 후 hard delete 시에도 감사 기록 보존 목적.
+
+---
 
 ### crossfade 상태머신
 ```
@@ -151,6 +177,7 @@ AppState 'background' 감지
 - `generation_counters` — 계정별 누적 생성 횟수 (무료 전용, SELECT FOR UPDATE)
 - `rewarded_ad_usage` — 월별 Rewarded Ad 시청 횟수 + 당일 언락 만료 timestamp (migration 0004)
 - `subscriptions` — RevenueCat webhook 미러 (entitlement, 만료일)
+- `audit_logs` — 계정 탈퇴 이벤트 감사 로그 (FK 없음, 탈퇴 후에도 보존, migration 0005)
 
 ---
 
@@ -175,6 +202,7 @@ interface AuthSlice {
   accessToken: string | null
   entitlement: 'free' | 'trial' | 'premium'
   trialExpiresAt: string | null
+  clearAuthState: () => void   // 탈퇴/로그아웃 시 상태 초기화
 }
 
 interface PlayerSlice {
@@ -206,6 +234,9 @@ interface SubscriptionSlice {
 - `SubscribeScreen` (S15) — 월/연 플랜 선택 + RevenueCat purchasePackage + 복원
 - `SettingsScreen` (S16) — 구독 관리 딥링크 + 플랜 업그레이드 + 데이터 삭제 + 로그아웃
 - `TrialExpiredScreen` (S17) — 트라이얼 만료 안내 + 구독 CTA + 무료 전환
+- `AccountDeletionScreen` — 탈퇴 2단계 확인 (사유 선택 + 최종 확인 바텀 시트)
+- `LegalScreen` — 개인정보처리방침 / 이용약관 목록 (expo-web-browser 연결)
+- `DeleteTracksSheet` — 음원 개별/전체 삭제 바텀 시트 (S16 하위 컴포넌트)
 
 ---
 
