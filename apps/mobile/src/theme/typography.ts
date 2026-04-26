@@ -1,8 +1,9 @@
 import { TextStyle, FontVariant } from 'react-native';
-import { Colors, FontFamily, FontSize } from './tokens';
+import { darkColors as Colors, ColorTokens, FontFamily, FontSize } from './tokens';
 
 // 텍스트 스타일 프리셋 — 실제 TextStyle 객체
 // 폰트 미로딩 시 fontFamily는 undefined로 fallback (system font 사용)
+// 정적 초기화 시 darkColors 기본값 사용 (앱 다크 퍼스트 디자인)
 
 export const Typography: Record<string, TextStyle> = {
   displayBold: {
@@ -59,3 +60,19 @@ export const Typography: Record<string, TextStyle> = {
     fontVariant: ['tabular-nums'] as FontVariant[],  // ux-flow.md: Tabular numbers — 파형·타이머 숫자 흔들림 방지
   },
 };
+
+// 테마 반응 팩토리 — useTheme().colors를 주입해 동적 색상 타이포 반환
+// 기존 Typography 직접 참조는 유지 (파괴적 변경 없음)
+export function getTypography(colors: ColorTokens): typeof Typography {
+  return {
+    ...Typography,
+    displayBold:  { ...Typography.displayBold,  color: colors.textPrimary },
+    h1:           { ...Typography.h1,           color: colors.textPrimary },
+    h2:           { ...Typography.h2,           color: colors.textPrimary },
+    h3:           { ...Typography.h3,           color: colors.textPrimary },
+    body:         { ...Typography.body,         color: colors.textPrimary },
+    caption:      { ...Typography.caption,      color: colors.textSecondary },
+    buttonLabel:  { ...Typography.buttonLabel,  color: colors.bgPrimary },
+    timerMono:    { ...Typography.timerMono,    color: colors.textPrimary },
+  };
+}
