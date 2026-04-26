@@ -10,6 +10,7 @@
 | v1.0 | 2026-04-24 | 최초 작성 — PRD v1.1 기반 System Design |
 | v1.1 | 2026-04-25 | §8 환경변수: GOOGLE_CLIENT_ID 추가 (소셜 인증 aud 검증) |
 | v1.2 | 2026-04-24 | Epic 03: §2 서버 구조 확장 (inference/, generations, tracks), §3 카운터 상태머신 보완, §8 MOCK_GPU 등 환경변수 추가 |
+| v1.3 | 2026-04-24 | Epic 05: §2 서버 구조 확장 (rewarded/, subscription_service), §4 rewarded_ad_usage migration 0004, §6 SubscriptionSlice rewardedAdMonthKey 추가, §7 S15/S16/S17 화면 추가 |
 
 ---
 
@@ -71,10 +72,10 @@ jajang/
 │
 ├── apps/
 │   └── api/                       # FastAPI 백엔드
-│       ├── api/v1/                # auth, voices, recordings, generations, tracks
-│       ├── models/                # SQLAlchemy ORM (User, VoiceSample, GeneratedTrack, GenerationCounter, ...)
-│       ├── schemas/               # Pydantic v2 request/response
-│       ├── services/              # VoicePipeline, StorageService, CounterService
+│       ├── api/v1/                # auth, voices, recordings, generations, tracks, rewarded, webhooks
+│       ├── models/                # SQLAlchemy ORM (User, VoiceSample, GeneratedTrack, GenerationCounter, RewardedAdUsage, ...)
+│       ├── schemas/               # Pydantic v2 request/response (webhooks, rewarded 포함)
+│       ├── services/              # VoicePipeline, StorageService, CounterService, SubscriptionService, RewardedService
 │       │   └── inference/         # VoiceInferenceClient ABC + MockClient + factory
 │       ├── tasks/                 # Celery tasks (sample_cleanup, generation)
 │       └── core/                  # config, security, db session (async + sync)
@@ -148,7 +149,7 @@ AppState 'background' 감지
 - `voice_samples` — 업로드 경로, 품질 검증 상태, 예약 삭제 timestamp
 - `generated_tracks` — S3 경로, 연결 곡명, 생성 상태
 - `generation_counters` — 계정별 누적 생성 횟수 (무료 전용, SELECT FOR UPDATE)
-- `rewarded_ad_usage` — 월별 Rewarded Ad 시청 횟수 + 당일 언락 만료 timestamp
+- `rewarded_ad_usage` — 월별 Rewarded Ad 시청 횟수 + 당일 언락 만료 timestamp (migration 0004)
 - `subscriptions` — RevenueCat webhook 미러 (entitlement, 만료일)
 
 ---
@@ -186,6 +187,8 @@ interface PlayerSlice {
 interface SubscriptionSlice {
   generationCount: number          // 서버 동기화
   rewardedAdUsedThisMonth: number
+  rewardedAdMonthKey: string       // 'YYYY-MM' — 월 전환 시 클라이언트 리셋 기준
+  rewardedUnlockExpiresAt: number | null  // 자정 timestamp (서버 today_unlock_expires_at 동기화)
 }
 ```
 
@@ -200,6 +203,9 @@ interface SubscriptionSlice {
 - `WaveformVisualizer` — 실시간(녹음 중) + 정적(미리듣기) 두 모드
 - `MiniPlayer` (C06) — S06 하단 고정, Premium/Trial 전용
 - `UpgradeSheet` (S14) — 두 variant: background-unlock / generation-exhausted
+- `SubscribeScreen` (S15) — 월/연 플랜 선택 + RevenueCat purchasePackage + 복원
+- `SettingsScreen` (S16) — 구독 관리 딥링크 + 플랜 업그레이드 + 데이터 삭제 + 로그아웃
+- `TrialExpiredScreen` (S17) — 트라이얼 만료 안내 + 구독 CTA + 무료 전환
 
 ---
 
