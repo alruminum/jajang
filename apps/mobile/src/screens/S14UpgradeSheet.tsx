@@ -39,7 +39,10 @@ import { resumePlayback } from '@audio/AudioEngine';
 
 // ─── 타입 ─────────────────────────────────────────────────────────────────────
 
-type UpgradeSheetProps = NativeStackScreenProps<MainStackParamList, 'Upgrade'>;
+// 'Upgrade' (S14 canonical) 와 'UpgradeSheet' (S07/S13 alias) 두 라우트 모두 수용
+type UpgradeSheetProps =
+  | NativeStackScreenProps<MainStackParamList, 'Upgrade'>
+  | NativeStackScreenProps<MainStackParamList, 'UpgradeSheet'>;
 
 // ─── 인라인 토스트 (라이브러리 미사용) ────────────────────────────────────────
 
