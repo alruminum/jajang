@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import UUID, CheckConstraint, DateTime, ForeignKey, Integer, func
+from sqlalchemy import UUID, CheckConstraint, DateTime, ForeignKey, Integer, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -17,6 +17,7 @@ class RewardedAdUsage(Base):
     __tablename__ = "rewarded_ad_usage"
     __table_args__ = (
         CheckConstraint("monthly_count >= 0", name="chk_rewarded_monthly_count"),
+        UniqueConstraint("user_id", "year_month", name="uq_rewarded_ad_usage_user_month"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
