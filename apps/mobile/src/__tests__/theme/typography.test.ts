@@ -11,20 +11,21 @@ import { describe, it, expect } from 'vitest';
 import { getTypography, Typography } from '../../theme/typography';
 import { darkColors, lightColors } from '../../theme/tokens';
 
+const REQUIRED_KEYS = [
+  'displayBold',
+  'h1',
+  'h2',
+  'h3',
+  'body',
+  'caption',
+  'buttonLabel',
+  'timerMono',
+] as const;
+
 // ────────────────────────────────────────────────
 // Typography 정적 객체 — 기존 키 유지 검증
 // ────────────────────────────────────────────────
 describe('Typography 정적 객체 — 키 존재 검증', () => {
-  const REQUIRED_KEYS = [
-    'displayBold',
-    'h1',
-    'h2',
-    'h3',
-    'body',
-    'caption',
-    'buttonLabel',
-    'timerMono',
-  ] as const;
 
   it('필수 타이포그래피 키 8개를 모두 포함한다', () => {
     for (const key of REQUIRED_KEYS) {
