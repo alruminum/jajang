@@ -1,7 +1,7 @@
 // apps/mobile/src/services/api/tracks.ts
 // /tracks API 클라이언트
 
-import { api } from '@services/api'
+import { apiClient } from './client'
 
 export interface TrackItem {
   id:            string
@@ -36,9 +36,9 @@ export const tracksApi = {
       query.last_checked_at = params.lastCheckedAt
     if (params?.includePresigned !== undefined)
       query.include_presigned = String(params.includePresigned)
-    return api.get('/tracks/', { params: query }).then(r => r.data)
+    return apiClient.get('/tracks/', { params: query }).then(r => r.data)
   },
 
   deleteTrack: (trackId: string): Promise<TrackDeleteResponse> =>
-    api.delete(`/tracks/${trackId}`).then(r => r.data),
+    apiClient.delete(`/tracks/${trackId}`).then(r => r.data),
 }

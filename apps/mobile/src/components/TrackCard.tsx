@@ -1,7 +1,7 @@
 // apps/mobile/src/components/TrackCard.tsx
 
 import React from 'react'
-import { View, Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import type { TrackItem } from '@services/api/tracks'
 
 interface Props {
@@ -23,12 +23,12 @@ export function TrackCard({ track, onPlay, onRetryPending, onDelete }: Props) {
   }
 
   return (
-    <Pressable
-      style={({ pressed }) => [
+    <TouchableOpacity
+      style={[
         styles.card,
         isPending && styles.cardPending,
-        pressed && styles.cardPressed,
       ]}
+      activeOpacity={0.7}
       onPress={handlePress}
       onLongPress={() => onDelete(track)}
       accessibilityLabel={
@@ -44,11 +44,9 @@ export function TrackCard({ track, onPlay, onRetryPending, onDelete }: Props) {
     >
       {/* 아이콘 영역 */}
       <View style={[styles.iconWrap, isPending && styles.iconWrapPending]}>
-        {isPending ? (
-          <ActivityIndicator size="small" color="#F5C97A" />
-        ) : (
-          <Text style={styles.icon}>{isFailed ? '⚠' : '♫'}</Text>
-        )}
+        <Text style={styles.icon}>
+          {isPending ? '…' : isFailed ? '⚠' : '♫'}
+        </Text>
       </View>
 
       {/* 텍스트 영역 */}
@@ -67,16 +65,16 @@ export function TrackCard({ track, onPlay, onRetryPending, onDelete }: Props) {
 
       {/* 우측 액션 */}
       {isCompleted && (
-        <Pressable
+        <TouchableOpacity
           style={styles.playBtn}
           onPress={() => onPlay(track)}
           hitSlop={8}
           accessibilityLabel="재생"
         >
           <Text style={styles.playIcon}>▶</Text>
-        </Pressable>
+        </TouchableOpacity>
       )}
-    </Pressable>
+    </TouchableOpacity>
   )
 }
 
@@ -89,7 +87,6 @@ function formatDate(iso: string | null): string {
 const styles = StyleSheet.create({
   card:            { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A1D30', borderRadius: 16, padding: 16, marginBottom: 10 },
   cardPending:     { opacity: 0.8, borderWidth: 1, borderColor: '#2A2E48' },
-  cardPressed:     { opacity: 0.7 },
   iconWrap:        { width: 44, height: 44, borderRadius: 12, backgroundColor: '#21253E', justifyContent: 'center', alignItems: 'center', marginRight: 14 },
   iconWrapPending: { backgroundColor: '#1A1D30', borderWidth: 1, borderColor: '#2A2E48' },
   icon:            { color: '#8BAED4', fontSize: 20 },
