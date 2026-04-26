@@ -1,6 +1,7 @@
 {
   "env": {
-    "HARNESS_DOC_NAME": "voice-pipeline"
+    "HARNESS_DOC_NAME": "voice-pipeline",
+    "HARNESS_INTERNAL": "1"
   },
   "allowedTools": []
 }
