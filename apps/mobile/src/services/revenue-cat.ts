@@ -1,4 +1,10 @@
-import Purchases, { CustomerInfo, LOG_LEVEL } from 'react-native-purchases';
+import Purchases, {
+  CustomerInfo,
+  LOG_LEVEL,
+  PURCHASES_ERROR_CODE,
+  PurchasesOffering,
+  PurchasesPackage,
+} from 'react-native-purchases';
 import { Platform } from 'react-native';
 import { useAuthStore } from '@store/auth-store';
 
@@ -81,6 +87,51 @@ export async function getCustomerInfo(): Promise<CustomerInfo> {
  */
 export async function revenueCatLogout(): Promise<void> {
   await Purchases.logOut();
+}
+
+/**
+ * RevenueCat Offerings 조회.
+ * 'default' offering을 사용. 패키지: MONTHLY / ANNUAL.
+ * 실패 시 null 반환 (네트워크 오류 처리는 호출자).
+ */
+export async function fetchOfferings(): Promise<PurchasesOffering | null> {
+  const offerings = await Purchases.getOfferings();
+  return offerings.current ?? null;
+}
+
+/**
+ * 패키지 결제 실행.
+ * RevenueCat purchasePackage → CustomerInfo 반환.
+ * 사용자 취소: throws PurchasesError (code=PURCHASE_CANCELLED_ERROR) → 호출자에서 구분 처리.
+ */
+export async function purchasePackage(pkg: PurchasesPackage): Promise<CustomerInfo> {
+  const { customerInfo } = await Purchases.purchasePackage(pkg);
+  return customerInfo;
+}
+
+/**
+ * 기존 구독 복원.
+ * 기기 변경 또는 앱 재설치 후 호출.
+ * 복원 대상 없으면 CustomerInfo.entitlements.active 빈 객체.
+ */
+export async function restorePurchases(): Promise<CustomerInfo> {
+  return Purchases.restorePurchases();
+}
+
+/**
+ * RevenueCat PurchasesError 취소 여부 확인 헬퍼.
+ * PURCHASES_ERROR_CODE 값은 string ('1') — 숫자 아님.
+ */
+export function isCancelledError(error: unknown): boolean {
+  if (
+    error !== null &&
+    typeof error === 'object' &&
+    'code' in error &&
+    (error as { code: unknown }).code === PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR
+  ) {
+    return true;
+  }
+  return false;
 }
 
 /**
