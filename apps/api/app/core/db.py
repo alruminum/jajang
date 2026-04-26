@@ -35,11 +35,11 @@ async def get_db_session() -> AsyncSession:  # type: ignore[return]
 
 # ── Celery task용 동기 세션 ──────────────────────────────────────────────────
 # FastAPI 라우터는 get_db() (async) 사용. SyncSessionLocal은 Celery task 전용.
-_sync_engine = create_engine(
-    settings.DATABASE_URL.replace("+asyncpg", ""),  # asyncpg → psycopg2
-    pool_size=5,
-    max_overflow=2,
+_sync_url = settings.DATABASE_URL.replace("+asyncpg", "").replace("+aiosqlite", "")
+_sync_engine_kwargs = (
+    {} if _sync_url.startswith("sqlite") else {"pool_size": 5, "max_overflow": 2}
 )
+_sync_engine = create_engine(_sync_url, **_sync_engine_kwargs)
 SyncSessionLocal = sessionmaker(bind=_sync_engine, expire_on_commit=False)
 
 
