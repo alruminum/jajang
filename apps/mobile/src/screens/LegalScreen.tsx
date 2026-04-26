@@ -44,6 +44,12 @@ const LEGAL_ITEMS: LegalItem[] = [
   },
 ];
 
+const BROWSER_OPTIONS = {
+  presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
+  toolbarColor: '#0D0F1A',
+  controlsColor: '#F5C97A',
+} as const;
+
 function getAppVersion(): string {
   return Constants.expoConfig?.version ?? '1.0.0';
 }
@@ -53,13 +59,7 @@ function getAppVersion(): string {
 export function LegalScreen() {
   const handleOpenUrl = useCallback(async (url: string) => {
     try {
-      await WebBrowser.openBrowserAsync(url, {
-        // iOS: SFSafariViewController 스타일
-        presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
-        // 앱 테마 컬러 적용
-        toolbarColor: '#0D0F1A',
-        controlsColor: '#F5C97A',
-      });
+      await WebBrowser.openBrowserAsync(url, BROWSER_OPTIONS);
     } catch {
       // openBrowserAsync는 네트워크 오류를 throw하지 않음
       // 브라우저 자체 오프라인 안내로 충분 — 앱 크래시 방지 목적
