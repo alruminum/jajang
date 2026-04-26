@@ -44,6 +44,10 @@ class Settings(BaseSettings):
     # Storage — presigned URL
     S3_PREVIEW_EXPIRY_SECONDS: int = 3600  # presigned URL 유효 시간 (1시간)
 
+    # DB 자동 생성 (SQLite dev 환경 전용)
+    AUTO_CREATE_TABLES: bool = False  # True 시 startup에서 Base.metadata.create_all 실행
+                                      # SQLite URL이면 자동 True 취급 (조건: url이 "sqlite"로 시작)
+
     # Env
     ENV: str = "development"
 
