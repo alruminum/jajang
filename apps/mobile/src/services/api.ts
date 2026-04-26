@@ -1,11 +1,8 @@
 import axios, { AxiosError, AxiosInstance } from 'axios';
 import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
 import { sessionEvents, SESSION_EXPIRED_EVENT } from '@lib/session-events';
 
-const API_BASE_URL =
-  process.env.API_BASE_URL ??
-  (Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000');
+const API_BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:8000';
 
 export const api: AxiosInstance = axios.create({
   baseURL: `${API_BASE_URL}/api/v1`,
