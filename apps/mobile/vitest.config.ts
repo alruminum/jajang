@@ -10,6 +10,11 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     setupFiles: ['./src/__tests__/setup.ts'],
+    server: {
+      deps: {
+        inline: ['@testing-library/react-native'],
+      },
+    },
     alias: {
       '@screens': path.resolve(__dirname, './src/screens'),
       '@components': path.resolve(__dirname, './src/components'),
