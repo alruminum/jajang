@@ -14,4 +14,8 @@ beat_schedule = {
         "task": "tasks.cleanup_voice_samples",
         "schedule": crontab(minute=0),  # 매 시각 정각 실행
     },
+    "hard-delete-expired-users": {
+        "task": "tasks.hard_delete_expired_users",
+        "schedule": crontab(hour=18, minute=0),  # 18:00 UTC = 03:00 KST
+    },
 }
