@@ -39,6 +39,7 @@ import {
 } from '@audio/AudioEngine';
 import AlbumArtRotating from '@components/AlbumArtRotating';
 import VolumeSlider from '@components/VolumeSlider';
+import TimerBottomSheet from '@components/TimerBottomSheet';
 
 // ─── 타입 ─────────────────────────────────────────────────────────────────────
 
@@ -77,12 +78,6 @@ function handleBack(
   nav: NativeStackNavigationProp<MainStackParamList, 'Play'>,
 ): void {
   nav.goBack();
-}
-
-// ─── openTimerSheet stub (impl/03에서 실제 구현) ──────────────────────────────
-
-function openTimerSheet(): void {
-  // TimerBottomSheet impl/03 구현 예정
 }
 
 // ─── TimerRemainingLabel (내부 컴포넌트) ──────────────────────────────────────
@@ -200,6 +195,9 @@ export default function S13PlayScreen({ route }: PlayScreenProps) {
   // 볼륨 슬라이더 잠금 여부 (crossfade 중)
   const volumeLocked = isVolumeControlLocked();
 
+  // 타이머 바텀시트 표시 상태
+  const [timerSheetVisible, setTimerSheetVisible] = useState(false);
+
   // 재생 시작 여부 ref (StrictMode 이중 실행 방지)
   const startedRef = useRef(false);
 
@@ -255,7 +253,7 @@ export default function S13PlayScreen({ route }: PlayScreenProps) {
     <SafeAreaView style={styles.container}>
       <Header
         onBack={onBackPress}
-        rightAction={<TimerButton onPress={openTimerSheet} />}
+        rightAction={<TimerButton onPress={() => setTimerSheetVisible(true)} />}
       />
 
       <View style={styles.artContainer}>
@@ -285,6 +283,13 @@ export default function S13PlayScreen({ route }: PlayScreenProps) {
 
       {/* 무료 유저만 — impl/07 처리 */}
       {entitlement === 'free' && BannerAdSlot}
+
+      {/* 수면 타이머 바텀시트 (impl/03) */}
+      <TimerBottomSheet
+        visible={timerSheetVisible}
+        currentEndsAt={timerEndsAt}
+        onClose={() => setTimerSheetVisible(false)}
+      />
     </SafeAreaView>
   );
 }

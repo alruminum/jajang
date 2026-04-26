@@ -35,10 +35,14 @@ let currentNextSound: Audio.Sound | null = null;
 
 /** 사용자 설정 수면 타이머 ref */
 let timerRef: ReturnType<typeof setTimeout> | null = null;
+/** 수면 타이머 1분 전 경고 타이머 ref */
+let warningTimerRef: ReturnType<typeof setTimeout> | null = null;
 /** 10시간 최대 재생 자동 종료 타이머 ref */
 let maxPlayTimerRef: ReturnType<typeof setTimeout> | null = null;
 /** RNTP PlaybackProgressUpdated 이벤트 구독 ref */
 let crossfadeListenerRef: EmitterSubscription | null = null;
+/** 재생 시작 시각 (10시간 타이머 잔여 계산용) */
+let playbackStartTime: number | null = null;
 
 // ─── 내부 헬퍼 ───────────────────────────────────────────────────────────────
 
@@ -47,6 +51,10 @@ function clearAllTimers(): void {
     clearTimeout(timerRef);
     timerRef = null;
   }
+  if (warningTimerRef !== null) {
+    clearTimeout(warningTimerRef);
+    warningTimerRef = null;
+  }
   if (maxPlayTimerRef !== null) {
     clearTimeout(maxPlayTimerRef);
     maxPlayTimerRef = null;
@@ -54,6 +62,42 @@ function clearAllTimers(): void {
   if (crossfadeListenerRef !== null) {
     crossfadeListenerRef.remove();
     crossfadeListenerRef = null;
+  }
+}
+
+/**
+ * 타이머 1분 전 경고 알림.
+ * - 알림 권한 있음: expo-notifications 즉시 로컬 푸시
+ * - 알림 권한 없음: showTimerWarningBanner=true (인앱 배너 degrade)
+ */
+async function notifyOneMinuteWarning(): Promise<void> {
+  const { notificationPermission } = usePlayerStore.getState();
+
+  if (notificationPermission === 'granted') {
+    try {
+      // expo-notifications 동적 로드 (미설치 시 graceful fallback)
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { scheduleNotificationAsync } = require('expo-notifications') as {
+        scheduleNotificationAsync: (options: {
+          content: { title: string; body: string; sound: boolean };
+          trigger: null;
+        }) => Promise<string>;
+      };
+      await scheduleNotificationAsync({
+        content: {
+          title: '자장',
+          body: '1분 후 자장가가 끝나요',
+          sound: false,
+        },
+        trigger: null, // 즉시 발송
+      });
+    } catch {
+      // expo-notifications 미설치 또는 발송 실패 — 인앱 배너 degrade
+      usePlayerStore.setState({ showTimerWarningBanner: true });
+    }
+  } else {
+    // 인앱 배너 degrade (ux-flow.md S13 "타임아웃 1분 전 알림 거부" 경로)
+    usePlayerStore.setState({ showTimerWarningBanner: true });
   }
 }
 
@@ -194,6 +238,45 @@ export async function setupAudioEngine(): Promise<void> {
       }
     }
   });
+
+  // 앱 재실행 시 타이머 상태 복원 (isPlaying 상태일 때만)
+  const { timerEndsAt, isPlaying } = usePlayerStore.getState();
+  if (timerEndsAt !== null && isPlaying) {
+    const remaining = timerEndsAt - Date.now();
+    if (remaining > 60_000) {
+      // 1분 이상 남음: 경고 + 종료 타이머 복원
+      const oneMinBefore = remaining - 60_000;
+      warningTimerRef = setTimeout(
+        () =>
+          notifyOneMinuteWarning().catch((err) =>
+            console.error('[AudioEngine] notifyOneMinuteWarning (restore) failed:', err),
+          ),
+        oneMinBefore,
+      );
+      timerRef = setTimeout(
+        () =>
+          fadeOutAndStop('timer_expired').catch((err) =>
+            console.error('[AudioEngine] fadeOutAndStop (restore) failed:', err),
+          ),
+        remaining,
+      );
+    } else if (remaining > 0) {
+      // 1분 미만 남음: 즉시 경고 배너 + 종료 타이머 복원
+      notifyOneMinuteWarning().catch((err) =>
+        console.error('[AudioEngine] notifyOneMinuteWarning (restore <1min) failed:', err),
+      );
+      timerRef = setTimeout(
+        () =>
+          fadeOutAndStop('timer_expired').catch((err) =>
+            console.error('[AudioEngine] fadeOutAndStop (restore <1min) failed:', err),
+          ),
+        remaining,
+      );
+    } else {
+      // 이미 만료된 타이머: 초기화
+      usePlayerStore.setState({ timerEndsAt: null });
+    }
+  }
 }
 
 /**
@@ -210,6 +293,7 @@ export async function startPlayback(params: {
   // 1. 기존 재생 정리
   await TrackPlayer.reset();
   clearAllTimers();
+  playbackStartTime = Date.now();
 
   // 2. RNTP에 트랙 추가
   await TrackPlayer.add({
@@ -283,6 +367,7 @@ export async function resumePlayback(): Promise<void> {
  */
 export async function stopPlayback(): Promise<void> {
   clearAllTimers();
+  playbackStartTime = null;
   if (isCrossfading) {
     isCrossfading = false;
     currentNextSound?.unloadAsync().catch(() => {});
@@ -320,6 +405,10 @@ export function setTimer(durationMs: number): void {
     clearTimeout(timerRef);
     timerRef = null;
   }
+  if (warningTimerRef !== null) {
+    clearTimeout(warningTimerRef);
+    warningTimerRef = null;
+  }
   // 수면 타이머가 설정되면 10시간 타이머를 대체
   if (maxPlayTimerRef !== null) {
     clearTimeout(maxPlayTimerRef);
@@ -328,6 +417,18 @@ export function setTimer(durationMs: number): void {
 
   const endsAt = Date.now() + durationMs;
   usePlayerStore.setState({ timerEndsAt: endsAt, showTimerWarningBanner: false });
+
+  // 1분 전 경고 타이머 예약
+  const oneMinBefore = durationMs - 60_000;
+  if (oneMinBefore > 0) {
+    warningTimerRef = setTimeout(
+      () =>
+        notifyOneMinuteWarning().catch((err) =>
+          console.error('[AudioEngine] notifyOneMinuteWarning failed:', err),
+        ),
+      oneMinBefore,
+    );
+  }
 
   timerRef = setTimeout(
     () =>
@@ -344,17 +445,25 @@ export function clearTimer(): void {
     clearTimeout(timerRef);
     timerRef = null;
   }
+  if (warningTimerRef !== null) {
+    clearTimeout(warningTimerRef);
+    warningTimerRef = null;
+  }
   usePlayerStore.setState({ timerEndsAt: null, showTimerWarningBanner: false });
 
-  // 10시간 자동 종료 타이머를 다시 설정
+  // 10시간 자동 종료 타이머를 잔여 시간 기준으로 재설정
   if (maxPlayTimerRef === null) {
-    maxPlayTimerRef = setTimeout(
-      () =>
-        fadeOutAndStop('max_playtime_reached').catch((err) =>
-          console.error('[AudioEngine] fadeOutAndStop (max) failed:', err),
-        ),
-      MAX_PLAY_MS,
-    );
+    const elapsed = playbackStartTime !== null ? Date.now() - playbackStartTime : 0;
+    const remaining = MAX_PLAY_MS - elapsed;
+    if (remaining > 0) {
+      maxPlayTimerRef = setTimeout(
+        () =>
+          fadeOutAndStop('max_playtime_reached').catch((err) =>
+            console.error('[AudioEngine] fadeOutAndStop (max) failed:', err),
+          ),
+        remaining,
+      );
+    }
   }
 }
 
