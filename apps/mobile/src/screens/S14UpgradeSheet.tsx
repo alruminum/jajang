@@ -221,9 +221,11 @@ export default function S14UpgradeSheet({ route, navigation }: UpgradeSheetProps
         // 자정까지 백그라운드 언락
         const midnight = getMidnightTimestamp();
 
-        // SubscriptionSlice 카운터 증가
+        // SubscriptionSlice 카운터 증가 + UI용 언락 만료 시각 기록
+        // §7: "동기화 책임은 S14 handleRewardedAd에 있음"
         useSubscriptionStore.setState((state) => ({
           rewardedAdUsedThisMonth: state.rewardedAdUsedThisMonth + 1,
+          rewardedUnlockExpiresAt: midnight,
         }));
 
         // PlayerSlice에 언락 만료 시각 기록 (AudioEngine 진실 공급원)
