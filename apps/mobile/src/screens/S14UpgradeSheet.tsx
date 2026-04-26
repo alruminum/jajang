@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   rewardedBtn: {
-    backgroundColor: '#F5C97A',
+    backgroundColor: '#82B090',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',

@@ -94,5 +94,5 @@ const styles = StyleSheet.create({
   songName:        { color: '#EEF0F8', fontSize: 16, fontFamily: 'NotoSansKR-Regular', marginBottom: 4 },
   subText:         { color: '#7B80A0', fontSize: 13 },
   playBtn:         { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
-  playIcon:        { color: '#F5C97A', fontSize: 18 },
+  playIcon:        { color: '#82B090', fontSize: 18 },
 })

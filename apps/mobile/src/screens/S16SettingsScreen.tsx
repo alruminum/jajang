@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#4A6FFF',
   },
   badgeTrial: {
-    backgroundColor: '#F5C97A',
+    backgroundColor: '#82B090',
   },
   badgeText: {
     fontSize: 11,
@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   rowLabelHighlighted: {
-    color: '#F5C97A',
+    color: '#82B090',
     fontWeight: '600',
   },
   rowLabelDestructive: {

@@ -42,10 +42,10 @@ export default function TrialExpiryBanner() {
 
 const styles = StyleSheet.create({
   banner: {
-    backgroundColor: 'rgba(245, 201, 122, 0.1)',
+    backgroundColor: 'rgba(130, 176, 144, 0.1)',
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: 'rgba(245, 201, 122, 0.25)',
+    borderColor: 'rgba(130, 176, 144, 0.25)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cta: {
-    color: '#F5C97A',
+    color: '#82B090',
     fontSize: 13,
     fontWeight: '600',
     marginLeft: 12,

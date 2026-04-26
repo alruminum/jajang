@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 24,
   },
-  modeLabel: { color: '#F5C97A', fontSize: 13, marginBottom: 6 },
+  modeLabel: { color: '#82B090', fontSize: 13, marginBottom: 6 },
   title: {
     color: '#EEF0F8',
     fontSize: 22,
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     alignItems: 'flex-start',
   },
-  checkmark: { color: '#F5C97A', fontSize: 16, marginRight: 10, marginTop: 1 },
+  checkmark: { color: '#82B090', fontSize: 16, marginRight: 10, marginTop: 1 },
   guideText: {
     color: '#EEF0F8',
     fontSize: 15,
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   },
   cta: {
     height: 56,
-    backgroundColor: '#F5C97A',
+    backgroundColor: '#82B090',
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
@@ -209,7 +209,7 @@ const modal = StyleSheet.create({
   desc: { color: '#7B80A0', fontSize: 14, lineHeight: 22, marginBottom: 24 },
   primaryBtn: {
     height: 52,
-    backgroundColor: '#F5C97A',
+    backgroundColor: '#82B090',
     borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',

@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   deleteBtn: {
-    color: '#E8A94A',
+    color: '#5A8A6A',
     fontSize: 14,
   },
   emptyText: {

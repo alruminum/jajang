@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#F5C97A',
+    backgroundColor: '#82B090',
     left: 0,
   },
 
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   benefitIcon: {
-    color: '#F5C97A',
+    color: '#82B090',
     fontSize: 14,
     fontWeight: '700',
     marginRight: 10,

@@ -258,7 +258,7 @@ export default function S11PreviewScreen({ navigation }: Props) {
       {/* 처리 중 상태 */}
       {isProcessing && (
         <View style={styles.processingBanner}>
-          <ActivityIndicator size="small" color="#F5C97A" style={{ marginRight: 8 }} />
+          <ActivityIndicator size="small" color="#82B090" style={{ marginRight: 8 }} />
           <Text style={styles.processingText}>{phaseMessages[phase]}</Text>
         </View>
       )}
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   exhaustedText: {
-    color: '#E8A94A',
+    color: '#5A8A6A',
     fontSize: 14,
     marginBottom: 4,
   },
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
   },
   primaryBtn: {
     height: 56,
-    backgroundColor: '#F5C97A',
+    backgroundColor: '#82B090',
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',

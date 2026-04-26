@@ -194,11 +194,11 @@ const styles = StyleSheet.create({
   inputError: { borderColor: '#E05F5F' },
   errorText: { color: '#E05F5F', fontSize: 12, marginTop: 6, marginLeft: 4 },
   inlineLink: { marginTop: 8 },
-  inlineLinkText: { color: '#F5C97A', fontSize: 13 },
+  inlineLinkText: { color: '#82B090', fontSize: 13 },
   primaryBtn: {
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#F5C97A',
+    backgroundColor: '#82B090',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 8,

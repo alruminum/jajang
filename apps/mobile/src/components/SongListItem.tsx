@@ -42,7 +42,7 @@ export function SongListItem({
         hitSlop={8}
       >
         {isPreviewLoading
-          ? <ActivityIndicator size="small" color="#F5C97A" />
+          ? <ActivityIndicator size="small" color="#82B090" />
           : <Text style={styles.previewIcon}>{isPreviewPlaying ? '⏸' : '▷'}</Text>
         }
       </Pressable>
@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',      // 미선택 시 투명 테두리
   },
   itemSelected: {
-    borderColor: '#F5C97A',          // 앰버 테두리 (선택)
+    borderColor: '#82B090',          // 앰버 테두리 (선택)
   },
   info: { flex: 1 },
   titleKo: {

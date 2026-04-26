@@ -25,16 +25,16 @@ export default function TrialBadge() {
 
 const styles = StyleSheet.create({
   badge: {
-    backgroundColor: 'rgba(245, 201, 122, 0.15)',
+    backgroundColor: 'rgba(130, 176, 144, 0.15)',
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 6,
     alignSelf: 'flex-start',
     borderWidth: 1,
-    borderColor: 'rgba(245, 201, 122, 0.3)',
+    borderColor: 'rgba(130, 176, 144, 0.3)',
   },
   text: {
-    color: '#F5C97A',
+    color: '#82B090',
     fontSize: 13,
     fontWeight: '500',
   },
