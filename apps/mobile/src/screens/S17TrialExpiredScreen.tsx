@@ -45,11 +45,11 @@ function MoonCoverAnimation() {
       easing: Easing.in(Easing.ease),
       useNativeDriver: true,
     }).start();
-  }, [moonX]);
+  }, []);
 
   return (
     <View style={styles.animationContainer}>
-      {/* 구름 레이어 (플레이스홀더 — 에셋 전달 전) */}
+      {/* 구름 레이어 */}
       <View style={styles.cloudPlaceholder} />
       {/* 달 레이어 (애니메이션) */}
       <Animated.View
@@ -83,10 +83,6 @@ function BenefitList({ benefits }: BenefitListProps) {
 export default function S17TrialExpiredScreen({ navigation }: TrialExpiredScreenProps) {
   const { setEntitlement } = useAuthStore();
 
-  function handleSubscribe() {
-    navigation.navigate('Subscribe');
-  }
-
   function handleContinueFree() {
     // 무료 플랜 전환 확정: trialExpiresAt=null → useTrialExpiredGuard 재트리거 방지
     setEntitlement('free', null);
@@ -114,7 +110,7 @@ export default function S17TrialExpiredScreen({ navigation }: TrialExpiredScreen
 
       <TouchableOpacity
         style={styles.subscribeBtn}
-        onPress={handleSubscribe}
+        onPress={() => navigation.navigate('Subscribe')}
         accessibilityLabel="구독 시작하기"
       >
         <Text style={styles.subscribeBtnText}>구독 시작하기</Text>
