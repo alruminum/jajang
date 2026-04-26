@@ -29,3 +29,20 @@ export async function getNewlyCompletedTrack(
   });
   return data;
 }
+
+/**
+ * 목소리 샘플 삭제 — 녹음된 목소리 학습 데이터 전체 삭제.
+ * DELETE /me/voice-samples
+ * S16 설정 화면에서 호출. auth-api에도 동일 함수 존재 (별도 import 경로 대응).
+ */
+export async function deleteVoiceSamplesAPI(): Promise<void> {
+  await api.delete('/me/voice-samples');
+}
+
+/**
+ * 생성된 음원 전체 삭제.
+ * DELETE /me/generated-tracks
+ */
+export async function deleteAllTracksAPI(): Promise<void> {
+  await api.delete('/me/generated-tracks');
+}

@@ -144,3 +144,18 @@ export function addCustomerInfoListener(
   Purchases.addCustomerInfoUpdateListener(callback);
   return () => Purchases.removeCustomerInfoUpdateListener(callback);
 }
+
+/**
+ * RevenueCat 구독 관리 URL 조회.
+ * iOS: App Store 구독 관리 URL (itms-apps://)
+ * Android: Google Play 구독 관리 URL
+ * 구독이 없는 유저나 Android 일부 환경에서 null 반환.
+ */
+export async function getManagementURL(): Promise<string | null> {
+  try {
+    const customerInfo = await Purchases.getCustomerInfo();
+    return customerInfo.managementURL ?? null;
+  } catch {
+    return null;
+  }
+}

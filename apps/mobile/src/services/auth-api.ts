@@ -28,3 +28,19 @@ export async function socialAuth(
   });
   return data;
 }
+
+/**
+ * 계정 탈퇴 — 서버에서 모든 유저 데이터 삭제.
+ * DELETE /me
+ */
+export async function deleteAccountAPI(): Promise<void> {
+  await api.delete('/me');
+}
+
+/**
+ * 목소리 샘플 삭제 — 녹음된 목소리 학습 데이터 전체 삭제.
+ * DELETE /me/voice-samples
+ */
+export async function deleteVoiceSamplesAPI(): Promise<void> {
+  await api.delete('/me/voice-samples');
+}

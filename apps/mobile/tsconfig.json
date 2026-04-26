@@ -6,6 +6,7 @@
     "paths": {
       "@screens/*": ["src/screens/*"],
       "@components/*": ["src/components/*"],
+      "@store": ["src/store/index.ts"],
       "@store/*": ["src/store/*"],
       "@services/*": ["src/services/*"],
       "@audio/*": ["src/audio/*"],
