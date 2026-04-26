@@ -39,6 +39,7 @@ export type MainStackParamList = {
   };
   Subscribe: undefined;                  // S15
   TrialExpired: undefined;               // S17
+  AccountDeletionFlow: undefined;        // S18 — 계정 탈퇴 (impl/04)
 };
 
 // --- Tab Param List ---
