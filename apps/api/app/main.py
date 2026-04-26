@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.core.db import init_db
+from app.core.db import create_all_if_dev, init_db
 
 logger = structlog.get_logger()
 
@@ -15,6 +15,7 @@ logger = structlog.get_logger()
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("startup", env=settings.ENV)
     await init_db()
+    await create_all_if_dev()          # SQLite dev 환경 테이블 자동 생성
     yield
     logger.info("shutdown")
 
