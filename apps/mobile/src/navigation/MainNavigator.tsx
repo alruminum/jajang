@@ -17,7 +17,8 @@ import S12GeneratingScreen from '@screens/S12GeneratingScreen';
 import S13PlayScreen from '@screens/S13PlayScreen';
 import S14UpgradeSheet from '@screens/S14UpgradeSheet';
 import S15SubscribeScreen from '@screens/S15SubscribeScreen';
-import S17TrialExpiredScreen from '@screens/S17TrialExpiredScreen';
+import S17TrialExpiredScreen from '@screens/S17TrialExpiredScreen'
+import AccountDeletionScreen from '@screens/AccountDeletionScreen';
 
 const Tab = createBottomTabNavigator<HomeTabParamList>();
 const Stack = createNativeStackNavigator<MainStackParamList>();
@@ -73,6 +74,7 @@ export default function MainNavigator() {
         component={S17TrialExpiredScreen}
         options={{ presentation: 'modal', gestureEnabled: false }}
       />
+      <Stack.Screen name="AccountDeletionFlow" component={AccountDeletionScreen} />
     </Stack.Navigator>
   );
 }

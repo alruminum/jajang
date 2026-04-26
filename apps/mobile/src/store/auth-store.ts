@@ -23,6 +23,8 @@ interface AuthActions {
   clearAuth: () => void;
   /** clearAuth의 alias — S16 설정 화면에서 로그아웃/탈퇴 시 호출 */
   clearSession: () => void;
+  /** clearAuth의 alias — 계정 탈퇴 완료 시 호출 (AccountDeletionScreen) */
+  clearAuthState: () => void;
 }
 
 const initialState: AuthState = {
@@ -54,6 +56,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 
       clearAuth: () => set(initialState),
       clearSession: () => set(initialState),
+      clearAuthState: () => set(initialState),
     }),
     {
       name: 'jajang-auth',
