@@ -51,6 +51,7 @@ export default function S12GeneratingScreen({ navigation, route }: Props) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [queuePosition, setQueuePosition] = useState<number | null>(null)
   const [elapsedMs, setElapsedMs] = useState(0)
+  const [isRetrying, setIsRetrying] = useState(false)
 
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const timeoutRef      = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -58,6 +59,7 @@ export default function S12GeneratingScreen({ navigation, route }: Props) {
   const startTimeRef    = useRef<number>(Date.now())
   const appStateRef     = useRef<AppStateStatus>(AppState.currentState)
   const phaseRef        = useRef<Phase>('generating')
+  const isRetryingRef   = useRef(false)
 
   // 달·별 float 애니메이션
   const floatAnim = useRef(new Animated.Value(0)).current
@@ -113,15 +115,17 @@ export default function S12GeneratingScreen({ navigation, route }: Props) {
     if (tickerRef.current)       { clearInterval(tickerRef.current); tickerRef.current = null }
   }
 
-  const startGeneration = async () => {
+  // newJobId: 재시도 시 새 UUID를 전달. 초기 진입 시에는 jobIdRef.current 사용.
+  const startGeneration = async (newJobId?: string) => {
+    const currentJobId = newJobId ?? jobIdRef.current
     try {
       const res = await generationsApi.initGeneration({
-        job_id:          jobIdRef.current,
+        job_id:          currentJobId,
         voice_sample_id: sampleId,
         song_key:        songKey,
       })
 
-      setActiveJob(jobIdRef.current, res.track_id, songKey)
+      setActiveJob(currentJobId, res.track_id, songKey)
 
       if (res.status === 'completed' && !res.is_new) {
         // 기존 완료된 job으로 재진입 (드문 케이스)
@@ -196,22 +200,14 @@ export default function S12GeneratingScreen({ navigation, route }: Props) {
     })
   }
 
-  const startGenerationWithJobId = async (newJobId: string) => {
-    try {
-      const res = await generationsApi.initGeneration({
-        job_id:          newJobId,
-        voice_sample_id: sampleId,
-        song_key:        songKey,
-      })
-      setActiveJob(newJobId, res.track_id, songKey)
-      startPolling(res.job_id)
-    } catch {
-      setPhase('failed')
-    }
-  }
-
   // 재시도: 새 job_id 생성 후 동일 샘플로 재시도
+  // isRetryingRef: 더블탭 시 interval 누수 방지 guard (sync)
+  // isRetrying state: Pressable disabled prop용 UI 차단
   const handleRetry = () => {
+    if (isRetryingRef.current) return
+    isRetryingRef.current = true
+    setIsRetrying(true)
+
     const newJobId = generateUUID()
     jobIdRef.current = newJobId
     stopPolling()
@@ -220,7 +216,10 @@ export default function S12GeneratingScreen({ navigation, route }: Props) {
     setQueuePosition(null)
     setErrorMessage(null)
     startTimeRef.current = Date.now()
-    startGenerationWithJobId(newJobId)
+    startGeneration(newJobId).finally(() => {
+      isRetryingRef.current = false
+      setIsRetrying(false)
+    })
   }
 
   const handleGoHome = () => {
@@ -247,6 +246,7 @@ export default function S12GeneratingScreen({ navigation, route }: Props) {
           <Pressable
             style={styles.primaryBtn}
             onPress={handleRetry}
+            disabled={isRetrying}
             accessibilityLabel="다시 시도"
           >
             <Text style={styles.primaryBtnText}>다시 시도</Text>
