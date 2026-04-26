@@ -14,11 +14,13 @@ export default defineConfig({
     server: {
       deps: {
         inline: ['@testing-library/react-native'],
+        external: [/react-native/],
       },
     },
     alias: {
       '@screens': path.resolve(__dirname, './src/screens'),
       '@components': path.resolve(__dirname, './src/components'),
+      '@store/index': path.resolve(__dirname, './src/store/index.ts'),
       '@store': path.resolve(__dirname, './src/store'),
       '@services': path.resolve(__dirname, './src/services'),
       '@audio': path.resolve(__dirname, './src/audio'),
