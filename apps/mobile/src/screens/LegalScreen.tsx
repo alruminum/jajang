@@ -12,11 +12,11 @@
 
 import React, { useCallback } from 'react';
 import {
-  View,
   Text,
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
 import { LEGAL_URLS } from '../config/legalUrls';
@@ -52,17 +52,22 @@ function getAppVersion(): string {
 
 export function LegalScreen() {
   const handleOpenUrl = useCallback(async (url: string) => {
-    await WebBrowser.openBrowserAsync(url, {
-      // iOS: SFSafariViewController 스타일
-      presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
-      // 앱 테마 컬러 적용
-      toolbarColor: '#0D0F1A',
-      controlsColor: '#F5C97A',
-    });
+    try {
+      await WebBrowser.openBrowserAsync(url, {
+        // iOS: SFSafariViewController 스타일
+        presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
+        // 앱 테마 컬러 적용
+        toolbarColor: '#0D0F1A',
+        controlsColor: '#F5C97A',
+      });
+    } catch {
+      // openBrowserAsync는 네트워크 오류를 throw하지 않음
+      // 브라우저 자체 오프라인 안내로 충분 — 앱 크래시 방지 목적
+    }
   }, []);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={styles.header}>법적 정보</Text>
 
       {LEGAL_ITEMS.map((item) => (
@@ -79,7 +84,7 @@ export function LegalScreen() {
       ))}
 
       <Text style={styles.appVersion}>버전 {getAppVersion()}</Text>
-    </View>
+    </SafeAreaView>
   );
 }
 
