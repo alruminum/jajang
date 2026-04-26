@@ -61,3 +61,7 @@ class User(Base, TimestampMixin):
     generated_tracks: Mapped[list["GeneratedTrack"]] = relationship(  # noqa: F821
         back_populates="user"
     )
+    # Relationships (Epic 05 범위)
+    rewarded_ad_usages: Mapped[list["RewardedAdUsage"]] = relationship(  # noqa: F821
+        back_populates="user"
+    )
