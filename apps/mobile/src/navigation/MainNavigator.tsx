@@ -9,8 +9,8 @@ import S16SettingsScreen from '@screens/S16SettingsScreen';
 
 // Stack screens
 import S07SongSelectScreen from '@screens/S07SongSelectScreen';
-import S08RecordModeScreen from '@screens/S08RecordModeScreen';
-import S09RecordGuideScreen from '@screens/S09RecordGuideScreen';
+import { RecordModeScreen } from '@screens/RecordModeScreen';
+import { RecordGuideScreen } from '@screens/RecordGuideScreen';
 import S10RecordScreen from '@screens/S10RecordScreen';
 import S11PreviewScreen from '@screens/S11PreviewScreen';
 import S12GeneratingScreen from '@screens/S12GeneratingScreen';
@@ -53,8 +53,8 @@ export default function MainNavigator() {
     >
       <Stack.Screen name="HomeTabs" component={HomeTabs} />
       <Stack.Screen name="SongSelect" component={S07SongSelectScreen} />
-      <Stack.Screen name="RecordMode" component={S08RecordModeScreen} />
-      <Stack.Screen name="RecordGuide" component={S09RecordGuideScreen} />
+      <Stack.Screen name="RecordMode" component={RecordModeScreen} />
+      <Stack.Screen name="RecordGuide" component={RecordGuideScreen} />
       <Stack.Screen name="Record" component={S10RecordScreen} />
       <Stack.Screen name="Preview" component={S11PreviewScreen} />
       <Stack.Screen name="Generating" component={S12GeneratingScreen} />
