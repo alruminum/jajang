@@ -14,10 +14,14 @@ import { useEntitlementSync } from '@hooks/useEntitlement';
 // 앱 레벨 1회 초기화 (컴포넌트 외부 — 어떤 화면도 열리기 전 SDK 준비)
 configurePurchases();
 
-GoogleSignin.configure({
-  webClientId: process.env.GOOGLE_WEB_CLIENT_ID ?? '',
-  offlineAccess: false,
-});
+// webClientId가 설정된 경우에만 configure (빈 값으로 configure 시 Play Services 거부)
+const googleWebClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '';
+if (googleWebClientId) {
+  GoogleSignin.configure({
+    webClientId: googleWebClientId,
+    offlineAccess: false,
+  });
+}
 
 export const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
