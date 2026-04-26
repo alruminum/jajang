@@ -1,7 +1,7 @@
 # Backlog — 자장(Jajang) v1
 
 마일스톤: `v1`
-업데이트: 2026-04-25 (v1.1 — plan-reviewer 3차 반영, PLAN_REVIEW_PASS)
+업데이트: 2026-04-26 (v1.2 — Epic 01~06 impl 완료, PR #1~#82 머지)
 
 ## 마일스톤 0 — 선행 리서치 (1주)
 
@@ -36,12 +36,12 @@
 
 | # | 에픽 | 포함 기능 | 상태 | 경로 |
 |---|---|---|---|---|
-| 01 | 인증 & 온보딩 | F1, F13(게이트), F14 | 미시작 | [epic-01-auth](docs/milestones/v1/epics/epic-01-auth/stories.md) |
-| 02 | 목소리 녹음 & 품질 검증 | F2, F3, F5 | 미시작 | [epic-02-recording](docs/milestones/v1/epics/epic-02-recording/stories.md) |
-| 03 | AI 음원 생성 | F4 | 미시작 | [epic-03-ai-generation](docs/milestones/v1/epics/epic-03-ai-generation/stories.md) |
-| 04 | 재생 & 백그라운드 | F6, F7, F8, F9 | 미시작 | [epic-04-playback](docs/milestones/v1/epics/epic-04-playback/stories.md) |
-| 05 | 수익화 (광고 + IAP) | F10, F11, F12 | 미시작 | [epic-05-monetization](docs/milestones/v1/epics/epic-05-monetization/stories.md) |
-| 06 | 개인정보 & 데이터 관리 | F13(설정 UI) | 미시작 | [epic-06-privacy](docs/milestones/v1/epics/epic-06-privacy/stories.md) |
+| 01 | 인증 & 온보딩 | F1, F13(게이트), F14 | ✅ 완료 (9 impl) | [epic-01-auth](docs/milestones/v1/epics/epic-01-auth/stories.md) |
+| 02 | 목소리 녹음 & 품질 검증 | F2, F3, F5 | ✅ 완료 (8 impl) | [epic-02-recording](docs/milestones/v1/epics/epic-02-recording/stories.md) |
+| 03 | AI 음원 생성 | F4 | ✅ 완료 (7 impl) | [epic-03-ai-generation](docs/milestones/v1/epics/epic-03-ai-generation/stories.md) |
+| 04 | 재생 & 백그라운드 | F6, F7, F8, F9 | ✅ 완료 (7 impl) | [epic-04-playback](docs/milestones/v1/epics/epic-04-playback/stories.md) |
+| 05 | 수익화 (광고 + IAP) | F10, F11, F12 | ✅ 완료 (5 impl) | [epic-05-monetization](docs/milestones/v1/epics/epic-05-monetization/stories.md) |
+| 06 | 개인정보 & 데이터 관리 | F13(설정 UI) | ✅ 완료 (5 impl) | [epic-06-privacy](docs/milestones/v1/epics/epic-06-privacy/stories.md) |
 
 ## 구현 순서
 
@@ -57,12 +57,12 @@
 
 ## 체크리스트
 
-- [ ] 마일스톤 0 — 선행 리서치
-- [ ] Epic 01 — 인증 & 온보딩
-- [ ] Epic 02 — 목소리 녹음 & 품질 검증
-- [ ] Epic 03 — AI 음원 생성
-- [ ] Epic 04 — 재생 & 백그라운드
-- [ ] Epic 05 — 수익화
-- [ ] Epic 06 — 개인정보 & 데이터 관리
+- [ ] 마일스톤 0 — 선행 리서치 (벤치마크 미실행, MockInferenceClient로 우선 진행)
+- [x] Epic 01 — 인증 & 온보딩
+- [x] Epic 02 — 목소리 녹음 & 품질 검증
+- [x] Epic 03 — AI 음원 생성 (실제 GPU 추론은 M0 후 교체)
+- [x] Epic 04 — 재생 & 백그라운드
+- [x] Epic 05 — 수익화
+- [x] Epic 06 — 개인정보 & 데이터 관리
 - [ ] 내부 베타 (TestFlight / Internal Test Track)
 - [ ] 앱스토어 심사 통과 + 공개 출시
