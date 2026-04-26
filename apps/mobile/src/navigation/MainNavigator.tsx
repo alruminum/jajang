@@ -71,7 +71,7 @@ export default function MainNavigator() {
       <Stack.Screen
         name="TrialExpired"
         component={S17TrialExpiredScreen}
-        options={{ presentation: 'modal' }}
+        options={{ presentation: 'modal', gestureEnabled: false }}
       />
     </Stack.Navigator>
   );

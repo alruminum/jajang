@@ -22,6 +22,7 @@ import CompletedTrackCard from '@components/CompletedTrackCard';
 import MiniPlayer from '@components/MiniPlayer';
 import { getMyTracks, getNewlyCompletedTrack, GeneratedTrack } from '@services/tracks-api';
 import { SONG_NAMES } from '@services/songs';
+import { useTrialExpiredGuard } from '@hooks/useTrialExpiredGuard';
 
 type NavProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -31,6 +32,9 @@ export default function S06HomeScreen() {
   const navigation = useNavigation<NavProp>();
   const { entitlement } = useAuthStore();
   const { currentTrackId } = usePlayerStore();
+
+  // 트라이얼 만료 감지 → S17 자동 진입
+  useTrialExpiredGuard(navigation);
 
   // Premium/Trial 유저이고 trackId가 있을 때만 미니 플레이어 노출
   const showMiniPlayer = (entitlement === 'premium' || entitlement === 'trial') && !!currentTrackId;
