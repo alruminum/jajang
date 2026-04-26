@@ -1,7 +1,7 @@
 // apps/mobile/src/services/api/recordings.ts
 // /recordings/init, /complete, /validate API 클라이언트
 
-import { api } from '@services/api'
+import { api } from '../api.ts'
 
 export interface UploadInitResponse {
   sample_id: string
@@ -57,13 +57,12 @@ export const recordingsApi = {
   completeUpload: (
     sampleId: string,
     params: {
-      sample_id: string
       duration_seconds: number
       rms_db: number
       peak_count: number
     },
   ): Promise<UploadCompleteResponse> =>
-    api.post(`/recordings/${sampleId}/complete`, params).then(r => r.data),
+    api.post(`/recordings/${sampleId}/complete`, { ...params, sample_id: sampleId }).then(r => r.data),
 
   validateSample: (sampleId: string): Promise<ValidateResponse> =>
     api.post(`/recordings/${sampleId}/validate`).then(r => r.data),

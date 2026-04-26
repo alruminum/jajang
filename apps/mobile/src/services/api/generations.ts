@@ -1,7 +1,7 @@
 // apps/mobile/src/services/api/generations.ts
 // /generations API 클라이언트
 
-import { api } from '@services/api'
+import { api } from '../api.ts'
 
 export type GenerationStatus = 'pending' | 'processing' | 'completed' | 'failed'
 
