@@ -34,8 +34,8 @@ interface UseBackNavigationParams {
 }
 
 interface UseBackNavigationReturn {
-  handleBack: () => void;         // 헤더 ← 버튼 / Android BackHandler
-  ConfirmStopDialog: React.FC;    // 무료 유저 확인 다이얼로그 컴포넌트
+  handleBack: () => void;              // 헤더 ← 버튼 / Android BackHandler
+  confirmDialog: React.ReactElement;   // 무료 유저 확인 다이얼로그 (pre-rendered JSX)
 }
 
 // ─── 훅 ───────────────────────────────────────────────────────────────────────
@@ -83,7 +83,9 @@ export function useBackNavigation({
     return () => subscription.remove();
   }, [handleBack]);
 
-  const ConfirmStopDialog: React.FC = () => (
+  // pre-rendered JSX — 훅 내부 컴포넌트 선언 안티패턴 방지
+  // (훅 내부에서 React.FC를 선언하면 매 렌더마다 새 타입이 생성되어 unmount→remount 반복)
+  const confirmDialog = (
     <Modal visible={showConfirm} transparent animationType="fade">
       <View style={styles.overlay}>
         <View style={styles.dialog}>
@@ -112,7 +114,7 @@ export function useBackNavigation({
     </Modal>
   );
 
-  return { handleBack, ConfirmStopDialog };
+  return { handleBack, confirmDialog };
 }
 
 // ─── 스타일 ───────────────────────────────────────────────────────────────────

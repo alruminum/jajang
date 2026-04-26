@@ -183,7 +183,7 @@ export default function S13PlayScreen({ route }: PlayScreenProps) {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList, 'Play'>>();
 
   // 뒤로가기 분기 훅 (impl/05)
-  const { handleBack, ConfirmStopDialog } = useBackNavigation({ entitlement, isPlaying });
+  const { handleBack, confirmDialog } = useBackNavigation({ entitlement, isPlaying });
 
   // 볼륨 슬라이더 잠금 여부 (crossfade 중)
   const volumeLocked = isVolumeControlLocked();
@@ -287,7 +287,7 @@ export default function S13PlayScreen({ route }: PlayScreenProps) {
       />
 
       {/* 무료 유저 뒤로가기 확인 다이얼로그 (impl/05) */}
-      <ConfirmStopDialog />
+      {confirmDialog}
     </SafeAreaView>
   );
 }
