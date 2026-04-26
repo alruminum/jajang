@@ -87,6 +87,14 @@ erDiagram
         timestamptz created_at
         timestamptz updated_at
     }
+
+    audit_logs {
+        uuid id PK
+        text user_id "FK 없음 — 탈퇴 후에도 보존"
+        text action "account_deletion_requested | account_hard_deleted"
+        jsonb metadata "provider, email 등"
+        timestamptz created_at
+    }
 ```
 
 ---
@@ -217,6 +225,23 @@ CREATE TABLE subscriptions (
     updated_at               TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ```
+
+### audit_logs (migration 0005)
+
+```sql
+CREATE TABLE audit_logs (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     TEXT,           -- FK 없음: 탈퇴 후 hard delete 시에도 감사 기록 보존
+    action      TEXT NOT NULL,  -- 'account_deletion_requested' | 'account_hard_deleted'
+    metadata    JSONB,          -- {"provider": "apple", "email": "...", ...}
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_audit_logs_user ON audit_logs (user_id);
+CREATE INDEX idx_audit_logs_action ON audit_logs (action, created_at DESC);
+```
+
+**설계 결정**: `audit_logs.user_id` 에 FK 없음. 탈퇴 30일 후 `users` 행 hard delete 시 FK constraint 위반 방지. 감사 로그는 법적 증거 목적으로 영구 보존.
 
 ---
 
