@@ -79,7 +79,7 @@ export default function TimerBottomSheet({
           </TouchableOpacity>
         ))}
 
-        {currentEndsAt !== null && (
+        {!!currentEndsAt && (
           <TouchableOpacity style={styles.clearOption} onPress={handleClear}>
             <Text style={styles.clearLabel}>타이머 끄기</Text>
           </TouchableOpacity>
