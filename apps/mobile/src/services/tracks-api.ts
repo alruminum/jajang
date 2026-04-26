@@ -29,3 +29,11 @@ export async function getNewlyCompletedTrack(
   });
   return data;
 }
+
+/**
+ * 생성된 음원 전체 삭제.
+ * DELETE /me/generated-tracks
+ */
+export async function deleteAllTracksAPI(): Promise<void> {
+  await api.delete('/me/generated-tracks');
+}
