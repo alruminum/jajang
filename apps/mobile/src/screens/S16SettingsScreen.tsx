@@ -2,20 +2,23 @@
  * S16 — 설정 화면 (SettingsScreen)
  *
  * 커버 스토리: Epic 05 Story 1 (구독 취소 딥링크 + 복원), Story 5 (구독 진입점), UX Flow S16
- * impl: docs/milestones/v1/epics/epic-05-monetization/impl/05-app-settings-subscription.md
+ *             Epic 06 Story 1 (목소리 샘플 삭제), Story 2 (생성 음원 삭제)
+ * impl: docs/milestones/v1/epics/epic-06-privacy/impl/03-app-settings-screen-extended.md
  *
  * 모듈 경계:
  * - S16 → revenue-cat.ts: getManagementURL, revenueCatLogout
  * - S16 → @store: useAuthStore (email, entitlement, trialExpiresAt / clearSession)
- * - S16 → @services/auth-api: deleteAccountAPI
- * - S16 → @services/tracks-api: deleteVoiceSamplesAPI, deleteAllTracksAPI
+ * - S16 → @store/generationSlice: useGenerationStore (tracks)
+ * - S16 → @services/dataManagementApi: getVoiceSampleStatus, deleteVoiceSample
+ * - S16 → @components/DeleteTracksSheet: 음원 목록 삭제 시트
  * - S16 → @utils/dialog: showConfirmDialog
  * - S16 → @utils/toast: showToast
  * - navigation.navigate('Subscribe', { source: 'settings' }) — 업그레이드 CTA
- * - navigation.navigate('Login') — 로그아웃/탈퇴 후
+ * - navigation.navigate('Login') — 로그아웃 후
+ * - navigation.navigate('AccountDeletionFlow') — 계정 탈퇴 (impl/04)
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -24,14 +27,20 @@ import {
   StyleSheet,
   ActivityIndicator,
   Linking,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 
 import { useAuthStore } from '@store';
 import { getManagementURL, revenueCatLogout } from '@services/revenue-cat';
-import { deleteAccountAPI } from '@services/auth-api';
-import { deleteVoiceSamplesAPI, deleteAllTracksAPI } from '@services/tracks-api';
+import {
+  getVoiceSampleStatus,
+  deleteVoiceSample,
+  VoiceSampleStatus,
+} from '@services/dataManagementApi';
+import { useGenerationStore } from '@store/generationSlice';
+import { DeleteTracksSheet } from '@components/DeleteTracksSheet';
 import { showConfirmDialog } from '@utils/dialog';
 import { showToast } from '@utils/toast';
 
@@ -184,7 +193,20 @@ interface S16SettingsScreenProps {
 }
 
 export default function S16SettingsScreen({ navigation }: S16SettingsScreenProps) {
-  const [isDeleting, setIsDeleting] = useState<'voice' | 'tracks' | null>(null);
+  const [sampleStatus, setSampleStatus] = useState<VoiceSampleStatus | null>(null);
+  const [isSampleDeleting, setIsSampleDeleting] = useState(false);
+  const [isTracksSheetOpen, setIsTracksSheetOpen] = useState(false);
+  const tracks = useGenerationStore((s) => s.tracks);
+
+  // ─── 진입 시 샘플 상태 조회 ───────────────────────────────────────────────
+
+  useEffect(() => {
+    getVoiceSampleStatus()
+      .then(setSampleStatus)
+      .catch(() => {
+        // API 실패 시 null 유지 → 버튼 기본 활성 상태
+      });
+  }, []);
 
   // ─── 로그아웃 ──────────────────────────────────────────────────────────────
 
@@ -201,66 +223,43 @@ export default function S16SettingsScreen({ navigation }: S16SettingsScreenProps
     navigation.navigate('Login');
   }
 
-  // ─── 계정 탈퇴 ────────────────────────────────────────────────────────────
+  // ─── 계정 탈퇴 — AccountDeletionFlow (impl/04) 진입 ─────────────────────
 
-  async function handleDeleteAccount() {
-    const confirmed1 = await showConfirmDialog(
-      '계정을 탈퇴할까요?',
-      '모든 데이터가 삭제됩니다',
-    );
-    if (!confirmed1) return;
-
-    const confirmed2 = await showConfirmDialog(
-      '정말 삭제할까요?',
-      '되돌릴 수 없어요',
-    );
-    if (!confirmed2) return;
-
-    try {
-      await deleteAccountAPI();
-      await revenueCatLogout();
-      useAuthStore.getState().clearSession();
-      navigation.navigate('Login');
-    } catch {
-      showToast('탈퇴 처리에 실패했어요');
-    }
+  function handleDeleteAccount() {
+    navigation.navigate('AccountDeletionFlow');
   }
 
-  // ─── 목소리 샘플 삭제 ─────────────────────────────────────────────────────
+  // ─── 목소리 샘플 삭제 (Alert.alert 1단계 확인) ────────────────────────────
 
-  async function handleDeleteVoiceSamples() {
-    const confirmed = await showConfirmDialog('목소리 샘플을 삭제할까요?');
-    if (!confirmed) return;
-
-    setIsDeleting('voice');
-    try {
-      await deleteVoiceSamplesAPI();
-      showToast('삭제했어요');
-    } catch {
-      showToast('삭제에 실패했어요');
-    } finally {
-      setIsDeleting(null);
-    }
-  }
-
-  // ─── 생성 음원 삭제 (MVP: 전체 삭제) ─────────────────────────────────────
-
-  async function handleDeleteTracks() {
-    const confirmed = await showConfirmDialog('전부 삭제할까요?', '되돌릴 수 없어요');
-    if (!confirmed) return;
-
-    setIsDeleting('tracks');
-    try {
-      await deleteAllTracksAPI();
-      showToast('삭제했어요');
-    } catch {
-      showToast('삭제에 실패했어요');
-    } finally {
-      setIsDeleting(null);
-    }
+  function handleDeleteVoiceSample() {
+    Alert.alert(
+      '목소리 샘플 삭제',
+      '삭제하면 복구할 수 없어요. 목소리 샘플을 삭제할까요?',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '삭제할게요',
+          style: 'destructive',
+          onPress: async () => {
+            setIsSampleDeleting(true);
+            try {
+              await deleteVoiceSample();
+              setSampleStatus({ hasSample: false, sampleStatus: 'deleted' });
+              showToast('삭제했어요');
+            } catch {
+              showToast('삭제 중 문제가 생겼어요. 다시 시도해주세요.');
+            } finally {
+              setIsSampleDeleting(false);
+            }
+          },
+        },
+      ],
+    );
   }
 
   // ─── 렌더 ─────────────────────────────────────────────────────────────────
+
+  const hasSampleDeleted = sampleStatus !== null && sampleStatus.hasSample === false;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -289,20 +288,28 @@ export default function S16SettingsScreen({ navigation }: S16SettingsScreenProps
         <Divider />
 
         {/* 데이터 관리 */}
-        <SettingsRow
-          label="목소리 샘플 삭제"
-          onPress={handleDeleteVoiceSamples}
-          isLoading={isDeleting === 'voice'}
-          disabled={isDeleting !== null && isDeleting !== 'voice'}
-          accessibilityLabel="목소리 샘플 삭제"
-        />
+        {hasSampleDeleted ? (
+          /* 이미 삭제됨 — 비활성 상태 */
+          <View style={styles.row}>
+            <Text style={[styles.rowLabel, styles.rowLabelMuted]}>목소리 샘플 삭제</Text>
+            <Text style={styles.rowSubLabel}>이미 삭제되었어요</Text>
+          </View>
+        ) : (
+          <SettingsRow
+            label="목소리 샘플 삭제"
+            onPress={handleDeleteVoiceSample}
+            isLoading={isSampleDeleting}
+            accessibilityLabel="목소리 샘플 삭제"
+          />
+        )}
+
         <SettingsRow
           label="생성 음원 삭제"
-          onPress={handleDeleteTracks}
-          isLoading={isDeleting === 'tracks'}
-          disabled={isDeleting !== null && isDeleting !== 'tracks'}
-          accessibilityLabel="생성 음원 전체 삭제"
+          onPress={() => setIsTracksSheetOpen(true)}
+          disabled={tracks.length === 0}
+          accessibilityLabel="생성 음원 삭제"
         />
+
         <SettingsRow
           label="계정 탈퇴"
           onPress={handleDeleteAccount}
@@ -337,6 +344,14 @@ export default function S16SettingsScreen({ navigation }: S16SettingsScreenProps
           <Text style={styles.logoutText}>로그아웃</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* 생성 음원 삭제 시트 */}
+      {isTracksSheetOpen && (
+        <DeleteTracksSheet
+          tracks={tracks}
+          onClose={() => setIsTracksSheetOpen(false)}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -440,6 +455,13 @@ const styles = StyleSheet.create({
   },
   rowLabelDestructive: {
     color: '#FF5C5C',
+  },
+  rowLabelMuted: {
+    color: '#4A4E68',
+  },
+  rowSubLabel: {
+    color: '#4A4E68',
+    fontSize: 13,
   },
   rowChevron: {
     color: '#4A4E68',
