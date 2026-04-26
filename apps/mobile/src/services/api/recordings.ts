@@ -1,7 +1,7 @@
 // apps/mobile/src/services/api/recordings.ts
 // /recordings/init, /complete, /validate API 클라이언트
 
-import { api } from '@services/api'
+import { api } from '../api.ts'
 
 export interface UploadInitResponse {
   sample_id: string

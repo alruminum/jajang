@@ -4,28 +4,20 @@
     "slug": "jajang",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "scheme": "jajang",
     "userInterfaceStyle": "dark",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#0D0F1A"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.jajang.app",
       "infoPlist": {
-        "UIBackgroundModes": ["audio"],
+        "UIBackgroundModes": [
+          "audio"
+        ],
         "NSMicrophoneUsageDescription": "자장가 녹음을 위해 마이크 접근이 필요해요",
         "NSPhotoLibraryUsageDescription": "프로필 이미지 설정에 사용됩니다"
       }
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0D0F1A"
-      },
       "package": "com.jajang.app",
       "permissions": [
         "android.permission.RECORD_AUDIO",
@@ -34,19 +26,8 @@
       ]
     },
     "plugins": [
-      [
-        "react-native-track-player",
-        {
-          "iosCapabilities": ["audio"]
-        }
-      ],
-      [
-        "react-native-google-mobile-ads",
-        {
-          "androidAppId": "ca-app-pub-xxx~xxx",
-          "iosAppId": "ca-app-pub-xxx~xxx"
-        }
-      ]
+      "expo-secure-store",
+      "expo-web-browser"
     ]
   }
 }
