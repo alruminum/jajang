@@ -35,8 +35,8 @@ export const FontFamily = {
   // DM Mono — 타이머·tabular numbers
   dmMono: 'DMMono_400Regular',
   // Noto Sans KR — 한글 본문
-  notoSansKR:       'NotoSansKR_300Light',
-  notoSansKRMedium: 'NotoSansKR_400Regular',
+  notoSansKRLight: 'NotoSansKR_300Light',   // Light (300)
+  notoSansKR:      'NotoSansKR_400Regular', // Regular = base (400)
 } as const;
 
 export type FontFamilyKey = keyof typeof FontFamily;
