@@ -181,6 +181,52 @@ def _mock_result(*, scalar=None, scalars=None):
 
 
 # ------------------------------------------------------------------ #
+# HTTP endpoint unit tests (시나리오 4, 5)
+# ------------------------------------------------------------------ #
+
+
+class TestDeleteMyAccountEndpoint:
+    """DELETE /users/me 엔드포인트 핸들러 직접 테스트 — HTTP 레이어 인증 차단 검증."""
+
+    def test_인증없이_호출_401(self):
+        """시나리오 4 — 토큰 없음: require_auth가 401 반환."""
+        from fastapi import HTTPException
+
+        from app.api.deps import require_auth
+
+        with pytest.raises(HTTPException) as exc_info:
+            require_auth(None)  # credentials=None → 인증 없음
+
+        assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
+
+    @pytest.mark.asyncio
+    async def test_soft_deleted_유저_401(self):
+        """시나리오 5 — deleted_at IS NOT NULL 유저: 엔드포인트에서 401 반환.
+
+        require_auth가 user_id를 반환하더라도,
+        delete_my_account 핸들러가 DB에서 deleted_at IS NULL 조건으로
+        유저를 조회해 None이면 401을 반환한다.
+        """
+        from fastapi import HTTPException
+        from sqlalchemy.ext.asyncio import AsyncSession
+
+        from app.api.v1.users import delete_my_account
+
+        db = AsyncMock(spec=AsyncSession)
+        result = MagicMock()
+        result.scalar_one_or_none.return_value = None  # soft-deleted 유저 → DB 조회 결과 None
+        db.execute = AsyncMock(return_value=result)
+
+        with pytest.raises(HTTPException) as exc_info:
+            await delete_my_account(
+                user_id=str(uuid.uuid4()),
+                db=db,
+            )
+
+        assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+# ------------------------------------------------------------------ #
 # Hard delete task unit test
 # ------------------------------------------------------------------ #
 
