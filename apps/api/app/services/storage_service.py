@@ -60,6 +60,17 @@ def generate_presigned_url(s3_key: str) -> str:
         raise
 
 
+def delete_object(s3_key: str) -> None:
+    """S3에서 오브젝트 삭제. tracks_service.delete_track에서 위임."""
+    s3 = _s3_client()
+    try:
+        s3.delete_object(Bucket=settings.S3_BUCKET_NAME, Key=s3_key)
+        logger.info("storage.object.deleted", s3_key=s3_key)
+    except ClientError as e:
+        logger.error("storage.object.delete.failed", s3_key=s3_key, error=str(e))
+        raise
+
+
 def _s3_client():
     """boto3 S3 클라이언트. R2 endpoint 분기 포함."""
     s3_kwargs: dict = {

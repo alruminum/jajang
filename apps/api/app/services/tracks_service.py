@@ -3,18 +3,24 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-import boto3
 import structlog
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.models.generated_track import GeneratedTrack
 from app.schemas.tracks import TrackItem, TracksListResponse
 from app.services import storage_service
 
 logger = structlog.get_logger()
+
+# Track status 상수 (magic string 산포 방지)
+TRACK_STATUS_PENDING = "pending"
+TRACK_STATUS_PROCESSING = "processing"
+TRACK_STATUS_COMPLETED = "completed"
+TRACK_STATUS_FAILED = "failed"
+PENDING_STATUSES = frozenset([TRACK_STATUS_PENDING, TRACK_STATUS_PROCESSING])
+ALL_STATUSES = frozenset([TRACK_STATUS_PENDING, TRACK_STATUS_PROCESSING, TRACK_STATUS_COMPLETED, TRACK_STATUS_FAILED])
 
 # song_key → 한국어 이름 매핑 (docs/domain-logic.md §곡 목록과 동기화 필요)
 SONG_NAME_MAP = {
@@ -48,19 +54,19 @@ async def list_tracks(
         select(GeneratedTrack)
         .where(
             GeneratedTrack.user_id == user_id,
-            GeneratedTrack.status.in_(["completed", "pending", "processing", "failed"]),
+            GeneratedTrack.status.in_(list(ALL_STATUSES)),
         )
         .order_by(GeneratedTrack.created_at.desc())
         .limit(50)  # V1: 최대 50개 (무제한 저장 정책)
     )
     tracks = result.scalars().all()
 
-    has_pending = any(t.status in ("pending", "processing") for t in tracks)
+    has_pending = any(t.status in PENDING_STATUSES for t in tracks)
 
     completed_since_last_check = False
     if last_checked_at is not None:
         completed_since_last_check = any(
-            t.status == "completed"
+            t.status == TRACK_STATUS_COMPLETED
             and t.completed_at is not None
             and t.completed_at > last_checked_at
             for t in tracks
@@ -69,7 +75,7 @@ async def list_tracks(
     track_items = []
     for t in tracks:
         presigned_url = None
-        if include_presigned and t.status == "completed" and t.s3_key:
+        if include_presigned and t.status == TRACK_STATUS_COMPLETED and t.s3_key:
             try:
                 presigned_url = storage_service.generate_presigned_url(t.s3_key)
             except Exception as e:
@@ -131,29 +137,17 @@ async def delete_track(
             status_code=status.HTTP_404_NOT_FOUND, detail="트랙을 찾을 수 없어요."
         )
 
-    if track.status in ("pending", "processing"):
+    if track.status in PENDING_STATUSES:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="생성 중인 트랙은 삭제할 수 없어요. 생성이 완료된 후 삭제해주세요.",
         )
 
-    # S3 mp3 삭제 (completed 트랙인 경우) — asyncio.to_thread로 블로킹 호출 래핑
+    # S3 mp3 삭제 (storage_service에 위임 — asyncio.to_thread로 블로킹 호출 래핑)
     if track.s3_key:
         s3_key = track.s3_key
-
-        def _s3_delete() -> None:
-            s3_kwargs: dict = {
-                "region_name": settings.S3_REGION,
-                "aws_access_key_id": settings.S3_ACCESS_KEY,
-                "aws_secret_access_key": settings.S3_SECRET_KEY,
-            }
-            if settings.S3_ENDPOINT_URL:
-                s3_kwargs["endpoint_url"] = settings.S3_ENDPOINT_URL
-            s3 = boto3.client("s3", **s3_kwargs)
-            s3.delete_object(Bucket=settings.S3_BUCKET_NAME, Key=s3_key)
-
         try:
-            await asyncio.to_thread(_s3_delete)
+            await asyncio.to_thread(storage_service.delete_object, s3_key)
             logger.info("tracks.s3.deleted", track_id=str(track_id), s3_key=s3_key)
         except Exception as e:
             logger.error("tracks.s3.delete.failed", track_id=str(track_id), error=str(e))

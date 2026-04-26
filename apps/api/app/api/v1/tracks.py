@@ -2,7 +2,6 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-import structlog
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,7 +11,6 @@ from app.schemas.tracks import TrackDeleteResponse, TracksListResponse
 from app.services.tracks_service import delete_track, list_tracks
 
 router = APIRouter(prefix="/tracks", tags=["tracks"])
-logger = structlog.get_logger()
 
 
 @router.get("/", response_model=TracksListResponse)
@@ -46,7 +44,7 @@ async def get_my_tracks(
 
 @router.delete("/{track_id}", response_model=TrackDeleteResponse)
 async def delete_my_track(
-    track_id: str,
+    track_id: uuid.UUID,
     user_id: str = Depends(require_auth),
     db: AsyncSession = Depends(get_db),
 ):
@@ -54,5 +52,5 @@ async def delete_my_track(
     트랙 삭제 (S06 스와이프 → 삭제 확인).
     생성 중(pending/processing) 트랙은 409 반환.
     """
-    await delete_track(db, uuid.UUID(user_id), uuid.UUID(track_id))
-    return TrackDeleteResponse(id=track_id, deleted=True)
+    await delete_track(db, uuid.UUID(user_id), track_id)
+    return TrackDeleteResponse(id=str(track_id), deleted=True)
