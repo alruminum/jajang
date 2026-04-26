@@ -54,12 +54,39 @@ const InterruptionModeAndroid = {
   DuckOthers: 2,
 };
 
+const AndroidOutputFormat = {
+  DEFAULT: 0, THREE_GPP: 1, MPEG_4: 2, AMR_NB: 3, AMR_WB: 4, AAC_ADTS: 6,
+};
+
+const AndroidAudioEncoder = {
+  DEFAULT: 0, AMR_NB: 1, AMR_WB: 2, AAC: 3, HE_AAC: 4, AAC_ELD: 5,
+};
+
+const IOSOutputFormat = {
+  LINEARPCM: 'lpcm', AC3: 'ac-3', '60958AC3': 'cac3', APPLEIMA4: 'ima4',
+  MPEG4AAC: 'aac ', MPEG4CELP: 'celp', MPEG4HVXC: 'hvxc', MPEG4TWINVQ: 'twvq',
+  MACE3: 'MAC3', MACE6: 'MAC6', ULAW: 'ulaw', ALAW: 'alaw',
+  QDESIGN: 'QDMC', QDESIGN2: 'QDM2', QUALCOMM: 'Qclp',
+  MPEGLAYER1: '.mp1', MPEGLAYER2: '.mp2', MPEGLAYER3: '.mp3',
+  APPLELOSSLESS: 'alac', MPEG4AAC_HE: 'aach', MPEG4AAC_LD: 'aacl',
+  MPEG4AAC_ELD: 'aace', MPEG4AAC_ELD_SBR: 'aacf', MPEG4AAC_ELD_V2: 'aacg',
+  MPEG4AAC_HE_V2: 'aacp', MPEG4AAC_SPATIAL: 'aacs', AMR: 'samr',
+  AMR_WB: 'sawb', AUDIBLE: 'AUDB', ILBC: 'ilbc', DVIINTELIMA: 0x6d730011,
+  MICROSOFTGSM: 0x6d730031, AES3: 'aes3', ENHANCEDAC3: 'ec-3',
+};
+
+const IOSAudioQuality = { MIN: 0, LOW: 32, MEDIUM: 64, HIGH: 96, MAX: 127 };
+
 const Audio = {
   Recording,
   Sound,
   RecordingOptionsPresets,
   InterruptionModeIOS,
   InterruptionModeAndroid,
+  AndroidOutputFormat,
+  AndroidAudioEncoder,
+  IOSOutputFormat,
+  IOSAudioQuality,
   requestPermissionsAsync: async () => ({ status: 'granted', granted: true }),
   getPermissionsAsync: async () => ({ status: 'granted', granted: true }),
   setAudioModeAsync: noopAsync,
@@ -73,4 +100,8 @@ module.exports = {
   RecordingOptionsPresets,
   InterruptionModeIOS,
   InterruptionModeAndroid,
+  AndroidOutputFormat,
+  AndroidAudioEncoder,
+  IOSOutputFormat,
+  IOSAudioQuality,
 };
