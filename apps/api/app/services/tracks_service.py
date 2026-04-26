@@ -21,6 +21,7 @@ TRACK_STATUS_COMPLETED = "completed"
 TRACK_STATUS_FAILED = "failed"
 PENDING_STATUSES = frozenset([TRACK_STATUS_PENDING, TRACK_STATUS_PROCESSING])
 ALL_STATUSES = frozenset([TRACK_STATUS_PENDING, TRACK_STATUS_PROCESSING, TRACK_STATUS_COMPLETED, TRACK_STATUS_FAILED])
+# 새 status 추가 시 여기에 명시적으로 opt-in 해야 목록 쿼리에 포함됨
 
 # song_key → 한국어 이름 매핑 (docs/domain-logic.md §곡 목록과 동기화 필요)
 SONG_NAME_MAP = {
@@ -54,7 +55,7 @@ async def list_tracks(
         select(GeneratedTrack)
         .where(
             GeneratedTrack.user_id == user_id,
-            GeneratedTrack.status.in_(list(ALL_STATUSES)),
+            GeneratedTrack.status.in_(ALL_STATUSES),
         )
         .order_by(GeneratedTrack.created_at.desc())
         .limit(50)  # V1: 최대 50개 (무제한 저장 정책)
