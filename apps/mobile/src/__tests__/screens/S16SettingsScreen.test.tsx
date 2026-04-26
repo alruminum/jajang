@@ -1,12 +1,13 @@
 /**
  * S16SettingsScreen 컴포넌트 통합 테스트
  *
- * 참조 impl: docs/milestones/v1/epics/epic-05-monetization/impl/05-app-settings-subscription.md
- * 커버 AC: AC-01 ~ AC-11 (전체)
+ * 참조 impl:
+ *   - docs/milestones/v1/epics/epic-05-monetization/impl/05-app-settings-subscription.md
+ *   - docs/milestones/v1/epics/epic-06-privacy/impl/03-app-settings-screen-extended.md
+ * 커버 AC: AC-01 ~ AC-06, AC-10, AC-11 (구독/로그아웃/법적 링크)
  *
- * FIXME: showConfirmDialog / showToast의 실제 import 경로가 아래 경로와 다를 경우
- *        vi.mock 경로 및 import 경로를 실제 파일 위치에 맞게 수정 필요.
- *        현재 가정: @utils/dialog, @utils/toast
+ * NOTE: 데이터 관리 섹션 (AC-07 목소리 샘플, AC-08 음원 삭제, AC-09 계정 탈퇴)은
+ *       Epic-06 구현으로 대체됨 → apps/mobile/src/__tests__/SettingsScreen.test.tsx 참조
  */
 
 import React from 'react'
@@ -26,19 +27,25 @@ vi.mock('@services/revenue-cat', () => ({
   revenueCatLogout: vi.fn(),
 }))
 
-vi.mock('@services/auth-api', () => ({
-  deleteAccountAPI: vi.fn(),
+// Epic-06에서 추가된 의존성 — S16SettingsScreen이 import하므로 mock 필요
+vi.mock('@services/dataManagementApi', () => ({
+  getVoiceSampleStatus: vi.fn().mockResolvedValue({ hasSample: false, sampleStatus: 'deleted' }),
+  deleteVoiceSample: vi.fn(),
+  deleteTrack: vi.fn(),
+  deleteAllTracks: vi.fn(),
 }))
 
-vi.mock('@services/tracks-api', () => ({
-  deleteVoiceSamplesAPI: vi.fn(),
-  deleteAllTracksAPI: vi.fn(),
+vi.mock('@store/generationSlice', () => ({
+  useGenerationStore: vi.fn(),
+}))
+
+vi.mock('@components/DeleteTracksSheet', () => ({
+  DeleteTracksSheet: () => null,
 }))
 
 // react-native is mocked globally in setup.ts (Linking, Platform, Alert, etc.)
 // Do not re-mock here with importOriginal() — it triggers Flow syntax errors.
 
-// FIXME: 실제 import 경로 확인 필요
 vi.mock('@utils/dialog', () => ({
   showConfirmDialog: vi.fn(),
 }))
@@ -53,8 +60,7 @@ vi.mock('@utils/toast', () => ({
 
 import { useAuthStore } from '@store'
 import { getManagementURL, revenueCatLogout } from '@services/revenue-cat'
-import { deleteAccountAPI } from '@services/auth-api'
-import { deleteVoiceSamplesAPI, deleteAllTracksAPI } from '@services/tracks-api'
+import { useGenerationStore } from '@store/generationSlice'
 import { Linking } from 'react-native'
 import { showConfirmDialog } from '@utils/dialog'
 import { showToast } from '@utils/toast'
@@ -106,14 +112,16 @@ function trialExpiry(daysLeft: number): string {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  setupAuthStore({ entitlement: 'free' })
   // showConfirmDialog 기본: 취소 (의도치 않은 부수효과 방지)
   vi.mocked(showConfirmDialog).mockResolvedValue(false)
   // API 기본: 성공
   vi.mocked(revenueCatLogout).mockResolvedValue(undefined)
-  vi.mocked(deleteAccountAPI).mockResolvedValue(undefined)
-  vi.mocked(deleteVoiceSamplesAPI).mockResolvedValue(undefined)
-  vi.mocked(deleteAllTracksAPI).mockResolvedValue(undefined)
   vi.mocked(getManagementURL).mockResolvedValue('https://example.com/manage')
+  // generationStore 기본: 빈 트랙 목록
+  vi.mocked(useGenerationStore).mockImplementation((selector: any) =>
+    selector({ tracks: [] }),
+  )
 })
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -263,198 +271,6 @@ describe('AC-06 — 알림 설정 탭', () => {
     const { getByText } = renderScreen()
     fireEvent.press(getByText('알림 설정'))
     expect(Linking.openSettings).toHaveBeenCalled()
-  })
-})
-
-// ──────────────────────────────────────────────────────────────────────────────
-// AC-07: 목소리 샘플 삭제
-// ──────────────────────────────────────────────────────────────────────────────
-
-describe('AC-07 — 목소리 샘플 삭제', () => {
-  beforeEach(() => setupAuthStore({ entitlement: 'free' }))
-
-  it('확인 후 deleteVoiceSamplesAPI 호출 및 성공 토스트 "삭제했어요"', async () => {
-    vi.mocked(showConfirmDialog).mockResolvedValue(true)
-
-    const { getByText } = renderScreen()
-    fireEvent.press(getByText('목소리 샘플 삭제'))
-
-    await waitFor(() => {
-      expect(deleteVoiceSamplesAPI).toHaveBeenCalledOnce()
-      expect(showToast).toHaveBeenCalledWith('삭제했어요')
-    })
-  })
-
-  it('취소 시 API 미호출', async () => {
-    vi.mocked(showConfirmDialog).mockResolvedValue(false)
-
-    const { getByText } = renderScreen()
-    fireEvent.press(getByText('목소리 샘플 삭제'))
-
-    await waitFor(() => {
-      expect(deleteVoiceSamplesAPI).not.toHaveBeenCalled()
-    })
-  })
-
-  it('API 실패 시 에러 토스트 "삭제에 실패했어요"', async () => {
-    vi.mocked(showConfirmDialog).mockResolvedValue(true)
-    vi.mocked(deleteVoiceSamplesAPI).mockRejectedValue(new Error('API error'))
-
-    const { getByText } = renderScreen()
-    fireEvent.press(getByText('목소리 샘플 삭제'))
-
-    await waitFor(() => {
-      expect(showToast).toHaveBeenCalledWith('삭제에 실패했어요')
-    })
-  })
-
-  it('voice 삭제 중 다른 항목 (생성 음원 삭제, 계정 탈퇴) 여전히 렌더링됨', async () => {
-    // impl: isDeleting==='voice'일 때 해당 항목만 비활성, 나머지는 정상 조작 가능
-    let resolveDelete!: () => void
-    const pending = new Promise<void>((res) => {
-      resolveDelete = res
-    })
-    vi.mocked(showConfirmDialog).mockResolvedValue(true)
-    vi.mocked(deleteVoiceSamplesAPI).mockReturnValue(pending)
-
-    const { getByText } = renderScreen()
-    fireEvent.press(getByText('목소리 샘플 삭제'))
-
-    await waitFor(() => {
-      expect(getByText('생성 음원 삭제')).toBeTruthy()
-      expect(getByText('계정 탈퇴')).toBeTruthy()
-    })
-
-    resolveDelete()
-  })
-})
-
-// ──────────────────────────────────────────────────────────────────────────────
-// AC-08: 생성 음원 전체 삭제
-// ──────────────────────────────────────────────────────────────────────────────
-
-describe('AC-08 — 생성 음원 전체 삭제', () => {
-  beforeEach(() => setupAuthStore({ entitlement: 'free' }))
-
-  it('확인 후 deleteAllTracksAPI 호출 및 성공 토스트', async () => {
-    vi.mocked(showConfirmDialog).mockResolvedValue(true)
-
-    const { getByText } = renderScreen()
-    fireEvent.press(getByText('생성 음원 삭제'))
-
-    await waitFor(() => {
-      expect(deleteAllTracksAPI).toHaveBeenCalledOnce()
-      expect(showToast).toHaveBeenCalledWith('삭제했어요')
-    })
-  })
-
-  it('취소 시 API 미호출', async () => {
-    vi.mocked(showConfirmDialog).mockResolvedValue(false)
-
-    const { getByText } = renderScreen()
-    fireEvent.press(getByText('생성 음원 삭제'))
-
-    await waitFor(() => {
-      expect(deleteAllTracksAPI).not.toHaveBeenCalled()
-    })
-  })
-
-  it('API 실패 시 에러 토스트 "삭제에 실패했어요"', async () => {
-    vi.mocked(showConfirmDialog).mockResolvedValue(true)
-    vi.mocked(deleteAllTracksAPI).mockRejectedValue(new Error('Server error'))
-
-    const { getByText } = renderScreen()
-    fireEvent.press(getByText('생성 음원 삭제'))
-
-    await waitFor(() => {
-      expect(showToast).toHaveBeenCalledWith('삭제에 실패했어요')
-    })
-  })
-})
-
-// ──────────────────────────────────────────────────────────────────────────────
-// AC-09: 계정 탈퇴 (2단계 확인)
-// ──────────────────────────────────────────────────────────────────────────────
-
-describe('AC-09 — 계정 탈퇴 (2단계 확인)', () => {
-  beforeEach(() => setupAuthStore({ entitlement: 'free' }))
-
-  it('2단계 확인 → deleteAccountAPI + revenueCatLogout + clearSession + Login 이동', async () => {
-    vi.mocked(showConfirmDialog)
-      .mockResolvedValueOnce(true) // 1단계: 계정 탈퇴할까요?
-      .mockResolvedValueOnce(true) // 2단계: 정말 삭제할까요?
-
-    const { getByText } = renderScreen()
-    fireEvent.press(getByText('계정 탈퇴'))
-
-    await waitFor(() => {
-      expect(deleteAccountAPI).toHaveBeenCalledOnce()
-      expect(revenueCatLogout).toHaveBeenCalledOnce()
-      expect(mockClearSession).toHaveBeenCalledOnce()
-      expect(mockNavigation.navigate).toHaveBeenCalledWith('Login')
-    })
-  })
-
-  it('1단계 취소 시 API 미호출, 화면 이동 없음', async () => {
-    vi.mocked(showConfirmDialog).mockResolvedValueOnce(false)
-
-    const { getByText } = renderScreen()
-    fireEvent.press(getByText('계정 탈퇴'))
-
-    await waitFor(() => {
-      expect(deleteAccountAPI).not.toHaveBeenCalled()
-      expect(mockNavigation.navigate).not.toHaveBeenCalled()
-    })
-  })
-
-  it('2단계 취소 시 API 미호출', async () => {
-    vi.mocked(showConfirmDialog)
-      .mockResolvedValueOnce(true)  // 1단계 확인
-      .mockResolvedValueOnce(false) // 2단계 취소
-
-    const { getByText } = renderScreen()
-    fireEvent.press(getByText('계정 탈퇴'))
-
-    await waitFor(() => {
-      expect(deleteAccountAPI).not.toHaveBeenCalled()
-    })
-  })
-
-  it('deleteAccountAPI 실패 시 에러 토스트, Login 이동 없음', async () => {
-    vi.mocked(showConfirmDialog)
-      .mockResolvedValueOnce(true)
-      .mockResolvedValueOnce(true)
-    vi.mocked(deleteAccountAPI).mockRejectedValue(new Error('서버 오류'))
-
-    const { getByText } = renderScreen()
-    fireEvent.press(getByText('계정 탈퇴'))
-
-    await waitFor(() => {
-      expect(showToast).toHaveBeenCalledWith('탈퇴 처리에 실패했어요')
-      expect(mockNavigation.navigate).not.toHaveBeenCalled()
-    })
-  })
-
-  it('revenueCatLogout이 clearSession보다 먼저 호출됨 (순서 보장)', async () => {
-    // impl 설계 결정: RevenueCat → 앱 세션 순서. 역순이면 이전 유저 상태 남음.
-    vi.mocked(showConfirmDialog)
-      .mockResolvedValueOnce(true)
-      .mockResolvedValueOnce(true)
-
-    const callOrder: string[] = []
-    vi.mocked(revenueCatLogout).mockImplementation(async () => {
-      callOrder.push('revenueCat')
-    })
-    mockClearSession.mockImplementation(() => {
-      callOrder.push('clearSession')
-    })
-
-    const { getByText } = renderScreen()
-    fireEvent.press(getByText('계정 탈퇴'))
-
-    await waitFor(() => {
-      expect(callOrder).toEqual(['revenueCat', 'clearSession'])
-    })
   })
 })
 

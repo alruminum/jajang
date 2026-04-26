@@ -14,7 +14,6 @@ export default defineConfig({
     server: {
       deps: {
         inline: ['@testing-library/react-native'],
-        external: [/react-native/],
       },
     },
     alias: {
