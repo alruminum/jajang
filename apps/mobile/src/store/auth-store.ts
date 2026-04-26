@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export interface AuthState {
   userId: string | null;
   accessToken: string | null;        // SecureStore에 저장 (민감), 여기서는 캐시 용도
-  entitlement: 'free' | 'trial' | 'premium';
+  entitlement: 'free' | 'trial' | 'premium' | null;
   trialExpiresAt: string | null;     // ISO 8601
   isAuthenticated: boolean;
 }
@@ -24,7 +24,7 @@ interface AuthActions {
 const initialState: AuthState = {
   userId: null,
   accessToken: null,
-  entitlement: 'free',
+  entitlement: null,
   trialExpiresAt: null,
   isAuthenticated: false,
 };
