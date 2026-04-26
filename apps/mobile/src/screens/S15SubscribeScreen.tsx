@@ -171,7 +171,13 @@ export default function S15SubscribeScreen({ navigation }: SubscribeScreenProps)
   // ─── 결제 플로우 ─────────────────────────────────────────────────────────────
 
   async function handleSubscribe(): Promise<void> {
-    if (!offering || isLoading) return;
+    if (isLoading) return;
+
+    // Offerings 로드 실패 상태 — silent return 대신 사용자에게 피드백 제공
+    if (!offering) {
+      showToast('상품 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
+      return;
+    }
 
     const pkg =
       selectedPlan === 'monthly' ? offering.monthly : offering.annual;
