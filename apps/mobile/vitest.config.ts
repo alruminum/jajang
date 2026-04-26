@@ -11,10 +11,16 @@ export default defineConfig({
     environment: 'node',
     typecheck: { tsconfig: './tsconfig.test.json' },
     setupFiles: ['./src/__tests__/setup.ts'],
-    server: {
-      deps: {
-        inline: ['@testing-library/react-native'],
-        external: [/react-native/],
+    deps: {
+      optimizer: {
+        web: {
+          include: ['@testing-library/react-native'],
+          exclude: [/react-native/],
+        },
+        ssr: {
+          include: ['@testing-library/react-native'],
+          exclude: [/react-native/],
+        },
       },
     },
     alias: {
