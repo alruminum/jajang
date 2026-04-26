@@ -14,10 +14,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { MainStackParamList } from '@navigation/types';
 import { useAuthStore } from '@store/auth-store';
+import { usePlayerStore } from '@store/player-store';
 import TrialBadge from '@components/TrialBadge';
 import TrialExpiryBanner from '@components/TrialExpiryBanner';
 import EmptyTrackState from '@components/EmptyTrackState';
 import CompletedTrackCard from '@components/CompletedTrackCard';
+import MiniPlayer from '@components/MiniPlayer';
 import { getMyTracks, getNewlyCompletedTrack, GeneratedTrack } from '@services/tracks-api';
 import { SONG_NAMES } from '@services/songs';
 
@@ -28,6 +30,10 @@ const LAST_CHECKED_KEY = 'home_last_checked_at';
 export default function S06HomeScreen() {
   const navigation = useNavigation<NavProp>();
   const { entitlement } = useAuthStore();
+  const { currentTrackId } = usePlayerStore();
+
+  // Premium/Trial 유저이고 trackId가 있을 때만 미니 플레이어 노출
+  const showMiniPlayer = (entitlement === 'premium' || entitlement === 'trial') && !!currentTrackId;
 
   const [tracks, setTracks]                      = useState<GeneratedTrack[]>([]);
   const [completedTrack, setCompletedTrack]       = useState<GeneratedTrack | null>(null);
@@ -74,7 +80,7 @@ export default function S06HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       {/* D-1 배너 (최상단) */}
       <TrialExpiryBanner />
 
@@ -139,7 +145,7 @@ export default function S06HomeScreen() {
             <Text style={styles.playIcon}>▶</Text>
           </TouchableOpacity>
         )}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, showMiniPlayer && styles.listContentWithMiniPlayer]}
         showsVerticalScrollIndicator={false}
       />
 
@@ -151,6 +157,13 @@ export default function S06HomeScreen() {
       >
         <Text style={styles.fabIcon}>+</Text>
       </TouchableOpacity>
+
+      {/* C06 미니 플레이어 — 하단 고정 오버레이 */}
+      {showMiniPlayer && (
+        <View style={styles.miniPlayerWrapper}>
+          <MiniPlayer />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -186,6 +199,14 @@ const styles = StyleSheet.create({
   counterText: { color: '#7B80A0', fontSize: 13 },
 
   listContent: { flexGrow: 1, paddingBottom: 100 },
+  listContentWithMiniPlayer: { paddingBottom: 172 },
+
+  miniPlayerWrapper: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
 
   trackItem: {
     flexDirection: 'row',
