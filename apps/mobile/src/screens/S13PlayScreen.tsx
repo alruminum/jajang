@@ -41,6 +41,7 @@ import AlbumArtRotating from '@components/AlbumArtRotating';
 import VolumeSlider from '@components/VolumeSlider';
 import TimerBottomSheet from '@components/TimerBottomSheet';
 import { useBackNavigation } from '@hooks/useBackNavigation';
+import BannerAdSlot from '@components/BannerAdSlot';
 
 // ─── 타입 ─────────────────────────────────────────────────────────────────────
 
@@ -165,10 +166,6 @@ function Header({
   );
 }
 
-// ─── BannerAdSlot placeholder (impl/07에서 구현) ──────────────────────────────
-
-const BannerAdSlot = null;
-
 // ─── PlayScreen ───────────────────────────────────────────────────────────────
 
 export default function S13PlayScreen({ route }: PlayScreenProps) {
@@ -276,8 +273,8 @@ export default function S13PlayScreen({ route }: PlayScreenProps) {
         <TimerRemainingLabel endsAt={timerEndsAt} />
       )}
 
-      {/* 무료 유저만 — impl/07 처리 */}
-      {entitlement === 'free' && BannerAdSlot}
+      {/* 무료 유저만 — impl/07 BannerAdSlot */}
+      {entitlement === 'free' && <BannerAdSlot />}
 
       {/* 수면 타이머 바텀시트 (impl/03) */}
       <TimerBottomSheet
