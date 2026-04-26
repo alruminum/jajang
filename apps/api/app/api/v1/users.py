@@ -12,6 +12,11 @@ from app.services.account_deletion_service import AccountDeletionService
 
 router = APIRouter(prefix="/users", tags=["users"])
 
+# V1 DEFERRED: POST /users/me/export (데이터 내보내기)
+# GDPR Art.15(열람권)은 EU 거주자에게만 적용. V1 타깃(한국)은 PIPA 적용이며
+# 자동화된 내보내기 의무 없음. EU 진출 시점(V2)에 재설계 예정.
+# 참조: docs/milestones/v1/epics/epic-06-privacy/impl/02-server-data-export.md
+
 
 @router.delete(
     "/me",
