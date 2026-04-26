@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
   floatEmoji:       { fontSize: 64, marginBottom: 32 },
   mainTitle:        { color: '#EEF0F8', fontSize: 22, textAlign: 'center', lineHeight: 32, fontFamily: 'NotoSansKR-Regular', marginBottom: 12 },
   subtitle:         { color: '#7B80A0', fontSize: 15, textAlign: 'center', marginBottom: 24 },
-  countdown:        { color: '#F5C97A', fontSize: 48, fontVariant: ['tabular-nums'], marginBottom: 24 },
+  countdown:        { color: '#82B090', fontSize: 48, fontVariant: ['tabular-nums'], marginBottom: 24 },
   dotRow:           { flexDirection: 'row', gap: 8, marginBottom: 32 },
   dot:              { width: 8, height: 8, borderRadius: 4, backgroundColor: '#2A2E48' },
   queueText:        { color: '#7B80A0', fontSize: 13, textAlign: 'center', marginBottom: 16 },
@@ -329,6 +329,6 @@ const styles = StyleSheet.create({
   // 타임아웃/실패 상태
   timeoutTitle:     { color: '#EEF0F8', fontSize: 22, textAlign: 'center', lineHeight: 32, fontFamily: 'NotoSansKR-Regular', marginBottom: 12 },
   errorSubtitle:    { color: '#7B80A0', fontSize: 14, textAlign: 'center', marginBottom: 32 },
-  primaryBtn:       { height: 56, backgroundColor: '#F5C97A', borderRadius: 28, paddingHorizontal: 40, justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
+  primaryBtn:       { height: 56, backgroundColor: '#82B090', borderRadius: 28, paddingHorizontal: 40, justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
   primaryBtnText:   { color: '#0D0F1A', fontSize: 17, fontFamily: 'NotoSansKR-Regular' },
 })

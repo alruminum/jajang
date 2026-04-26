@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   countdownNumber: {
-    color: '#F5C97A',
+    color: '#82B090',
     fontSize: 96,
     fontVariant: ['tabular-nums'], // 흔들림 방지 tabular numbers
     fontFamily: 'NotoSansKR-Regular',
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   silenceWarning: {
-    color: '#E8A94A',
+    color: '#5A8A6A',
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 8,

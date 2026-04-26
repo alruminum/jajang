@@ -33,7 +33,7 @@ function HomeTabs() {
           backgroundColor: '#12152B',
           borderTopColor: '#2A2E48',
         },
-        tabBarActiveTintColor: '#F5C97A',
+        tabBarActiveTintColor: '#82B090',
         tabBarInactiveTintColor: '#7B80A0',
       }}
     >

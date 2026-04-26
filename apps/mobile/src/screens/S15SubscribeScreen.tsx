@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   benefitIcon: {
-    color: '#F5C97A',
+    color: '#82B090',
     fontSize: 14,
     fontWeight: '700',
     marginRight: 8,
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
     color: '#F5F5F5',
   },
   savingsBadge: {
-    backgroundColor: '#F5C97A',
+    backgroundColor: '#82B090',
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
     minHeight: 72,
   },
   trialBadge: {
-    color: '#F5C97A',
+    color: '#82B090',
     fontSize: 13,
     textAlign: 'center',
     marginBottom: 12,

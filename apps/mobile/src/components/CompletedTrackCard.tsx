@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   primaryBtn: {
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#F5C97A',
+    backgroundColor: '#82B090',
     alignItems: 'center',
     justifyContent: 'center',
   },

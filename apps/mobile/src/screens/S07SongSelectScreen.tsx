@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   counterChip: { backgroundColor: '#21253E', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
   counterText: { color: '#7B80A0', fontSize: 13 },
   list:        { paddingBottom: 100 },
-  cta:         { position: 'absolute', bottom: 32, left: 20, right: 20, height: 56, backgroundColor: '#F5C97A', borderRadius: 28, justifyContent: 'center', alignItems: 'center' },
+  cta:         { position: 'absolute', bottom: 32, left: 20, right: 20, height: 56, backgroundColor: '#82B090', borderRadius: 28, justifyContent: 'center', alignItems: 'center' },
   ctaDisabled: { opacity: 0.4 },
   ctaText:     { color: '#0D0F1A', fontSize: 17, fontFamily: 'NotoSansKR-Regular' },
 });

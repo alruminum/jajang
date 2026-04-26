@@ -34,7 +34,7 @@ type WaveformVisualizerProps =
 export function WaveformVisualizer({
   mode,
   levels,
-  color = '#F5C97A',
+  color = '#82B090',
   height = 80,
   playbackPosition,
 }: WaveformVisualizerProps) {
@@ -57,7 +57,7 @@ export function WaveformVisualizer({
       {bars.map((barHeight, i) => {
         const isPlayed = mode === 'static' && i < playedUpTo;
         const barColor = mode === 'static'
-          ? (isPlayed ? '#F5C97A' : color)
+          ? (isPlayed ? '#82B090' : color)
           : color;
         return (
           <View
