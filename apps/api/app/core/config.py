@@ -36,6 +36,7 @@ class Settings(BaseSettings):
 
     # Social Auth
     GOOGLE_CLIENT_ID: str = ""
+    MOCK_GOOGLE_AUTH: bool = False   # true 시 Google tokeninfo 호출 스킵 (개발 환경 전용)
 
     # RevenueCat
     REVENUECAT_WEBHOOK_SECRET: str = ""

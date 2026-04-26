@@ -9,6 +9,8 @@ interface Props {
 }
 
 export default function SocialAuthButtons({ onSuccess, onError }: Props) {
+  const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '';
+
   const handleApple = async () => {
     try {
       const credential = await appleAuth.performRequest({
@@ -26,10 +28,22 @@ export default function SocialAuthButtons({ onSuccess, onError }: Props) {
 
   const handleGoogle = async () => {
     try {
+      // ── dev 환경 mock 분기 ──────────────────────────────────────────
+      // webClientId 미설정(개발 환경) 시 native Google Sign-In 스킵.
+      // MOCK_GOOGLE_AUTH=true 서버와 쌍으로 동작.
+      // mock id_token 형식: "dev-mock-<email>" — 서버가 email로 파싱 가능.
+      if (__DEV__ && !webClientId) {
+        const mockToken = 'dev-mock-qa@jajang.com';
+        onSuccess('google', mockToken);
+        return;
+      }
+      // ──────────────────────────────────────────────────────────────────
+
       await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      if (!userInfo.idToken) throw new Error('No id token');
-      onSuccess('google', userInfo.idToken);
+      const response = await GoogleSignin.signIn();
+      if (response.type !== 'success') return; // 유저 취소
+      if (!response.data.idToken) throw new Error('No id token');
+      onSuccess('google', response.data.idToken);
     } catch (e: any) {
       if (e.code === 12501) return; // Google: 유저 취소
       onError?.(e);
