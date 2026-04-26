@@ -8,7 +8,7 @@
  * 모듈 경계:
  * - S13 → AudioEngine: startPlayback, pausePlayback, resumePlayback, setVolume, isVolumeControlLocked
  * - S13 → PlayerSlice: isPlaying, volume, timerEndsAt, pendingUpgradePrompt (read-only)
- * - handleBack(): impl/05에서 구현 예정 — 현재 로컬 stub
+ * - handleBack(): useBackNavigation 훅 (impl/05)
  * - openTimerSheet(): impl/03에서 구현 예정 — 현재 로컬 stub
  * - BannerAdSlot: impl/07에서 구현 예정 — null placeholder
  */
@@ -40,6 +40,7 @@ import {
 import AlbumArtRotating from '@components/AlbumArtRotating';
 import VolumeSlider from '@components/VolumeSlider';
 import TimerBottomSheet from '@components/TimerBottomSheet';
+import { useBackNavigation } from '@hooks/useBackNavigation';
 
 // ─── 타입 ─────────────────────────────────────────────────────────────────────
 
@@ -67,17 +68,6 @@ async function requestNotificationPermissionOnFirstEntry(): Promise<void> {
 
   usePlayerStore.setState({ notificationPermission: permission });
   await AsyncStorage.setItem('notif_permission_asked', '1');
-}
-
-// ─── handleBack stub (impl/05에서 실제 구현) ──────────────────────────────────
-// impl/05 완료 후 이 함수를 교체한다. 현재는 단순 goBack() 처리.
-
-function handleBack(
-  _entitlement: 'free' | 'trial' | 'premium',
-  _isPlaying: boolean,
-  nav: NativeStackNavigationProp<MainStackParamList, 'Play'>,
-): void {
-  nav.goBack();
 }
 
 // ─── TimerRemainingLabel (내부 컴포넌트) ──────────────────────────────────────
@@ -192,6 +182,9 @@ export default function S13PlayScreen({ route }: PlayScreenProps) {
   const { entitlement } = useAuthStore();
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList, 'Play'>>();
 
+  // 뒤로가기 분기 훅 (impl/05)
+  const { handleBack, ConfirmStopDialog } = useBackNavigation({ entitlement, isPlaying });
+
   // 볼륨 슬라이더 잠금 여부 (crossfade 중)
   const volumeLocked = isVolumeControlLocked();
 
@@ -226,6 +219,12 @@ export default function S13PlayScreen({ route }: PlayScreenProps) {
     }
   }, [pendingUpgradePrompt, navigation]);
 
+  // ── iOS 스와이프백 비활성화 (AC-09) ──────────────────────────────────────────
+  // gestureEnabled=false 로 스와이프백 제스처를 막아 entitlement 분기 없는 화면 이탈 방지
+  useEffect(() => {
+    navigation.setOptions({ gestureEnabled: false });
+  }, [navigation]);
+
   // ── 핸들러 ───────────────────────────────────────────────────────────────────
 
   const handlePlayPause = () => {
@@ -241,10 +240,6 @@ export default function S13PlayScreen({ route }: PlayScreenProps) {
     setVolume(v).catch((err) => console.error('[S13] setVolume failed:', err));
   };
 
-  const onBackPress = () => {
-    handleBack(entitlement, isPlaying, navigation);
-  };
-
   // ── 렌더링 ────────────────────────────────────────────────────────────────────
 
   const songTitle = SONG_NAMES[resolvedSongKey] ?? resolvedSongKey;
@@ -252,7 +247,7 @@ export default function S13PlayScreen({ route }: PlayScreenProps) {
   return (
     <SafeAreaView style={styles.container}>
       <Header
-        onBack={onBackPress}
+        onBack={handleBack}
         rightAction={<TimerButton onPress={() => setTimerSheetVisible(true)} />}
       />
 
@@ -290,6 +285,9 @@ export default function S13PlayScreen({ route }: PlayScreenProps) {
         currentEndsAt={timerEndsAt}
         onClose={() => setTimerSheetVisible(false)}
       />
+
+      {/* 무료 유저 뒤로가기 확인 다이얼로그 (impl/05) */}
+      <ConfirmStopDialog />
     </SafeAreaView>
   );
 }
