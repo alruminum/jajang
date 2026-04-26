@@ -1,12 +1,12 @@
 from contextlib import asynccontextmanager
 
-from sqlalchemy import text
+from sqlalchemy import create_engine, text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from app.core.config import settings
 
@@ -31,6 +31,16 @@ async def get_db_session() -> AsyncSession:  # type: ignore[return]
     """Celery task 등 FastAPI DI 외부에서 DB 세션이 필요할 때 사용하는 컨텍스트 매니저."""
     async with AsyncSessionLocal() as session:
         yield session
+
+
+# ── Celery task용 동기 세션 ──────────────────────────────────────────────────
+# FastAPI 라우터는 get_db() (async) 사용. SyncSessionLocal은 Celery task 전용.
+_sync_engine = create_engine(
+    settings.DATABASE_URL.replace("+asyncpg", ""),  # asyncpg → psycopg2
+    pool_size=5,
+    max_overflow=2,
+)
+SyncSessionLocal = sessionmaker(bind=_sync_engine, expire_on_commit=False)
 
 
 async def init_db() -> None:
