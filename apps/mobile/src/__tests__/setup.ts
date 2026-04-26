@@ -1,5 +1,10 @@
 import { vi } from 'vitest';
 
+// ─── React Native globals ────────────────────────────────────────────────────
+// __DEV__ is a React Native global (true in development). Define it here so
+// modules like revenue-cat.ts that reference __DEV__ at import time don't throw.
+(global as unknown as Record<string, unknown>).__DEV__ = false;
+
 // ─── react-native ────────────────────────────────────────────────────────────
 vi.mock('react-native', () => ({
   Platform: {
@@ -19,7 +24,12 @@ vi.mock('react-native', () => ({
   TouchableOpacity: 'TouchableOpacity',
   ScrollView: 'ScrollView',
   KeyboardAvoidingView: 'KeyboardAvoidingView',
+  ActivityIndicator: 'ActivityIndicator',
   Dimensions: { get: () => ({ width: 390, height: 844 }) },
+  Linking: {
+    openURL: vi.fn().mockResolvedValue(undefined),
+    openSettings: vi.fn().mockResolvedValue(undefined),
+  },
 }));
 
 // ─── react-native-safe-area-context ──────────────────────────────────────────

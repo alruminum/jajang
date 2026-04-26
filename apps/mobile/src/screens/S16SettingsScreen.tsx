@@ -6,56 +6,40 @@
  *
  * 모듈 경계:
  * - S16 → revenue-cat.ts: getManagementURL, revenueCatLogout
- * - S16 → AuthStore: entitlement, trialExpiresAt, userId read / clearAuth() write
- * - S16 → S15: navigate('Subscribe', { source: 'settings' })  [source 파라미터는 런타임 무시]
- * - S16 → Auth 스택: rootNavigation.navigate('Auth') — 로그아웃/탈퇴 후
- * - S16 → services/auth-api: deleteAccountAPI, deleteVoiceSamplesAPI
- * - S16 → services/tracks-api: deleteAllTracksAPI
+ * - S16 → @store: useAuthStore (email, entitlement, trialExpiresAt / clearSession)
+ * - S16 → @services/auth-api: deleteAccountAPI
+ * - S16 → @services/tracks-api: deleteVoiceSamplesAPI, deleteAllTracksAPI
+ * - S16 → @utils/dialog: showConfirmDialog
+ * - S16 → @utils/toast: showToast
+ * - navigation.navigate('Subscribe', { source: 'settings' }) — 업그레이드 CTA
+ * - navigation.navigate('Login') — 로그아웃/탈퇴 후
  */
 
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  Alert,
   ActivityIndicator,
   Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 
-import type { RootStackParamList, MainStackParamList } from '@navigation/types';
-import { useAuthStore } from '@store/auth-store';
+import { useAuthStore } from '@store';
 import { getManagementURL, revenueCatLogout } from '@services/revenue-cat';
-import { deleteAccountAPI, deleteVoiceSamplesAPI } from '@services/auth-api';
-import { deleteAllTracksAPI } from '@services/tracks-api';
+import { deleteAccountAPI } from '@services/auth-api';
+import { deleteVoiceSamplesAPI, deleteAllTracksAPI } from '@services/tracks-api';
+import { showConfirmDialog } from '@utils/dialog';
+import { showToast } from '@utils/toast';
 
 // ─── 상수 ─────────────────────────────────────────────────────────────────────
 
 const PRIVACY_URL = 'https://jajang.app/privacy';
 const TERMS_URL = 'https://jajang.app/terms';
 const APP_VERSION = '1.0.0';
-
-// ─── 헬퍼 ─────────────────────────────────────────────────────────────────────
-
-/** Alert.alert 기반 확인 다이얼로그. 확인 → true, 취소 → false */
-function showConfirmDialog(title: string, message?: string): Promise<boolean> {
-  return new Promise((resolve) => {
-    Alert.alert(
-      title,
-      message,
-      [
-        { text: '취소', style: 'cancel', onPress: () => resolve(false) },
-        { text: '확인', style: 'destructive', onPress: () => resolve(true) },
-      ],
-      { cancelable: true, onDismiss: () => resolve(false) },
-    );
-  });
-}
 
 // ─── SettingsRow 컴포넌트 ─────────────────────────────────────────────────────
 
@@ -115,12 +99,11 @@ function Divider() {
 // ─── SubscriptionSection ──────────────────────────────────────────────────────
 
 interface SubscriptionSectionProps {
-  mainNavigation: NativeStackNavigationProp<MainStackParamList>;
-  showToast: (message: string) => void;
+  navigation: NavigationProp<ParamListBase>;
 }
 
-function SubscriptionSection({ mainNavigation, showToast }: SubscriptionSectionProps) {
-  const { entitlement, trialExpiresAt, userId } = useAuthStore();
+function SubscriptionSection({ navigation }: SubscriptionSectionProps) {
+  const { entitlement, trialExpiresAt, email } = useAuthStore();
 
   // 배지 텍스트 결정
   const badgeText = (() => {
@@ -145,11 +128,11 @@ function SubscriptionSection({ mainNavigation, showToast }: SubscriptionSectionP
 
   return (
     <View>
-      {/* 계정 헤더: userId + 배지 */}
+      {/* 계정 헤더: 이메일 + 배지 */}
       <View style={styles.accountRow}>
         <Text style={styles.accountIcon}>👤</Text>
         <Text style={styles.accountId} numberOfLines={1}>
-          {userId ?? '계정'}
+          {email ?? '계정'}
         </Text>
         {badgeText !== null && (
           <View
@@ -185,7 +168,7 @@ function SubscriptionSection({ mainNavigation, showToast }: SubscriptionSectionP
       {entitlement !== 'premium' && (
         <SettingsRow
           label="플랜 업그레이드"
-          onPress={() => mainNavigation.navigate('Subscribe')}
+          onPress={() => navigation.navigate('Subscribe', { source: 'settings' })}
           highlighted={entitlement === 'free' || entitlement === null}
           accessibilityLabel="플랜 업그레이드"
         />
@@ -196,35 +179,12 @@ function SubscriptionSection({ mainNavigation, showToast }: SubscriptionSectionP
 
 // ─── S16SettingsScreen (메인 화면) ────────────────────────────────────────────
 
-export default function S16SettingsScreen() {
-  const { clearAuth } = useAuthStore();
+interface S16SettingsScreenProps {
+  navigation: NavigationProp<ParamListBase>;
+}
+
+export default function S16SettingsScreen({ navigation }: S16SettingsScreenProps) {
   const [isDeleting, setIsDeleting] = useState<'voice' | 'tracks' | null>(null);
-  const [toast, setToast] = useState<{ message: string; visible: boolean }>({
-    message: '',
-    visible: false,
-  });
-  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // 루트 네비게이터 (Auth 스택으로 이동)
-  const rootNavigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-
-  // Main 스택 네비게이터 (Subscribe 화면으로 이동)
-  const mainNavigation =
-    useNavigation<NativeStackNavigationProp<MainStackParamList>>();
-
-  // ─── 토스트 ────────────────────────────────────────────────────────────────
-
-  function showToast(message: string): void {
-    if (toastTimerRef.current !== null) {
-      clearTimeout(toastTimerRef.current);
-    }
-    setToast({ message, visible: true });
-    toastTimerRef.current = setTimeout(() => {
-      setToast({ message: '', visible: false });
-      toastTimerRef.current = null;
-    }, 3_000);
-  }
 
   // ─── 로그아웃 ──────────────────────────────────────────────────────────────
 
@@ -237,8 +197,8 @@ export default function S16SettingsScreen() {
     } catch {
       // RevenueCat 실패해도 앱 세션은 초기화
     }
-    clearAuth();
-    rootNavigation.navigate('Auth');
+    useAuthStore.getState().clearSession();
+    navigation.navigate('Login');
   }
 
   // ─── 계정 탈퇴 ────────────────────────────────────────────────────────────
@@ -259,8 +219,8 @@ export default function S16SettingsScreen() {
     try {
       await deleteAccountAPI();
       await revenueCatLogout();
-      clearAuth();
-      rootNavigation.navigate('Auth');
+      useAuthStore.getState().clearSession();
+      navigation.navigate('Login');
     } catch {
       showToast('탈퇴 처리에 실패했어요');
     }
@@ -315,10 +275,7 @@ export default function S16SettingsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* 계정 + 구독 섹션 */}
-        <SubscriptionSection
-          mainNavigation={mainNavigation}
-          showToast={showToast}
-        />
+        <SubscriptionSection navigation={navigation} />
 
         <Divider />
 
@@ -380,13 +337,6 @@ export default function S16SettingsScreen() {
           <Text style={styles.logoutText}>로그아웃</Text>
         </TouchableOpacity>
       </ScrollView>
-
-      {/* 인라인 토스트 */}
-      {toast.visible && (
-        <View style={styles.toast} accessibilityLiveRegion="assertive">
-          <Text style={styles.toastText}>{toast.message}</Text>
-        </View>
-      )}
     </SafeAreaView>
   );
 }
@@ -517,22 +467,5 @@ const styles = StyleSheet.create({
   logoutText: {
     color: '#7B80A0',
     fontSize: 15,
-  },
-
-  // 토스트
-  toast: {
-    position: 'absolute',
-    bottom: 40,
-    left: 24,
-    right: 24,
-    backgroundColor: 'rgba(30, 34, 60, 0.95)',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  toastText: {
-    color: '#F5F5F5',
-    fontSize: 13,
   },
 });
