@@ -62,6 +62,11 @@ export default function MainNavigator() {
         component={S14UpgradeSheet}
         options={{ presentation: 'modal' }} // 바텀 시트 느낌
       />
+      <Stack.Screen
+        name="UpgradeSheet"
+        component={S14UpgradeSheet}
+        options={{ presentation: 'modal' }} // S07/S13 alias
+      />
       <Stack.Screen name="Subscribe" component={S15SubscribeScreen} />
       <Stack.Screen
         name="TrialExpired"
