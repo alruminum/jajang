@@ -4,6 +4,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import type { Track } from '../services/dataManagementApi'
 
 interface GenerationState {
   // 현재 진행 중인 job
@@ -16,11 +17,16 @@ interface GenerationState {
   completedTrackId:    string | null
   completedPresignUrl: string | null
 
+  // 완료된 음원 목록 (Epic 06: 데이터 관리 섹션에서 삭제 처리)
+  tracks: Track[]
+
   // 액션
   setActiveJob:    (jobId: string, trackId: string, songKey: string) => void
   setCompleted:    (jobId: string, trackId: string, presignUrl: string) => void
   clearActive:     () => void
   clearCompleted:  () => void
+  removeTrack:     (trackId: string) => void
+  clearAllTracks:  () => void
 }
 
 export const useGenerationStore = create<GenerationState>()(
@@ -32,6 +38,7 @@ export const useGenerationStore = create<GenerationState>()(
       completedJobId:      null,
       completedTrackId:    null,
       completedPresignUrl: null,
+      tracks: [],
 
       setActiveJob: (jobId, trackId, songKey) =>
         set({ activeJobId: jobId, activeTrackId: trackId, activeSongKey: songKey }),
@@ -44,6 +51,14 @@ export const useGenerationStore = create<GenerationState>()(
 
       clearActive:    () => set({ activeJobId: null, activeTrackId: null, activeSongKey: null }),
       clearCompleted: () => set({ completedJobId: null, completedTrackId: null, completedPresignUrl: null }),
+
+      removeTrack: (trackId) =>
+        set((state) => ({
+          tracks: state.tracks.filter((t) => t.id !== trackId),
+        })),
+
+      clearAllTracks: () =>
+        set({ tracks: [] }),
     }),
     {
       name: 'jajang-generation',
