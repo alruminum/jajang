@@ -25,8 +25,12 @@ export type MainStackParamList = {
   RecordGuide: { mode: 'humming' | 'shush' };                 // S09
   Record: { songKey: string; mode: 'humming' | 'shush' };     // S10
   Preview: { recordingUri: string; songKey: string };          // S11
-  Generating: { jobId: string; songKey: string };              // S12
-  Play: { trackId: string };             // S13
+  Generating: {
+    sampleId: string;   // voice_sample_id (서버 검증 완료)
+    songKey:  string;
+    jobId?:   string;   // 클라이언트 생성 UUID (멱등성 키, 없으면 S12에서 생성)
+  };                                                           // S12
+  Play: { trackId: string; presignUrl?: string };             // S13
   Upgrade: {                             // S14 (legacy)
     variant: 'background' | 'generation-exhausted';
   };
