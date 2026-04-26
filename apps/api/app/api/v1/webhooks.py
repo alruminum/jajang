@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import uuid as uuid_lib
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -54,6 +55,15 @@ async def revenuecat_webhook(
     )
 
     if event_type in HANDLED_EVENTS and event.app_user_id:
+        # UUID 유효성 사전 검증 (로그는 호출자에서)
+        try:
+            uuid_lib.UUID(event.app_user_id)
+        except ValueError:
+            logger.warning(
+                "webhook.invalid_app_user_id",
+                app_user_id=event.app_user_id[:8] if len(event.app_user_id) >= 8 else event.app_user_id,
+            )
+            return {"status": "ok"}
         try:
             await sync_subscription_from_event(db, event)
         except Exception as exc:

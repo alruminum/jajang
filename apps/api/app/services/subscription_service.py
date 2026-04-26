@@ -2,14 +2,11 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.subscription import Subscription
 from app.schemas.webhooks import RevenueCatEvent
-
-logger = structlog.get_logger()
 
 # 이벤트 타입 → entitlement 매핑
 ENTITLEMENT_MAP: dict[str, str] = {
@@ -47,8 +44,7 @@ async def sync_subscription_from_event(
     try:
         user_id = uuid.UUID(event.app_user_id)
     except ValueError:
-        logger.warning("subscription.sync.invalid_uuid", app_user_id=event.app_user_id)
-        return  # 유효하지 않은 UUID — silent skip
+        return  # 유효하지 않은 UUID — silent skip (로그는 호출자에서)
 
     entitlement = ENTITLEMENT_MAP.get(event.type, "free")
 
