@@ -3,7 +3,6 @@
   "compilerOptions": {
     "strict": true,
     "baseUrl": ".",
-    "types": ["vitest/globals"],
     "paths": {
       "@screens/*": ["src/screens/*"],
       "@components/*": ["src/components/*"],

@@ -9,6 +9,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    typecheck: { tsconfig: './tsconfig.test.json' },
     setupFiles: ['./src/__tests__/setup.ts'],
     server: {
       deps: {
