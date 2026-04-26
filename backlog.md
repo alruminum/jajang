@@ -1,7 +1,7 @@
 # Backlog — 자장(Jajang) v1
 
 마일스톤: `v1`
-업데이트: 2026-04-26 (v1.2 — Epic 01~06 impl 완료, PR #1~#82 머지)
+업데이트: 2026-04-26 (v1.3 — Epic 07 디자인 시스템 추가, Issue #87)
 
 ## 마일스톤 0 — 선행 리서치 (1주)
 
@@ -42,6 +42,7 @@
 | 04 | 재생 & 백그라운드 | F6, F7, F8, F9 | ✅ 완료 (7 impl) | [epic-04-playback](docs/milestones/v1/epics/epic-04-playback/stories.md) |
 | 05 | 수익화 (광고 + IAP) | F10, F11, F12 | ✅ 완료 (5 impl) | [epic-05-monetization](docs/milestones/v1/epics/epic-05-monetization/stories.md) |
 | 06 | 개인정보 & 데이터 관리 | F13(설정 UI) | ✅ 완료 (5 impl) | [epic-06-privacy](docs/milestones/v1/epics/epic-06-privacy/stories.md) |
+| 07 | 디자인 시스템 | 디자인 토큰 + 폰트 로딩 + 화면 비주얼 폴리시 | 🔲 진행 중 (1 impl 계획) | [epic-07-design-system](docs/milestones/v1/epics/epic-07-design-system/impl/01-theme-tokens.md) |
 
 ## 구현 순서
 
@@ -64,5 +65,6 @@
 - [x] Epic 04 — 재생 & 백그라운드
 - [x] Epic 05 — 수익화
 - [x] Epic 06 — 개인정보 & 데이터 관리
+- [ ] Epic 07 — 디자인 시스템 (Issue #87)
 - [ ] 내부 베타 (TestFlight / Internal Test Track)
 - [ ] 앱스토어 심사 통과 + 공개 출시

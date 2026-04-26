@@ -12,6 +12,8 @@
 | v1.2 | 2026-04-24 | Epic 03: §2 서버 구조 확장 (inference/, generations, tracks), §3 카운터 상태머신 보완, §8 MOCK_GPU 등 환경변수 추가 |
 | v1.3 | 2026-04-24 | Epic 05: §2 서버 구조 확장 (rewarded/, subscription_service), §4 rewarded_ad_usage migration 0004, §6 SubscriptionSlice rewardedAdMonthKey 추가, §7 S15/S16/S17 화면 추가 |
 | v1.4 | 2026-04-24 | Epic 06: §2 audit_log 모델 + AccountDeletionService + LegalScreen/AccountDeletionScreen/DeleteTracksSheet, §3 hard_delete 스케줄 추가, §4 audit_logs 테이블 migration 0005, §6 AuthSlice clearAuthState 추가, §7 신규 화면 3개 추가 |
+| v1.5 | 2026-04-26 | Epic 07: §1 @expo-google-fonts 3종 추가, §2 src/theme/ + src/hooks/useFonts.ts 신설, §7 디자인 토큰 시스템 추가 |
+| v1.6 | 2026-04-26 | Epic 07 impl-02: §7 토큰 값 확정 — Colors(12종+파생3), FontFamily(6종), FontSize(7단계), Radius(4단계), Spacing(6단계), Typography 프리셋(8종). @expo-google-fonts 의존성 추가는 impl-03으로 분리. |
 
 ---
 
@@ -27,6 +29,7 @@
 | 상태 관리 | Zustand | v4.x | 경량 + persist 미들웨어로 구독 상태 로컬 캐시 |
 | 네비게이션 | React Navigation v7 | — | Stack + BottomSheet 조합 |
 | 오디오 녹음 | expo-av / expo-audio | SDK 52 | Bare workflow에서 마이크 접근, RNTP와 충돌 없음 |
+| 폰트 로딩 | expo-font + @expo-google-fonts | — | DM Sans / DM Mono / Noto Sans KR 번들 로딩. 네트워크 의존 없음, SIL 라이선스 |
 
 ### 백엔드
 | 항목 | 기술 | 선택 이유 |
@@ -67,6 +70,8 @@ jajang/
 │       │   ├── store/             # Zustand slices (auth, player, subscription, generation)
 │       │   ├── services/          # API 클라이언트, RevenueCat, AdMob 래퍼
 │       │   ├── audio/             # AudioEngine (RNTP 래퍼, crossfade, timer)
+│       │   ├── theme/             # 디자인 토큰 (tokens.ts, typography.ts, spacing.ts, index.ts)
+│       │   ├── hooks/             # useFonts.ts (DM Sans + Noto Sans KR + DM Mono)
 │       │   └── utils/             # 클라이언트 품질 검증 (RMS, 피크)
 │       ├── ios/                   # Info.plist (UIBackgroundModes: audio)
 │       └── android/               # AndroidManifest (FOREGROUND_SERVICE)
@@ -225,6 +230,13 @@ interface SubscriptionSlice {
 ## §7 화면 컴포넌트
 
 17 screens + 1 component — 상세 스펙 → `docs/ux-flow.md` 참조
+
+**디자인 토큰 시스템** (`src/theme/`) — impl-02에서 파일·값 확정:
+- `tokens.ts` — `Colors`(12종 + 파생 투명도 3종), `FontFamily`(6종), `FontSize`(7단계: xs~display), `Radius`(4단계: sm/md/lg/pill), pure constants `as const`
+- `typography.ts` — `Typography` 프리셋 8종 (displayBold / h1~h3 / body / caption / buttonLabel / timerMono), `TextStyle` 기반
+- `spacing.ts` — `Spacing` 6단계 (xs=4 ~ xxl=48)
+- `index.ts` — 배럴 export
+- `useFonts.ts` — expo-font 폰트 로딩 훅 (impl-03 예정 — DM Sans 3 weight + DM Mono + Noto Sans KR 2 weight)
 
 핵심 컴포넌트:
 - `AudioEngine` — RNTP 래퍼, crossfade, timer fade-out

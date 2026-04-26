@@ -21,6 +21,7 @@ module.exports = function (api) {
             'react-native-google-mobile-ads': './src/__mocks__/react-native-google-mobile-ads.js',
             'react-native-track-player': './src/__mocks__/react-native-track-player.js',
             'expo-av': './stubs/expo-av.js',
+            'react-native-purchases': './stubs/react-native-purchases.js',
           },
         },
       ],
