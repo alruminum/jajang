@@ -1,13 +1,47 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParamList } from '@navigation/types';
+import { useTheme } from '@hooks/useTheme';
 
 type NavProp = NativeStackNavigationProp<MainStackParamList>;
 
 export default function EmptyTrackState() {
   const navigation = useNavigation<NavProp>();
+  const { colors } = useTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 40,
+    },
+    emoji: { fontSize: 56, marginBottom: 24 },
+    title: {
+      color: colors.textPrimary,
+      fontSize: 18,
+      fontWeight: '600',
+      marginBottom: 8,
+      textAlign: 'center',
+    },
+    subtitle: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      marginBottom: 32,
+      textAlign: 'center',
+    },
+    btn: {
+      height: 52,
+      borderRadius: 26,
+      backgroundColor: colors.accentPrimary,
+      paddingHorizontal: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    btnText: { color: colors.bgPrimary, fontSize: 15, fontWeight: '600' },
+  }), [colors]);
 
   return (
     <View style={styles.container}>
@@ -25,35 +59,3 @@ export default function EmptyTrackState() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 40,
-  },
-  emoji: { fontSize: 56, marginBottom: 24 },
-  title: {
-    color: '#EEF0F8',
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    color: '#7B80A0',
-    fontSize: 14,
-    marginBottom: 32,
-    textAlign: 'center',
-  },
-  btn: {
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#82B090',
-    paddingHorizontal: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  btnText: { color: '#0D0F1A', fontSize: 15, fontWeight: '600' },
-});

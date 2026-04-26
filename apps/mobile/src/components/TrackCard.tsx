@@ -1,33 +1,44 @@
 // apps/mobile/src/components/TrackCard.tsx
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import type { TrackItem } from '@services/api/tracks'
+import { useTheme } from '@hooks/useTheme'
 
 interface Props {
   track:            TrackItem
   onPlay:           (track: TrackItem) => void
-  onRetryPending?:  (track: TrackItem) => void   // 생성 중 카드 탭 → S12 복귀
+  onRetryPending?:  (track: TrackItem) => void
   onDelete:         (track: TrackItem) => void
 }
 
 export function TrackCard({ track, onPlay, onRetryPending, onDelete }: Props) {
+  const { colors } = useTheme()
   const isCompleted = track.status === 'completed'
   const isPending   = track.status === 'pending' || track.status === 'processing'
   const isFailed    = track.status === 'failed'
 
+  const styles = useMemo(() => StyleSheet.create({
+    card:            { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: 16, padding: 16, marginBottom: 10 },
+    cardPending:     { opacity: 0.8, borderWidth: 1, borderColor: colors.border },
+    iconWrap:        { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.surfaceHigh, justifyContent: 'center', alignItems: 'center', marginRight: 14 },
+    iconWrapPending: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+    icon:            { color: colors.accentPrimary, fontSize: 20 },
+    textWrap:        { flex: 1 },
+    songName:        { color: colors.textPrimary, fontSize: 16, fontFamily: 'NotoSansKR-Regular', marginBottom: 4 },
+    subText:         { color: colors.textSecondary, fontSize: 13 },
+    playBtn:         { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
+    playIcon:        { color: colors.accentPrimary, fontSize: 18 },
+  }), [colors])
+
   const handlePress = () => {
     if (isCompleted) onPlay(track)
     else if (isPending && onRetryPending) onRetryPending(track)
-    // failed: 롱탭 → 삭제만 허용 (재생 불가)
   }
 
   return (
     <TouchableOpacity
-      style={[
-        styles.card,
-        isPending && styles.cardPending,
-      ]}
+      style={[styles.card, isPending && styles.cardPending]}
       activeOpacity={0.7}
       onPress={handlePress}
       onLongPress={() => onDelete(track)}
@@ -42,14 +53,12 @@ export function TrackCard({ track, onPlay, onRetryPending, onDelete }: Props) {
         '길게 눌러서 삭제하세요'
       }
     >
-      {/* 아이콘 영역 */}
       <View style={[styles.iconWrap, isPending && styles.iconWrapPending]}>
         <Text style={styles.icon}>
           {isPending ? '…' : isFailed ? '⚠' : '♫'}
         </Text>
       </View>
 
-      {/* 텍스트 영역 */}
       <View style={styles.textWrap}>
         <Text style={styles.songName} numberOfLines={1}>
           {track.song_name}
@@ -63,7 +72,6 @@ export function TrackCard({ track, onPlay, onRetryPending, onDelete }: Props) {
         </Text>
       </View>
 
-      {/* 우측 액션 */}
       {isCompleted && (
         <TouchableOpacity
           style={styles.playBtn}
@@ -83,16 +91,3 @@ function formatDate(iso: string | null): string {
   const d = new Date(iso)
   return `${d.getMonth() + 1}월 ${d.getDate()}일`
 }
-
-const styles = StyleSheet.create({
-  card:            { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A1D30', borderRadius: 16, padding: 16, marginBottom: 10 },
-  cardPending:     { opacity: 0.8, borderWidth: 1, borderColor: '#2A2E48' },
-  iconWrap:        { width: 44, height: 44, borderRadius: 12, backgroundColor: '#21253E', justifyContent: 'center', alignItems: 'center', marginRight: 14 },
-  iconWrapPending: { backgroundColor: '#1A1D30', borderWidth: 1, borderColor: '#2A2E48' },
-  icon:            { color: '#8BAED4', fontSize: 20 },
-  textWrap:        { flex: 1 },
-  songName:        { color: '#EEF0F8', fontSize: 16, fontFamily: 'NotoSansKR-Regular', marginBottom: 4 },
-  subText:         { color: '#7B80A0', fontSize: 13 },
-  playBtn:         { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
-  playIcon:        { color: '#82B090', fontSize: 18 },
-})

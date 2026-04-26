@@ -7,13 +7,14 @@
  * - @react-native-community/slider 미사용 — 외부 패키지 없는 커스텀 구현
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { View, PanResponder, StyleSheet } from 'react-native';
 import type {
   GestureResponderEvent,
   PanResponderGestureState,
   LayoutChangeEvent,
 } from 'react-native';
+import { useTheme } from '@hooks/useTheme';
 
 export interface VolumeSliderProps {
   value: number;       // 0.0 ~ 1.0
@@ -22,13 +23,49 @@ export interface VolumeSliderProps {
 }
 
 const THUMB_SIZE = 22;
+const TRACK_HEIGHT = 4;
 
 export default function VolumeSlider({ value, disabled, onChange }: VolumeSliderProps) {
+  const { colors } = useTheme();
   const widthRef = useRef(0);
   const disabledRef = useRef(disabled);
   const onChangeRef = useRef(onChange);
 
-  // 클로저 stale 방지 — refs 동기화
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      height: 48,
+      justifyContent: 'center',
+      paddingHorizontal: THUMB_SIZE / 2,
+    },
+    containerDisabled: {
+      opacity: 0.4,
+    },
+    trackBackground: {
+      position: 'absolute',
+      left: THUMB_SIZE / 2,
+      right: THUMB_SIZE / 2,
+      height: TRACK_HEIGHT,
+      borderRadius: TRACK_HEIGHT / 2,
+      backgroundColor: colors.border,
+    },
+    trackFill: {
+      position: 'absolute',
+      left: THUMB_SIZE / 2,
+      height: TRACK_HEIGHT,
+      borderRadius: TRACK_HEIGHT / 2,
+      backgroundColor: colors.accentPrimary,
+    },
+    thumb: {
+      position: 'absolute',
+      width: THUMB_SIZE,
+      height: THUMB_SIZE,
+      borderRadius: THUMB_SIZE / 2,
+      backgroundColor: colors.accentPrimary,
+      top: '50%',
+      marginTop: -THUMB_SIZE / 2,
+    },
+  }), [colors]);
+
   useEffect(() => {
     disabledRef.current = disabled;
   }, [disabled]);
@@ -72,13 +109,8 @@ export default function VolumeSlider({ value, disabled, onChange }: VolumeSlider
       accessibilityValue={{ min: 0, max: 100, now: Math.round(value * 100) }}
       accessibilityLabel="볼륨"
     >
-      {/* 배경 트랙 */}
       <View style={styles.trackBackground} />
-
-      {/* 채워진 트랙 */}
       <View style={[styles.trackFill, { width: fillPercent }]} />
-
-      {/* 썸 */}
       <View
         style={[
           styles.thumb,
@@ -91,40 +123,3 @@ export default function VolumeSlider({ value, disabled, onChange }: VolumeSlider
     </View>
   );
 }
-
-const TRACK_HEIGHT = 4;
-
-const styles = StyleSheet.create({
-  container: {
-    height: 48, // 최소 터치 타겟 48dp
-    justifyContent: 'center',
-    paddingHorizontal: THUMB_SIZE / 2,
-  },
-  containerDisabled: {
-    opacity: 0.4,
-  },
-  trackBackground: {
-    position: 'absolute',
-    left: THUMB_SIZE / 2,
-    right: THUMB_SIZE / 2,
-    height: TRACK_HEIGHT,
-    borderRadius: TRACK_HEIGHT / 2,
-    backgroundColor: '#2A2E48',
-  },
-  trackFill: {
-    position: 'absolute',
-    left: THUMB_SIZE / 2,
-    height: TRACK_HEIGHT,
-    borderRadius: TRACK_HEIGHT / 2,
-    backgroundColor: '#82B090',
-  },
-  thumb: {
-    position: 'absolute',
-    width: THUMB_SIZE,
-    height: THUMB_SIZE,
-    borderRadius: THUMB_SIZE / 2,
-    backgroundColor: '#82B090',
-    top: '50%',
-    marginTop: -THUMB_SIZE / 2,
-  },
-});

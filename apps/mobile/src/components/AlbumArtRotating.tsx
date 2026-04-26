@@ -6,8 +6,9 @@
  * - isPlaying=false → 현재 위치에서 정지
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { Animated, Easing, StyleSheet } from 'react-native';
+import { useTheme } from '@hooks/useTheme';
 
 export interface AlbumArtRotatingProps {
   isPlaying: boolean;
@@ -17,8 +18,15 @@ export interface AlbumArtRotatingProps {
 const ALBUM_ART_URI = 'https://assets.jajang.app/album-art.png';
 
 export default function AlbumArtRotating({ isPlaying, size = 240 }: AlbumArtRotatingProps) {
+  const { colors } = useTheme();
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const animRef = useRef<Animated.CompositeAnimation | null>(null);
+
+  const styles = useMemo(() => StyleSheet.create({
+    base: {
+      backgroundColor: colors.surface,
+    },
+  }), [colors]);
 
   useEffect(() => {
     if (isPlaying) {
@@ -57,9 +65,3 @@ export default function AlbumArtRotating({ isPlaying, size = 240 }: AlbumArtRota
     />
   );
 }
-
-const styles = StyleSheet.create({
-  base: {
-    backgroundColor: '#1A1D30', // URI 로드 전 placeholder 색상
-  },
-});
