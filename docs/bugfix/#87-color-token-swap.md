@@ -71,9 +71,12 @@ apps/mobile/src/__tests__/screens/S08RecordModeScreen.test.tsx
 | `#F5C97A55` | `#82B09055` | 33% 투명도 변형 (있으면 교체) |
 | `#E8A94A` | `#5A8A6A` | 보조 amber → 보조 sage |
 | `#e8a94a` | `#5a8a6a` | 소문자 변형 |
+| `rgba(245, 201, 122,` | `rgba(130, 176, 144,` | rgba 형식 amber RGB → sage RGB (alpha 유지) |
 
 > 투명도 2자리(`22` / `33` / `44` / `55`)는 현재 코드베이스에서 `#F5C97A22` 패턴이 grep 0건 확인됨.
 > 그러나 향후 추가 가능성을 대비해 매핑 명시. `#E8A94A`는 S10, S11, RecordScreen, DeleteTracksSheet 4개 파일에서 확인됨.
+> `rgba(245, 201, 122, ...)` 형식은 TrialExpiryBanner.tsx(L45,L48), TrialBadge.tsx(L28,L34) 4건 확인됨.
+> 치환 공식: `#82B090` = R:130(0x82) G:176(0xB0) B:144(0x90). RGB 부분만 교체하고 쉼표 이후 alpha는 그대로 유지.
 
 ---
 
@@ -201,6 +204,12 @@ LC_ALL=C sed -i '' 's/#E8A94A/#5A8A6A/g; s/#e8a94a/#5a8a6a/g' \
   apps/mobile/src/screens/S11PreviewScreen.tsx \
   apps/mobile/src/screens/RecordScreen.tsx \
   apps/mobile/src/components/DeleteTracksSheet.tsx
+
+# 3. rgba(245, 201, 122, ...) 교체 — TrialExpiryBanner, TrialBadge
+#    alpha 값(0.1 / 0.15 / 0.25 / 0.3)은 그대로 유지, RGB 부분만 교체
+LC_ALL=C sed -i '' 's/rgba(245, 201, 122,/rgba(130, 176, 144,/g' \
+  apps/mobile/src/components/TrialExpiryBanner.tsx \
+  apps/mobile/src/components/TrialBadge.tsx
 ```
 
 ---
@@ -210,8 +219,8 @@ LC_ALL=C sed -i '' 's/#E8A94A/#5A8A6A/g; s/#e8a94a/#5a8a6a/g' \
 교체 후 아래 명령으로 잔존 여부를 확인한다. 모두 0건이어야 통과.
 
 ```bash
-# F5C97A 잔존 확인 (대소문자 무시)
-echo "=== F5C97A 잔존 ==="
+# F5C97A 잔존 확인 (대소문자 무시) — hex 형식
+echo "=== F5C97A 잔존 (hex) ==="
 grep -ri "F5C97A" apps/mobile/src/ | wc -l
 # 기대값: 0
 
@@ -220,9 +229,17 @@ echo "=== E8A94A 잔존 ==="
 grep -ri "E8A94A" apps/mobile/src/ | wc -l
 # 기대값: 0
 
+# rgba(245, 201, 122, ...) 잔존 확인 — FAIL-2 보완: rgba 형식 별도 탐지
+echo "=== rgba amber 잔존 ==="
+grep -r "rgba(245" apps/mobile/src/ | grep "201, 122" | wc -l
+# 기대값: 0
+
 # 교체된 색상이 존재하는지 확인 (sanity check)
 echo "=== 82B090 존재 확인 (0보다 커야 정상) ==="
 grep -ri "82B090\|82b090" apps/mobile/src/ | wc -l
+
+echo "=== rgba sage 존재 확인 (0보다 커야 정상) ==="
+grep -r "rgba(130, 176, 144," apps/mobile/src/ | wc -l
 ```
 
 ---

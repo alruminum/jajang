@@ -14,6 +14,7 @@
 | v1.4 | 2026-04-24 | Epic 06: §2 audit_log 모델 + AccountDeletionService + LegalScreen/AccountDeletionScreen/DeleteTracksSheet, §3 hard_delete 스케줄 추가, §4 audit_logs 테이블 migration 0005, §6 AuthSlice clearAuthState 추가, §7 신규 화면 3개 추가 |
 | v1.5 | 2026-04-26 | Epic 07: §1 @expo-google-fonts 3종 추가, §2 src/theme/ + src/hooks/useFonts.ts 신설, §7 디자인 토큰 시스템 추가 |
 | v1.6 | 2026-04-26 | Epic 07 impl-02: §7 토큰 값 확정 — Colors(12종+파생3), FontFamily(6종), FontSize(7단계), Radius(4단계), Spacing(6단계), Typography 프리셋(8종). @expo-google-fonts 의존성 추가는 impl-03으로 분리. |
+| v1.7 | 2026-04-26 | Epic 07 impl-03 계획: §1 expo-splash-screen 추가, §7 useFonts.ts 계획 완료 상태 반영 |
 
 ---
 
@@ -29,7 +30,7 @@
 | 상태 관리 | Zustand | v4.x | 경량 + persist 미들웨어로 구독 상태 로컬 캐시 |
 | 네비게이션 | React Navigation v7 | — | Stack + BottomSheet 조합 |
 | 오디오 녹음 | expo-av / expo-audio | SDK 52 | Bare workflow에서 마이크 접근, RNTP와 충돌 없음 |
-| 폰트 로딩 | expo-font + @expo-google-fonts | — | DM Sans / DM Mono / Noto Sans KR 번들 로딩. 네트워크 의존 없음, SIL 라이선스 |
+| 폰트 로딩 | expo-font + expo-splash-screen + @expo-google-fonts | — | DM Sans / DM Mono / Noto Sans KR 번들 로딩. 네트워크 의존 없음, SIL 라이선스. expo-splash-screen으로 FOUC 방지 |
 
 ### 백엔드
 | 항목 | 기술 | 선택 이유 |
@@ -236,7 +237,7 @@ interface SubscriptionSlice {
 - `typography.ts` — `Typography` 프리셋 8종 (displayBold / h1~h3 / body / caption / buttonLabel / timerMono), `TextStyle` 기반
 - `spacing.ts` — `Spacing` 6단계 (xs=4 ~ xxl=48)
 - `index.ts` — 배럴 export
-- `useFonts.ts` — expo-font 폰트 로딩 훅 (impl-03 예정 — DM Sans 3 weight + DM Mono + Noto Sans KR 2 weight)
+- `useFonts.ts` — expo-font 폰트 로딩 훅 (impl-03 계획 완료 — DM Sans 3 weight + DM Mono + Noto Sans KR 2 weight, expo-splash-screen FOUC 방지 통합)
 
 핵심 컴포넌트:
 - `AudioEngine` — RNTP 래퍼, crossfade, timer fade-out

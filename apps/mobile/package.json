@@ -10,6 +10,9 @@
     "lint": "eslint src --ext .ts,.tsx"
   },
   "dependencies": {
+    "@expo-google-fonts/dm-mono": "^0.4.2",
+    "@expo-google-fonts/dm-sans": "^0.4.2",
+    "@expo-google-fonts/noto-sans-kr": "^0.4.3",
     "@invertase/react-native-apple-authentication": "^2.3.0",
     "@react-native-async-storage/async-storage": "^2.0.0",
     "@react-native-google-signin/google-signin": "^13.0.0",
@@ -19,7 +22,9 @@
     "axios": "^1.7.0",
     "events": "^3.3.0",
     "expo": "^55.0.17",
+    "expo-font": "~55.0.6",
     "expo-secure-store": "~55.0.13",
+    "expo-splash-screen": "~55.0.19",
     "expo-status-bar": "~55.0.5",
     "expo-web-browser": "~55.0.14",
     "jwt-decode": "^4.0.0",
