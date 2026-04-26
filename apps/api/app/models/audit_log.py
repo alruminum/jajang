@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, DateTime, Index, Text
+from sqlalchemy import JSON, Column, DateTime, Index, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 
 from app.core.db import Base
@@ -24,7 +24,7 @@ class AuditLog(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(Text, nullable=True)   # FK 없음 (설계 결정 참조)
     action = Column(Text, nullable=False)   # 'account_deletion_requested' | 'account_hard_deleted'
-    event_metadata = Column("metadata", JSONB, nullable=True)  # SQLAlchemy reserved name 우회
+    event_metadata = Column("metadata", JSON().with_variant(JSONB(), "postgresql"), nullable=True)  # SQLAlchemy reserved name 우회 + SQLite 호환
     created_at = Column(
         DateTime(timezone=True),
         nullable=False,
