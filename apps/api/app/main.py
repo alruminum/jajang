@@ -39,6 +39,7 @@ def create_app() -> FastAPI:
     from app.api.v1.rewarded import router as rewarded_router
     from app.api.v1.songs import router as songs_router
     from app.api.v1.tracks import router as tracks_router
+    from app.api.v1.users import router as users_router
     from app.api.v1.webhooks import router as webhooks_router
     app.include_router(auth_router, prefix="/api/v1")
     app.include_router(challenges_router, prefix="/api/v1")
@@ -47,6 +48,7 @@ def create_app() -> FastAPI:
     app.include_router(recordings_router, prefix="/api/v1")
     app.include_router(rewarded_router, prefix="/api/v1")
     app.include_router(tracks_router, prefix="/api/v1")
+    app.include_router(users_router, prefix="/api/v1")
     app.include_router(webhooks_router, prefix="/api/v1")
     return app
 
