@@ -129,8 +129,9 @@
 
 | 스토리 | GitHub Issue |
 |---|---|
-| Story 1 | — |
-| Story 2 | — |
-| Story 3 | — |
-| Story 4 | — |
-| Story 5 | — |
+| Epic | [#52](https://github.com/alruminum/jajang/issues/52) |
+| Story 1 | [#53](https://github.com/alruminum/jajang/issues/53) |
+| Story 2 | [#54](https://github.com/alruminum/jajang/issues/54) |
+| Story 3 | [#55](https://github.com/alruminum/jajang/issues/55) |
+| Story 4 | [#56](https://github.com/alruminum/jajang/issues/56) |
+| Story 5 | [#57](https://github.com/alruminum/jajang/issues/57) |

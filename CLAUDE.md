@@ -1,6 +1,9 @@
-# [프로젝트명]
+# 자장 (Jajang)
 
-[한 줄 설명. 플랫폼, 장르, MVP 기간 등]
+부모 목소리로 AI 자장가를 생성하고 화면 잠근 채로 최대 10시간 재생하는 React Native + FastAPI 크로스플랫폼 앱. MVP 10~14주 (1인 개발 + Claude 어시스트).
+
+**Repo**: https://github.com/alruminum/jajang
+**구조**: 모노레포 — `apps/mobile/` (Expo Bare) + `apps/api/` (FastAPI)
 
 ---
 
@@ -17,26 +20,51 @@
 
 ## 개발 명령어
 
+### Mobile (apps/mobile)
 ```bash
-# [초기화] 예: npm install / pnpm install
-npm install
-
-# [개발] 예: npm run dev / next dev
-npm run dev
-
-# [빌드] 예: npm run build / next build
-npm run build
-
-# [테스트] 예: npx vitest run / npm test
-npx vitest run
+cd apps/mobile
+npm install              # 또는 pnpm install
+npx expo prebuild        # 네이티브 코드 생성 (최초 1회)
+npx expo run:ios         # iOS 시뮬레이터 (Bare workflow)
+npx expo run:android     # Android 에뮬레이터
+npx vitest run           # 테스트
 ```
 
-## 환경변수 (`.env`)
-
+### API (apps/api)
+```bash
+cd apps/api
+pip install -e .                                      # 또는 poetry install
+alembic upgrade head                                  # DB migration
+uvicorn app.main:app --reload --port 8000             # 개발 서버
+celery -A app.core.celery_app worker --loglevel=info  # Celery 워커
+pytest                                                # 테스트
 ```
-# [키=값] 예:
-# DATABASE_URL=postgresql://...
-# NEXT_PUBLIC_API_URL=http://localhost:3000
+
+## 환경변수
+
+### apps/api/.env
+```
+DATABASE_URL=postgresql://localhost/jajang
+JWT_PRIVATE_KEY=...
+JWT_PUBLIC_KEY=...
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+REFRESH_TOKEN_EXPIRE_DAYS=30
+GOOGLE_CLIENT_ID=...
+S3_BUCKET=jajang-audio
+S3_REGION=ap-northeast-2
+S3_ACCESS_KEY=...
+S3_SECRET_KEY=...
+REVENUECAT_WEBHOOK_SECRET=...
+MOCK_GPU=true                                          # M0 전 placeholder mp3 사용
+```
+
+### apps/mobile (app.config.ts)
+```
+EXPO_PUBLIC_API_URL=http://localhost:8000/api/v1
+EXPO_PUBLIC_REVENUECAT_API_KEY_IOS=...
+EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID=...
+EXPO_PUBLIC_ADMOB_APP_ID_IOS=...
+EXPO_PUBLIC_ADMOB_APP_ID_ANDROID=...
 ```
 
 ---
