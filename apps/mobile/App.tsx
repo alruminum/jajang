@@ -2,8 +2,8 @@ import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer, DarkTheme, createNavigationContainerRef } from '@react-navigation/native';
-import mobileAds, { MaxAdContentRating } from 'react-native-google-mobile-ads';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { initializeAdMob } from '@services/adMobService';
 import RootNavigator from '@navigation/RootNavigator';
 import { sessionEvents, SESSION_EXPIRED_EVENT } from '@lib/session-events';
 import { useAuth } from '@hooks/useAuth';
@@ -64,13 +64,8 @@ export default function App() {
   useEntitlementSync();
 
   useEffect(() => {
-    // AdMob 초기화 (첫 광고 요청 전 완료 필요)
-    mobileAds().initialize().catch(console.warn);
-    mobileAds().setRequestConfiguration({
-      maxAdContentRating: MaxAdContentRating.PG,
-      tagForChildDirectedTreatment: false,
-      tagForUnderAgeOfConsent: false,
-    }).catch(console.warn);
+    // AdMob 초기화 (첫 광고 요청 전 완료 필요 — adMobService)
+    initializeAdMob().catch(console.warn);
   }, []);
 
   return (
