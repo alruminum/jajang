@@ -1,28 +1,67 @@
-// ─── Colors ──────────────────────────────────────────────────────────────────
-export const Colors = {
-  // 배경 — 깊은 남색 (순수 black 아님)
-  bgPrimary:   '#0D0F1A',
-  bgDeep:      '#12152B',
-  // 서피스 — 카드/시트 배경
-  surface:     '#1A1D30',
-  surfaceHigh: '#21253E',
-  // 엑센트 — 세이지 그린 (수면·자연·평온 무드)
-  accentPrimary:   '#82B090',   // Issue #87 색상 토큰 교체 반영
-  accentSecondary: '#8BAED4',   // 달빛 블루 (보조 정보)
-  // 경계선
-  border: '#2A2E48',
-  // 텍스트
-  textPrimary:   '#EEF0F8',
-  textSecondary: '#7B80A0',
-  // 시멘틱
-  destructive: '#E05252',   // 삭제·경고 (설정 탈퇴 버튼 등)
-  // 파생 — 투명도 변형 (Pencil hex alpha 기준)
-  accentPrimary14: '#82B09024',   // 약 14% (0x24 = 36/255)
-  accentPrimary20: '#82B09033',   // 약 20% (0x33 = 51/255)
-  accentPrimary33: '#82B09055',   // 약 33% (0x55 = 85/255)
-} as const;
+// ─── Color Token Type ─────────────────────────────────────────────────────────
+export type ColorTokens = {
+  accentPrimary:    string;
+  accentSecondary:  string;
+  bgPrimary:        string;
+  bgDeep:           string;
+  surface:          string;
+  surfaceHigh:      string;
+  textPrimary:      string;
+  textSecondary:    string;
+  border:           string;
+  destructive:      string;
+  success:          string;
+  overlay:          string;
+  // 파생 투명도
+  accentPrimary14:  string;
+  accentPrimary20:  string;
+  accentPrimary33:  string;
+};
 
-export type ColorKey = keyof typeof Colors;
+// ─── Dark Colors (Midnight Indigo) ───────────────────────────────────────────
+export const darkColors: ColorTokens = {
+  accentPrimary:    '#5A7AA8',
+  accentSecondary:  '#C49A8A',
+  bgPrimary:        '#0D0F1A',
+  bgDeep:           '#12152B',
+  surface:          '#1A1D30',
+  surfaceHigh:      '#21253E',
+  textPrimary:      '#EEF0F8',
+  textSecondary:    '#7B80A0',
+  border:           '#2A2E48',
+  destructive:      '#E85A5A',
+  success:          '#6BCB77',
+  overlay:          '#000000AA',
+  // 파생 — 투명도 변형 (Pencil hex alpha 기준)
+  accentPrimary14:  '#5A7AA824',   // 약 14% (0x24 = 36/255)
+  accentPrimary20:  '#5A7AA833',   // 약 20% (0x33 = 51/255)
+  accentPrimary33:  '#5A7AA855',   // 약 33% (0x55 = 85/255)
+};
+
+// ─── Light Colors ─────────────────────────────────────────────────────────────
+export const lightColors: ColorTokens = {
+  accentPrimary:    '#3A5A88',
+  accentSecondary:  '#9A6858',
+  bgPrimary:        '#FBF7F0',
+  bgDeep:           '#F0EAE0',
+  surface:          '#E8E0D4',
+  surfaceHigh:      '#DDD4C6',
+  textPrimary:      '#1C1A18',
+  textSecondary:    '#6B6055',
+  border:           '#C8BEB0',
+  destructive:      '#C0392B',
+  success:          '#2E8B44',
+  overlay:          '#00000066',
+  // 파생 — 투명도 변형
+  accentPrimary14:  '#3A5A8824',   // 약 14% (0x24 = 36/255)
+  accentPrimary20:  '#3A5A8833',   // 약 20% (0x33 = 51/255)
+  accentPrimary33:  '#3A5A8855',   // 약 33% (0x55 = 85/255)
+};
+
+// ─── 하위 호환 별칭 ────────────────────────────────────────────────────────────
+// 기존 Colors 참조 코드 무중단 — 다크 퍼스트 앱이므로 darkColors 를 기본값으로.
+export const Colors = darkColors;
+export type ColorKey = keyof ColorTokens;
 
 // ─── Font Family ──────────────────────────────────────────────────────────────
 // 폰트 이름은 useFonts (impl-03) 에서 expo-font에 등록 후 유효.
