@@ -65,6 +65,18 @@ describe('useTheme — scheme 분기', () => {
     const { result } = renderHook(() => useTheme());
     expect(result.current.colors).toBe(darkColors);
   });
+
+  it('useColorScheme undefined → isDark === true (다크 퍼스트 폴백)', () => {
+    mockUseColorScheme.mockReturnValue(undefined as unknown as null);
+    const { result } = renderHook(() => useTheme());
+    expect(result.current.isDark).toBe(true);
+  });
+
+  it('useColorScheme undefined → colors 는 darkColors 와 동일 참조', () => {
+    mockUseColorScheme.mockReturnValue(undefined as unknown as null);
+    const { result } = renderHook(() => useTheme());
+    expect(result.current.colors).toBe(darkColors);
+  });
 });
 
 // ────────────────────────────────────────────────
