@@ -1,81 +1,137 @@
 /**
- * #99 dual-theme-migration — useTheme 훅 테스트
+ * useTheme 훅 테스트
  *
  * 수용 기준:
- * - useColorScheme 'dark' → isDark=true, colors=darkColors
- * - useColorScheme 'light' → isDark=false, colors=lightColors
+ * - useColorScheme 'dark' → isDark=true, colors=darkColors  (pref='system')
+ * - useColorScheme 'light' → isDark=false, colors=lightColors  (pref='system')
  * - useColorScheme null/undefined → isDark=true (앱 다크 퍼스트 정책)
  * - 반환 shape: { colors: ColorTokens, isDark: boolean }
+ * - pref='dark' → OS scheme 무관하게 isDark=true, colors=darkColors
+ * - pref='light' → OS scheme 무관하게 isDark=false, colors=lightColors
  */
 
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
-// react-native mock — useColorScheme 제어용
+// react-native — useColorScheme만 mock (renderHook 미사용 → react-test-renderer 충돌 없음)
 vi.mock('react-native', () => ({
   useColorScheme: vi.fn(),
 }));
 
+// useThemeStore mock — AsyncStorage 의존성 차단, pref 제어용
+vi.mock('../store/theme-store', () => ({
+  useThemeStore: vi.fn(),
+}));
+
 import { useColorScheme } from 'react-native';
-import { renderHook } from '@testing-library/react-native';
+import { useThemeStore } from '../store/theme-store';
 import { useTheme } from '@hooks/useTheme';
 import { darkColors, lightColors } from '../theme/tokens';
 
 const mockUseColorScheme = vi.mocked(useColorScheme);
+const mockUseThemeStore = vi.mocked(useThemeStore);
+
+/** pref 값을 selector 패턴으로 주입 */
+function setPref(pref: string) {
+  mockUseThemeStore.mockImplementation((selector: (s: { pref: string; setPref: ReturnType<typeof vi.fn> }) => unknown) =>
+    selector({ pref, setPref: vi.fn() })
+  );
+}
 
 // ────────────────────────────────────────────────
-// scheme 분기 — isDark / colors 선택
+// scheme 분기 — pref='system' (기존 동작 유지)
 // ────────────────────────────────────────────────
-describe('useTheme — scheme 분기', () => {
+describe('useTheme — scheme 분기 (pref=system)', () => {
+  beforeEach(() => {
+    setPref('system');
+  });
+
   afterEach(() => {
     vi.clearAllMocks();
   });
 
   it("useColorScheme 'dark' → isDark === true", () => {
     mockUseColorScheme.mockReturnValue('dark');
-    const { result } = renderHook(() => useTheme());
-    expect(result.current.isDark).toBe(true);
+    expect(useTheme().isDark).toBe(true);
   });
 
   it("useColorScheme 'dark' → colors 는 darkColors 와 동일 참조", () => {
     mockUseColorScheme.mockReturnValue('dark');
-    const { result } = renderHook(() => useTheme());
-    expect(result.current.colors).toBe(darkColors);
+    expect(useTheme().colors).toBe(darkColors);
   });
 
   it("useColorScheme 'light' → isDark === false", () => {
     mockUseColorScheme.mockReturnValue('light');
-    const { result } = renderHook(() => useTheme());
-    expect(result.current.isDark).toBe(false);
+    expect(useTheme().isDark).toBe(false);
   });
 
   it("useColorScheme 'light' → colors 는 lightColors 와 동일 참조", () => {
     mockUseColorScheme.mockReturnValue('light');
-    const { result } = renderHook(() => useTheme());
-    expect(result.current.colors).toBe(lightColors);
+    expect(useTheme().colors).toBe(lightColors);
   });
 
   it('useColorScheme null → isDark === true (다크 퍼스트 폴백)', () => {
     mockUseColorScheme.mockReturnValue(null);
-    const { result } = renderHook(() => useTheme());
-    expect(result.current.isDark).toBe(true);
+    expect(useTheme().isDark).toBe(true);
   });
 
   it('useColorScheme null → colors 는 darkColors 와 동일 참조', () => {
     mockUseColorScheme.mockReturnValue(null);
-    const { result } = renderHook(() => useTheme());
-    expect(result.current.colors).toBe(darkColors);
+    expect(useTheme().colors).toBe(darkColors);
   });
 
   it('useColorScheme undefined → isDark === true (다크 퍼스트 폴백)', () => {
     mockUseColorScheme.mockReturnValue(undefined as unknown as null);
-    const { result } = renderHook(() => useTheme());
-    expect(result.current.isDark).toBe(true);
+    expect(useTheme().isDark).toBe(true);
   });
 
   it('useColorScheme undefined → colors 는 darkColors 와 동일 참조', () => {
     mockUseColorScheme.mockReturnValue(undefined as unknown as null);
-    const { result } = renderHook(() => useTheme());
-    expect(result.current.colors).toBe(darkColors);
+    expect(useTheme().colors).toBe(darkColors);
+  });
+});
+
+// ────────────────────────────────────────────────
+// ThemePref override
+// ────────────────────────────────────────────────
+describe('useTheme — ThemePref override', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("pref='dark' → isDark=true (OS scheme='light'이어도)", () => {
+    setPref('dark');
+    mockUseColorScheme.mockReturnValue('light');
+    expect(useTheme().isDark).toBe(true);
+  });
+
+  it("pref='dark' → colors === darkColors", () => {
+    setPref('dark');
+    mockUseColorScheme.mockReturnValue('light');
+    expect(useTheme().colors).toBe(darkColors);
+  });
+
+  it("pref='light' → isDark=false (OS scheme='dark'이어도)", () => {
+    setPref('light');
+    mockUseColorScheme.mockReturnValue('dark');
+    expect(useTheme().isDark).toBe(false);
+  });
+
+  it("pref='light' → colors === lightColors", () => {
+    setPref('light');
+    mockUseColorScheme.mockReturnValue('dark');
+    expect(useTheme().colors).toBe(lightColors);
+  });
+
+  it("pref='system' + scheme='dark' → isDark=true (기존 동작 유지)", () => {
+    setPref('system');
+    mockUseColorScheme.mockReturnValue('dark');
+    expect(useTheme().isDark).toBe(true);
+  });
+
+  it("pref='system' + scheme='light' → isDark=false (기존 동작 유지)", () => {
+    setPref('system');
+    mockUseColorScheme.mockReturnValue('light');
+    expect(useTheme().isDark).toBe(false);
   });
 });
 
@@ -84,6 +140,7 @@ describe('useTheme — scheme 분기', () => {
 // ────────────────────────────────────────────────
 describe('useTheme — 반환값 shape', () => {
   beforeEach(() => {
+    setPref('system');
     mockUseColorScheme.mockReturnValue('dark');
   });
 
@@ -92,25 +149,25 @@ describe('useTheme — 반환값 shape', () => {
   });
 
   it('{ colors, isDark } 두 키를 포함한 객체를 반환한다', () => {
-    const { result } = renderHook(() => useTheme());
-    expect(result.current).toHaveProperty('colors');
-    expect(result.current).toHaveProperty('isDark');
+    const result = useTheme();
+    expect(result).toHaveProperty('colors');
+    expect(result).toHaveProperty('isDark');
   });
 
   it('colors 는 null 이 아닌 객체다 (ColorTokens)', () => {
-    const { result } = renderHook(() => useTheme());
-    expect(typeof result.current.colors).toBe('object');
-    expect(result.current.colors).not.toBeNull();
+    const result = useTheme();
+    expect(typeof result.colors).toBe('object');
+    expect(result.colors).not.toBeNull();
   });
 
   it('isDark 는 boolean 이다', () => {
-    const { result } = renderHook(() => useTheme());
-    expect(typeof result.current.isDark).toBe('boolean');
+    const result = useTheme();
+    expect(typeof result.isDark).toBe('boolean');
   });
 
   it('dark 모드에서 colors.accentPrimary 는 darkColors 값이다', () => {
-    const { result } = renderHook(() => useTheme());
-    expect(result.current.colors.accentPrimary).toBe(darkColors.accentPrimary);
+    const result = useTheme();
+    expect(result.colors.accentPrimary).toBe(darkColors.accentPrimary);
   });
 });
 
@@ -119,6 +176,7 @@ describe('useTheme — 반환값 shape', () => {
 // ────────────────────────────────────────────────
 describe('useTheme — light 모드 토큰 샘플', () => {
   beforeEach(() => {
+    setPref('system');
     mockUseColorScheme.mockReturnValue('light');
   });
 
@@ -127,17 +185,14 @@ describe('useTheme — light 모드 토큰 샘플', () => {
   });
 
   it('light 모드 colors.bgPrimary 는 lightColors.bgPrimary 와 같다', () => {
-    const { result } = renderHook(() => useTheme());
-    expect(result.current.colors.bgPrimary).toBe(lightColors.bgPrimary);
+    expect(useTheme().colors.bgPrimary).toBe(lightColors.bgPrimary);
   });
 
   it('light 모드 colors.textPrimary 는 lightColors.textPrimary 와 같다', () => {
-    const { result } = renderHook(() => useTheme());
-    expect(result.current.colors.textPrimary).toBe(lightColors.textPrimary);
+    expect(useTheme().colors.textPrimary).toBe(lightColors.textPrimary);
   });
 
   it('light 모드 colors.accentPrimary 는 darkColors 값과 다르다', () => {
-    const { result } = renderHook(() => useTheme());
-    expect(result.current.colors.accentPrimary).not.toBe(darkColors.accentPrimary);
+    expect(useTheme().colors.accentPrimary).not.toBe(darkColors.accentPrimary);
   });
 });
