@@ -1,8 +1,9 @@
 // apps/mobile/src/components/TrackCard.tsx
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import type { TrackItem } from '@services/api/tracks'
+import { useTheme } from '@hooks/useTheme'
 
 interface Props {
   track:            TrackItem
@@ -12,6 +13,20 @@ interface Props {
 }
 
 export function TrackCard({ track, onPlay, onRetryPending, onDelete }: Props) {
+  const { colors } = useTheme()
+  const styles = useMemo(() => StyleSheet.create({
+    card:            { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: 16, padding: 16, marginBottom: 10 },
+    cardPending:     { opacity: 0.8, borderWidth: 1, borderColor: colors.border },
+    iconWrap:        { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.surfaceHigh, justifyContent: 'center', alignItems: 'center', marginRight: 14 },
+    iconWrapPending: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+    icon:            { color: colors.accentSecondary, fontSize: 20 },
+    textWrap:        { flex: 1 },
+    songName:        { color: colors.textPrimary, fontSize: 16, fontFamily: 'NotoSansKR-Regular', marginBottom: 4 },
+    subText:         { color: colors.textSecondary, fontSize: 13 },
+    playBtn:         { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
+    playIcon:        { color: colors.accentPrimary, fontSize: 18 },
+  }), [colors])
+
   const isCompleted = track.status === 'completed'
   const isPending   = track.status === 'pending' || track.status === 'processing'
   const isFailed    = track.status === 'failed'
@@ -83,16 +98,3 @@ function formatDate(iso: string | null): string {
   const d = new Date(iso)
   return `${d.getMonth() + 1}월 ${d.getDate()}일`
 }
-
-const styles = StyleSheet.create({
-  card:            { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A1D30', borderRadius: 16, padding: 16, marginBottom: 10 },
-  cardPending:     { opacity: 0.8, borderWidth: 1, borderColor: '#2A2E48' },
-  iconWrap:        { width: 44, height: 44, borderRadius: 12, backgroundColor: '#21253E', justifyContent: 'center', alignItems: 'center', marginRight: 14 },
-  iconWrapPending: { backgroundColor: '#1A1D30', borderWidth: 1, borderColor: '#2A2E48' },
-  icon:            { color: '#C49A8A', fontSize: 20 },
-  textWrap:        { flex: 1 },
-  songName:        { color: '#EEF0F8', fontSize: 16, fontFamily: 'NotoSansKR-Regular', marginBottom: 4 },
-  subText:         { color: '#7B80A0', fontSize: 13 },
-  playBtn:         { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
-  playIcon:        { color: '#5A7AA8', fontSize: 18 },
-})

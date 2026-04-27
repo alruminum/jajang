@@ -11,7 +11,7 @@
  * - S06에서 조건부 렌더. props 전달 없음
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -28,12 +28,28 @@ import { usePlayerStore } from '@store/player-store';
 import { pausePlayback, resumePlayback } from '@audio/AudioEngine';
 import { SONG_NAMES } from '@services/songs';
 import type { MainStackParamList } from '@navigation/types';
+import { useTheme } from '@hooks/useTheme';
 
 type NavProp = NativeStackNavigationProp<MainStackParamList>;
 
 // ─── MiniWaveform (내부 컴포넌트) ──────────────────────────────────────────────
 
 function MiniWaveform({ isPlaying }: { isPlaying: boolean }) {
+  const { colors } = useTheme();
+  const waveformStyles = useMemo(() => StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    bar: {
+      width: 3,
+      borderRadius: 2,
+      backgroundColor: colors.accentPrimary,
+      marginRight: 3,
+    },
+  }), [colors]);
+
   const bar0 = useRef(new Animated.Value(0.3)).current;
   const bar1 = useRef(new Animated.Value(0.6)).current;
   const bar2 = useRef(new Animated.Value(0.5)).current;
@@ -76,6 +92,46 @@ function MiniWaveform({ isPlaying }: { isPlaying: boolean }) {
 // ─── MiniPlayer ───────────────────────────────────────────────────────────────
 
 export default function MiniPlayer() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => StyleSheet.create({
+    container: {
+      backgroundColor: colors.surface,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    bar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      height: 64,
+    },
+    songName: {
+      flex: 1,
+      color: colors.textPrimary,
+      fontSize: 14,
+      fontWeight: '600',
+      marginRight: 8,
+    },
+    status: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      marginRight: 12,
+    },
+    playButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: colors.surfaceHigh,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    playButtonText: {
+      color: colors.textPrimary,
+      fontSize: 14,
+    },
+  }), [colors]);
+
   const { isPlaying, currentSongKey } = usePlayerStore();
   const navigation = useNavigation<NavProp>();
   const insets = useSafeAreaInsets();
@@ -143,58 +199,3 @@ export default function MiniPlayer() {
     </Animated.View>
   );
 }
-
-// ─── 스타일 ───────────────────────────────────────────────────────────────────
-
-const waveformStyles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  bar: {
-    width: 3,
-    borderRadius: 2,
-    backgroundColor: '#5A7AA8',
-    marginRight: 3,
-  },
-});
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#1A1D30',
-    borderTopWidth: 1,
-    borderTopColor: '#252940',
-  },
-  bar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    height: 64,
-  },
-  songName: {
-    flex: 1,
-    color: '#EEF0F8',
-    fontSize: 14,
-    fontWeight: '600',
-    marginRight: 8,
-  },
-  status: {
-    color: '#7B80A0',
-    fontSize: 12,
-    marginRight: 12,
-  },
-  playButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#252940',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  playButtonText: {
-    color: '#EEF0F8',
-    fontSize: 14,
-  },
-});
