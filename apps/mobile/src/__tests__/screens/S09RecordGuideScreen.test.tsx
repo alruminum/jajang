@@ -9,17 +9,14 @@ import { render, fireEvent } from '@testing-library/react-native'
 import { Linking } from 'react-native'
 import { RecordGuideScreen } from '@screens/RecordGuideScreen'
 
-// ─── Mock: expo-av (setup.ts 미포함 API 보완) ─────────────────────────────────
+// ─── Mock: expo-audio (권한 API) ──────────────────────────────────────────────
 const mockGetPermissions = vi.fn()
 const mockRequestPermissions = vi.fn()
 
-vi.mock('expo-av', () => ({
-  Audio: {
-    getPermissionsAsync: mockGetPermissions,
-    requestPermissionsAsync: mockRequestPermissions,
-    setAudioModeAsync: vi.fn().mockResolvedValue(undefined),
-    Sound: { createAsync: vi.fn() },
-  },
+vi.mock('expo-audio', () => ({
+  getRecordingPermissionsAsync: mockGetPermissions,
+  requestRecordingPermissionsAsync: mockRequestPermissions,
+  setAudioModeAsync: vi.fn().mockResolvedValue(undefined),
 }))
 
 // ─── Mock: challengesApi ──────────────────────────────────────────────────────

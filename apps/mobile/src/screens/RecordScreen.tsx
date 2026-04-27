@@ -10,7 +10,9 @@ import {
   Alert,
   BackHandler,
 } from 'react-native';
-import { Audio } from 'expo-av';
+import { useAudioRecorder, useAudioRecorderState, setAudioModeAsync } from 'expo-audio';
+import type { RecordingOptions } from 'expo-audio';
+import { IOSOutputFormat, AudioQuality } from 'expo-audio';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { WaveformVisualizer } from '../components/WaveformVisualizer';
@@ -34,23 +36,22 @@ type ScreenPhase = 'countdown' | 'recording' | 'short_warning';
 // WAV PCM 녹음 옵션 (librosa SNR 분석에 최적)
 // 60초 16kHz 16bit mono ≈ 1.9MB — LTE 업로드 무리 없음
 // ─────────────────────────────────────
-const RECORDING_OPTIONS: Audio.RecordingOptions = {
+const RECORDING_OPTIONS: RecordingOptions = {
   isMeteringEnabled: true,
+  extension: '.wav',
+  sampleRate: 16000,
+  numberOfChannels: 1,
+  bitRate: 256000,
   android: {
-    extension: '.wav',
-    outputFormat: Audio.AndroidOutputFormat.DEFAULT,
-    audioEncoder: Audio.AndroidAudioEncoder.DEFAULT,
+    outputFormat: 'default',
+    audioEncoder: 'default',
     sampleRate: 16000,
-    numberOfChannels: 1,
-    bitRate: 256000,
   },
   ios: {
     extension: '.wav',
-    outputFormat: Audio.IOSOutputFormat.LINEARPCM,
-    audioQuality: Audio.IOSAudioQuality.MAX,
+    outputFormat: IOSOutputFormat.LINEARPCM,
+    audioQuality: AudioQuality.MAX,
     sampleRate: 16000,
-    numberOfChannels: 1,
-    bitRate: 256000,
     linearPCMBitDepth: 16,
     linearPCMIsBigEndian: false,
     linearPCMIsFloat: false,
@@ -59,8 +60,8 @@ const RECORDING_OPTIONS: Audio.RecordingOptions = {
 };
 
 // ─────────────────────────────────────
-// expo-av metering → 0~1 레벨 변환
-// expo-av metering: 0~-160 dBFS 범위
+// expo-audio metering → 0~1 레벨 변환
+// expo-audio metering: 0~-160 dBFS 범위
 // -60dB 이상을 1.0으로 클리핑 (실용 범위)
 // ─────────────────────────────────────
 function meteringToLevel(metering: number | undefined): number {
@@ -82,11 +83,15 @@ export function RecordScreen({ navigation, route }: Props) {
   const [levels, setLevels] = useState<number[]>([]);
   const [showSilenceWarning, setShowSilenceWarning] = useState(false);
 
+  // expo-audio 훅
+  const recorder = useAudioRecorder(RECORDING_OPTIONS);
+  const recorderState = useAudioRecorderState(recorder, 100);
+
   // refs (렌더 사이클 외부 상태)
-  const recordingRef = useRef<Audio.Recording | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const silentSecRef = useRef(0); // 연속 무음 누적 시간 (0.1초 단위)
+  const levelsRef = useRef<number[]>([]); // levels 최신값 추적
 
   // ── 카운트다운 ──────────────────────
   useEffect(() => {
@@ -112,40 +117,39 @@ export function RecordScreen({ navigation, route }: Props) {
     navigation.setOptions({ gestureEnabled: false });
   }, [navigation]);
 
+  // ── recorderState metering → levels 처리 ──
+  useEffect(() => {
+    if (!recorderState.isRecording) return;
+
+    const level = meteringToLevel(recorderState.metering);
+
+    // levels 배열 최대 40개 유지 (메모리 무한 증가 방지)
+    setLevels((prev) => [...prev.slice(-39), level]);
+    levelsRef.current = [...levelsRef.current.slice(-39), level];
+
+    // 무음 감지 (연속 무음만 카운트)
+    if (level < SILENCE_THRESHOLD) {
+      silentSecRef.current += 0.1;
+      if (silentSecRef.current >= SILENCE_WARN_SEC) {
+        setShowSilenceWarning(true);
+      }
+    } else {
+      silentSecRef.current = 0;
+      setShowSilenceWarning(false);
+    }
+  }, [recorderState]);
+
   // ── 녹음 시작 ──────────────────────
   const startRecording = async () => {
     try {
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
       });
 
-      const { recording } = await Audio.Recording.createAsync(
-        RECORDING_OPTIONS,
-        // metering 콜백: 100ms 주기
-        (status) => {
-          if (!status.isRecording) return;
+      await recorder.prepareToRecordAsync();
+      recorder.record();
 
-          const level = meteringToLevel(status.metering);
-
-          // levels 배열 최대 40개 유지 (메모리 무한 증가 방지)
-          setLevels((prev) => [...prev.slice(-39), level]);
-
-          // 무음 감지 (연속 무음만 카운트)
-          if (level < SILENCE_THRESHOLD) {
-            silentSecRef.current += 0.1;
-            if (silentSecRef.current >= SILENCE_WARN_SEC) {
-              setShowSilenceWarning(true);
-            }
-          } else {
-            silentSecRef.current = 0;
-            setShowSilenceWarning(false);
-          }
-        },
-        100, // 100ms 주기 metering
-      );
-
-      recordingRef.current = recording;
       setPhase('recording');
 
       // 경과 시간 타이머
@@ -220,6 +224,7 @@ export function RecordScreen({ navigation, route }: Props) {
     setLevels([]);
     setCountdown(COUNTDOWN_START);
     silentSecRef.current = 0;
+    levelsRef.current = [];
     setShowSilenceWarning(false);
     setPhase('countdown');
   };
@@ -235,14 +240,11 @@ export function RecordScreen({ navigation, route }: Props) {
       silenceTimerRef.current = null;
     }
 
-    const rec = recordingRef.current;
-    if (!rec) return null;
+    if (!recorder.isRecording) return null;
 
     try {
-      await rec.stopAndUnloadAsync();
-      const uri = rec.getURI();
-      recordingRef.current = null;
-      return uri ?? null;
+      await recorder.stop();
+      return recorder.uri ?? null;
     } catch {
       return null;
     }
@@ -261,9 +263,9 @@ export function RecordScreen({ navigation, route }: Props) {
   // ── 언마운트 정리 ──────────────────
   useEffect(() => {
     return () => {
-      cleanupRecording();
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ────────────────────────────────────

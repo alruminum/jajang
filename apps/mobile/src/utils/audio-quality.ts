@@ -9,10 +9,10 @@ export interface QualityResult {
 
 /**
  * PCM 기반 품질 검증.
- * durationSec: expo-av Recording.getStatusAsync().durationMillis / 1000
+ * durationSec: expo-audio useAudioRecorderState().durationMillis / 1000
  * pcmSamples:  Float32Array [-1, 1] 정규화 PCM 데이터
  *
- * 주의: expo-av는 직접 PCM Float32Array를 반환하지 않는다.
+ * 주의: expo-audio는 직접 PCM Float32Array를 반환하지 않는다.
  * 실용적 V1 대안: durationSec + metering 기반 RMS 추정 (validateFromMetadata 참조).
  * 이 함수는 PCM 이용 가능한 경우를 가정한 full 구현체.
  */
@@ -37,8 +37,8 @@ export function validateAudioQuality(
 }
 
 /**
- * expo-av metering 기반 실용적 V1 검증 (PCM 없이).
- * meteringLevels: Recording 중 수집된 dBFS 레벨 배열 (expo-av metering → 0~-160 범위)
+ * expo-audio metering 기반 실용적 V1 검증 (PCM 없이).
+ * meteringLevels: useAudioRecorderState() 중 수집된 dBFS 레벨 배열 (metering → 0~-160 범위)
  * durationSec: 녹음 총 길이
  */
 export function validateFromMetadata(
