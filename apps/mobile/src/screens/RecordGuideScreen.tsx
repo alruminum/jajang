@@ -41,12 +41,31 @@ export function RecordGuideScreen({ navigation, route }: Props) {
   }, []);
 
   const handleStartRecording = async () => {
-    const { status } = await Audio.requestPermissionsAsync();
-    if (status === 'granted') {
+    // 1차: 현재 권한 상태 확인 (팝업 없이)
+    const current = await Audio.getPermissionsAsync();
+
+    if (current.status === 'granted') {
       navigation.navigate('Record', { mode, songKey: '' });
-    } else if (status === 'denied') {
-      setShowPermissionModal(true);
+      return;
     }
+
+    // canAskAgain === true → OS 팝업 요청 가능
+    if (current.canAskAgain) {
+      const { status } = await Audio.requestPermissionsAsync();
+      if (status === 'granted') {
+        navigation.navigate('Record', { mode, songKey: '' });
+      } else {
+        // 거부 후 canAskAgain 재확인
+        const after = await Audio.getPermissionsAsync();
+        if (!after.canAskAgain) {
+          setShowPermissionModal(true);
+        }
+      }
+      return;
+    }
+
+    // canAskAgain === false → OS 팝업 불가, 설정 유도
+    setShowPermissionModal(true);
   };
 
   return (
