@@ -3,6 +3,29 @@ depth: std
 ---
 # impl: #121 expo-av → expo-audio 마이그레이션
 
+## 구현 현황 (2026-04-27 기준)
+
+| 항목 | 상태 | 커밋 |
+|---|---|---|
+| package.json `expo-audio` 전환 | ✅ 완료 | 0489275 |
+| S07SongSelectScreen — `createAudioPlayer` 마이그레이션 | ✅ 완료 | 0489275 |
+| S10RecordScreen — `useAudioRecorder` 마이그레이션 | ✅ 완료 | 0489275 |
+| RecordScreen — `useAudioRecorder` 마이그레이션 | ✅ 완료 | 0489275 |
+| S11PreviewScreen — `useAudioPlayer` 마이그레이션 | ✅ 완료 | 0489275 |
+| AudioEngine.ts — crossfade `createAudioPlayer` 전환 | ✅ 완료 | 0489275 |
+| setup.ts + S07 test mock 교체 | ✅ 완료 | 0489275 |
+| S09 test — `getRecordingPermissionsAsync` 직접 mock으로 구현 | ✅ 완료 (plan 기술과 상이, 아래 주석 참조) | 0489275 |
+| **S07 정지 회귀 패치** (`.pause()` before `.remove()`) | ❌ **미완료** | — |
+| Android 실기기 최종 검증 | ❌ **미완료** | — |
+
+> **S09 구현 방식 변경**: plan은 `usePermissions` 훅으로 기술했으나, 엔지니어가 `getRecordingPermissionsAsync`/`requestRecordingPermissionsAsync` 직접 호출로 구현 (setup.ts mock에도 해당 함수 포함). 테스트 통과 기준으로 이 방식이 채택됨 — plan 본문 S09 섹션은 참조용으로만 남김.
+
+### ⚠️ 다음 엔지니어 작업: S07 정지 회귀 패치
+
+`docs/bugfix/#121-expo-audio-migration.md` 최하단 **"후속 패치 — S07 정지 회귀"** 섹션을 읽고 `S07SongSelectScreen.tsx` 2곳 수정 후 실기기 검증.
+
+---
+
 ## Overview
 
 **증상**: Android 실기기(Galaxy S25) 및 에뮬레이터에서 UI는 재생 상태로 전환되나 실제 음원이 무음.  
@@ -605,3 +628,44 @@ vi.mocked(usePermissions).mockReturnValue([
 | S11 재생 미리보기 음원 출력 | 실기기 수동 확인 |
 | expo-av import 전체 제거 | `grep -rn "from 'expo-av'" src/` 결과 0건 — JSDoc 주석 내 `expo-av` 언급은 위 audio-quality.ts 항목에서 별도 처리 |
 | iOS 정상 동작 유지 | 시뮬레이터 회귀 확인 |
+
+---
+
+## 후속 패치 — S07 정지 회귀 (2026-04-27 실기기 검증 후 발견)
+
+### 증상
+실기기 Galaxy S25에서 brahms ▶ 탭 → 음원 정상 재생. 그러나 ⏸ 탭 또는 다른 곡 ▶ 탭 시 음원이 멈추지 않음. 앱 종료 시까지 계속 재생.
+
+### 원인
+expo-audio의 `createAudioPlayer` 명령형 API에서 `.remove()` 만 호출하면 Android ExoPlayer 출력이 즉시 중단되지 않는 케이스 존재. 정지 직전 `.pause()` 명시 호출 필요.
+
+### 수정 (apps/mobile/src/screens/S07SongSelectScreen.tsx 2곳)
+
+**1) useEffect cleanup (47~48라인 근처):**
+```diff
+     return () => {
+-      playerRef.current?.remove();
++      playerRef.current?.pause();
++      playerRef.current?.remove();
+     };
+```
+
+**2) handlePreviewToggle 시작부 (54~58라인 근처):**
+```diff
+     if (playerRef.current) {
++      playerRef.current.pause();
+       playerRef.current.remove();
+       playerRef.current = null;
+     }
+```
+
+### 범위 외
+- 다른 화면(S10/S11/RecordScreen/AudioEngine) 수정 금지 — 본 회귀는 S07 한정
+- S11/RecordScreen은 useAudioPlayer/useAudioRecorder 훅 기반이라 동일 이슈 없음
+
+### 검증 기준 (추가)
+| 항목 | 방법 |
+|---|---|
+| 같은 곡 ⏸ 탭 → 음원 즉시 정지 | 실기기 수동 확인 |
+| 다른 곡 ▶ 탭 → 이전 곡 즉시 정지 + 새 곡 재생 | 실기기 수동 확인 |
+| 화면 이탈(unmount) → 재생 중 음원 정지 | 실기기 수동 확인 |

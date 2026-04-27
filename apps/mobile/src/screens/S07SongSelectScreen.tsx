@@ -45,6 +45,7 @@ export function SongSelectScreen({ navigation }: Props) {
 
     return () => {
       // 화면 언마운트 시 미리듣기 정리
+      playerRef.current?.pause();
       playerRef.current?.remove();
     };
   }, []);
@@ -53,6 +54,7 @@ export function SongSelectScreen({ navigation }: Props) {
   const handlePreviewToggle = async (songKey: string) => {
     // 현재 재생 중인 곡 정지
     if (playerRef.current) {
+      playerRef.current.pause();
       playerRef.current.remove();
       playerRef.current = null;
     }
