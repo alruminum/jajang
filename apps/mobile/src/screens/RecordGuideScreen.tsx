@@ -7,7 +7,7 @@ import {
   Linking,
   Modal,
 } from 'react-native';
-import { Audio } from 'expo-av';
+import { getRecordingPermissionsAsync, requestRecordingPermissionsAsync } from 'expo-audio';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import type { MainStackParamList } from '../navigation/types';
@@ -42,7 +42,7 @@ export function RecordGuideScreen({ navigation, route }: Props) {
 
   const handleStartRecording = async () => {
     // 1차: 현재 권한 상태 확인 (팝업 없이)
-    const current = await Audio.getPermissionsAsync();
+    const current = await getRecordingPermissionsAsync();
 
     if (current.status === 'granted') {
       navigation.navigate('Record', { mode, songKey: '' });
@@ -51,12 +51,12 @@ export function RecordGuideScreen({ navigation, route }: Props) {
 
     // canAskAgain === true → OS 팝업 요청 가능
     if (current.canAskAgain) {
-      const { status } = await Audio.requestPermissionsAsync();
+      const { status } = await requestRecordingPermissionsAsync();
       if (status === 'granted') {
         navigation.navigate('Record', { mode, songKey: '' });
       } else {
         // 거부 후 canAskAgain 재확인
-        const after = await Audio.getPermissionsAsync();
+        const after = await getRecordingPermissionsAsync();
         if (!after.canAskAgain) {
           setShowPermissionModal(true);
         }

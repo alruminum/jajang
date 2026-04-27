@@ -1,7 +1,7 @@
 // apps/mobile/src/screens/S11PreviewScreen.tsx
 // S11 — 녹음 미리듣기 화면 (파형 미리보기 + 재생 + 업로드 + 서버 품질 검증)
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { Audio } from 'expo-av';
+import { useAudioPlayer, useAudioPlayerStatus, setAudioModeAsync } from 'expo-audio';
 import * as FileSystem from 'expo-file-system';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -43,72 +43,55 @@ export default function S11PreviewScreen({ navigation }: Props) {
   const [phase, setPhase] = useState<UploadPhase>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [durationSec, setDurationSec] = useState(0);
-  const [positionSec, setPositionSec] = useState(0);
 
-  const soundRef = useRef<Audio.Sound | null>(null);
+  // expo-audio 훅: localAudioUri 기반 player + status
+  const player = useAudioPlayer(localAudioUri ? { uri: localAudioUri } : null);
+  const status = useAudioPlayerStatus(player);
 
-  // 녹음 파일 로드 + 길이 조회
+  // durationSec / positionSec (초 단위)
+  const durationSec = status?.duration ?? 0;
+  const positionSec = status?.currentTime ?? 0;
+
+  // 재생 완료 감지 → 상태 초기화 + seek to 0
+  useEffect(() => {
+    if (status?.didJustFinish) {
+      setIsPlaying(false);
+      player.seekTo(0);
+    }
+  }, [status?.didJustFinish]);
+
+  // expo-audio allowsRecording 복원 (S10에서 true로 설정됨) + 언마운트 정리
   useEffect(() => {
     if (!localAudioUri) {
       navigation.goBack();
       return;
     }
 
-    // expo-av allowsRecordingIOS 복원 (S10에서 true로 설정됨)
-    Audio.setAudioModeAsync({
-      allowsRecordingIOS: false,
-      playsInSilentModeIOS: true,
+    setAudioModeAsync({
+      allowsRecording: false,
+      playsInSilentMode: true,
     });
 
-    loadSound();
-
     return () => {
-      soundRef.current?.unloadAsync();
+      player.remove();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadSound = async () => {
-    if (!localAudioUri) return;
-
-    const { sound, status } = await Audio.Sound.createAsync(
-      { uri: localAudioUri },
-      { shouldPlay: false },
-      (s) => {
-        if (s.isLoaded) {
-          setPositionSec((s.positionMillis ?? 0) / 1000);
-          if (s.didJustFinish) {
-            setIsPlaying(false);
-            sound.setPositionAsync(0);
-          }
-        }
-      },
-    );
-
-    soundRef.current = sound;
-    if (status.isLoaded) {
-      setDurationSec((status.durationMillis ?? 0) / 1000);
-    }
-  };
-
   // 재생/정지 토글
-  const handlePlayToggle = async () => {
-    const sound = soundRef.current;
-    if (!sound) return;
-
+  const handlePlayToggle = () => {
     if (isPlaying) {
-      await sound.pauseAsync();
+      player.pause();
       setIsPlaying(false);
     } else {
-      await sound.playAsync();
+      player.play();
       setIsPlaying(true);
     }
   };
 
   // 다시 녹음
   const handleReRecord = async () => {
-    await soundRef.current?.unloadAsync();
+    player.remove();
     // 로컬 파일 삭제 (재녹음 시 기존 파일 정리)
     if (localAudioUri) {
       await FileSystem.deleteAsync(localAudioUri, { idempotent: true });

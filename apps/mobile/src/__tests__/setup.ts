@@ -130,24 +130,51 @@ vi.mock('react-native-track-player', () => ({
   RepeatMode: { Off: 0, Track: 1, Queue: 2 },
 }));
 
-// ─── expo-av ─────────────────────────────────────────────────────────────────
-vi.mock('expo-av', () => ({
-  Audio: {
-    Sound: {
-      createAsync: vi.fn().mockResolvedValue({
-        sound: {
-          playAsync: vi.fn().mockResolvedValue(undefined),
-          pauseAsync: vi.fn().mockResolvedValue(undefined),
-          stopAsync: vi.fn().mockResolvedValue(undefined),
-          unloadAsync: vi.fn().mockResolvedValue(undefined),
-          setVolumeAsync: vi.fn().mockResolvedValue(undefined),
-          setPositionAsync: vi.fn().mockResolvedValue(undefined),
-          setOnPlaybackStatusUpdate: vi.fn(),
-          getStatusAsync: vi.fn().mockResolvedValue({ isLoaded: true, durationMillis: 60000, positionMillis: 0 }),
-        },
-        status: { isLoaded: true },
-      }),
-    },
-    setAudioModeAsync: vi.fn().mockResolvedValue(undefined),
-  },
+// ─── expo-audio ──────────────────────────────────────────────────────────────
+vi.mock('expo-audio', () => ({
+  createAudioPlayer: vi.fn(() => ({
+    play: vi.fn(),
+    pause: vi.fn(),
+    remove: vi.fn(),
+    seekTo: vi.fn().mockResolvedValue(undefined),
+    addListener: vi.fn(() => ({ remove: vi.fn() })),
+    get volume() { return 1; },
+    set volume(_v: number) {},
+    get currentTime() { return 0; },
+    get duration() { return 60; },
+    get playing() { return false; },
+  })),
+  useAudioPlayer: vi.fn(() => ({
+    play: vi.fn(),
+    pause: vi.fn(),
+    remove: vi.fn(),
+    seekTo: vi.fn().mockResolvedValue(undefined),
+  })),
+  useAudioPlayerStatus: vi.fn(() => ({
+    isLoaded: true,
+    currentTime: 0,
+    duration: 60,
+    didJustFinish: false,
+  })),
+  useAudioRecorder: vi.fn(() => ({
+    prepareToRecordAsync: vi.fn().mockResolvedValue(undefined),
+    record: vi.fn(),
+    stop: vi.fn().mockResolvedValue(undefined),
+    uri: null,
+    isRecording: false,
+  })),
+  useAudioRecorderState: vi.fn(() => ({
+    isRecording: false,
+    metering: undefined,
+  })),
+  getRecordingPermissionsAsync: vi.fn().mockResolvedValue({
+    status: 'granted',
+    canAskAgain: true,
+    granted: true,
+  }),
+  requestRecordingPermissionsAsync: vi.fn().mockResolvedValue({
+    status: 'granted',
+    granted: true,
+  }),
+  setAudioModeAsync: vi.fn().mockResolvedValue(undefined),
 }));

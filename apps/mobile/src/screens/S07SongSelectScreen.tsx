@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, FlatList, Text, Pressable, StyleSheet, Alert } from 'react-native';
-import { Audio } from 'expo-av';
-import type { AVPlaybackStatus } from 'expo-av';
+import { createAudioPlayer } from 'expo-audio';
+import type { AudioPlayer, AudioStatus } from 'expo-audio';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { songsApi, type Song } from '@services/api/songs';
@@ -19,7 +19,7 @@ export function SongSelectScreen({ navigation }: Props) {
   // 미리듣기 상태
   const [previewingKey, setPreviewingKey] = useState<string | null>(null);
   const [previewLoadingKey, setPreviewLoadingKey] = useState<string | null>(null);
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const playerRef = useRef<AudioPlayer | null>(null);
 
   const { selectedSongKey, setSelectedSong, resetRecordingFlow } = useRecordingStore();
   // generationCount는 Epic 03 완료 후 AuthStore에 추가 예정.
@@ -45,16 +45,16 @@ export function SongSelectScreen({ navigation }: Props) {
 
     return () => {
       // 화면 언마운트 시 미리듣기 정리
-      soundRef.current?.unloadAsync();
+      playerRef.current?.remove();
     };
   }, []);
 
   // 미리듣기 토글 (동시 2곡 재생 불가)
   const handlePreviewToggle = async (songKey: string) => {
     // 현재 재생 중인 곡 정지
-    if (soundRef.current) {
-      await soundRef.current.unloadAsync();
-      soundRef.current = null;
+    if (playerRef.current) {
+      playerRef.current.remove();
+      playerRef.current = null;
     }
 
     if (previewingKey === songKey) {
@@ -66,19 +66,17 @@ export function SongSelectScreen({ navigation }: Props) {
     setPreviewLoadingKey(songKey);
     try {
       const { preview_url } = await songsApi.getPreviewUrl(songKey);
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: preview_url },
-        { shouldPlay: true },
-      );
-      soundRef.current = sound;
+      const player = createAudioPlayer({ uri: preview_url });
+      playerRef.current = player;
+      player.play();
       setPreviewingKey(songKey);
 
       // 재생 완료 시 상태 리셋
-      sound.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
-        if (status.isLoaded && status.didJustFinish) {
+      player.addListener('playbackStatusUpdate', (status: AudioStatus) => {
+        if (status.didJustFinish) {
           setPreviewingKey(null);
-          sound.unloadAsync();
-          soundRef.current = null;
+          player.remove();
+          playerRef.current = null;
         }
       });
     } catch {

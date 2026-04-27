@@ -7,14 +7,15 @@
  * 모듈 경계:
  * - AudioEngine → PlayerSlice: 단방향 setState. PlayerSlice는 AudioEngine을 직접 호출하지 않음.
  * - S13 PlayScreen → AudioEngine: startPlayback, pausePlayback, resumePlayback, setVolume 호출.
- * - expo-av: crossfade 전용. 백그라운드 AudioSession은 RNTP가 소유.
+ * - expo-audio: crossfade 전용. 백그라운드 AudioSession은 RNTP가 소유.
  * - entitlement: useAuthStore에서 읽음 (usePlayerStore가 아님).
  */
 
 import { AppState } from 'react-native';
 import type { EmitterSubscription } from 'react-native';
 import TrackPlayer, { Capability, Event, State } from 'react-native-track-player';
-import { Audio } from 'expo-av';
+import { createAudioPlayer } from 'expo-audio';
+import type { AudioPlayer } from 'expo-audio';
 import { usePlayerStore } from '@store/player-store';
 import { useAuthStore } from '@store/auth-store';
 import { SONG_NAMES } from '@services/songs';
@@ -31,7 +32,7 @@ const CROSSFADE_STEPS = 15;
 // ─── 모듈 스코프 상태 (외부 직접 접근 금지) ──────────────────────────────────
 
 let isCrossfading = false;
-let currentNextSound: Audio.Sound | null = null;
+let currentNextPlayer: AudioPlayer | null = null;
 
 /** 사용자 설정 수면 타이머 ref */
 let timerRef: ReturnType<typeof setTimeout> | null = null;
@@ -106,12 +107,11 @@ async function triggerCrossfade(trackUrl: string): Promise<void> {
   isCrossfading = true;
 
   try {
-    // expo-av로 두 번째 트랙 무음 로드 + 즉시 재생 시작
-    const { sound: nextSound } = await Audio.Sound.createAsync(
-      { uri: trackUrl },
-      { shouldPlay: true, volume: 0, positionMillis: 0 },
-    );
-    currentNextSound = nextSound;
+    // expo-audio로 두 번째 트랙 무음 로드 + 즉시 재생 시작
+    const nextPlayer = createAudioPlayer({ uri: trackUrl });
+    nextPlayer.volume = 0;
+    nextPlayer.play();
+    currentNextPlayer = nextPlayer;
 
     const STEP_MS = CROSSFADE_MS / CROSSFADE_STEPS;
 
@@ -119,18 +119,18 @@ async function triggerCrossfade(trackUrl: string): Promise<void> {
       const progress = i / CROSSFADE_STEPS;
       const userVolume = usePlayerStore.getState().volume;
       await TrackPlayer.setVolume((1 - progress) * userVolume);
-      await nextSound.setVolumeAsync(progress * userVolume);
+      nextPlayer.volume = progress * userVolume;
       await sleep(STEP_MS);
     }
 
-    // RNTP 트랙 재시작 (nextSound 역할 인계)
+    // RNTP 트랙 재시작 (nextPlayer 역할 인계)
     await TrackPlayer.seekTo(0);
     const userVolume = usePlayerStore.getState().volume;
     await TrackPlayer.setVolume(userVolume);
 
-    // expo-av 정리
-    await nextSound.unloadAsync();
-    currentNextSound = null;
+    // expo-audio 정리
+    nextPlayer.remove();
+    currentNextPlayer = null;
   } catch (err) {
     // crossfade 실패 — RNTP seekTo(0)으로 fallback
     console.error('[AudioEngine] crossfade error, fallback to seekTo(0):', err);
@@ -142,7 +142,7 @@ async function triggerCrossfade(trackUrl: string): Promise<void> {
     }
   } finally {
     isCrossfading = false;
-    currentNextSound = null;
+    currentNextPlayer = null;
   }
 }
 
@@ -221,8 +221,8 @@ export async function setupAudioEngine(): Promise<void> {
         // crossfade 진행 중이면 중단 후 pause (AC-09)
         if (isCrossfading) {
           isCrossfading = false;
-          currentNextSound?.unloadAsync().catch(() => {});
-          currentNextSound = null;
+          currentNextPlayer?.remove();
+          currentNextPlayer = null;
         }
         await TrackPlayer.pause();
         usePlayerStore.setState({ pendingUpgradePrompt: 'background_blocked' });
@@ -370,8 +370,8 @@ export async function stopPlayback(): Promise<void> {
   playbackStartTime = null;
   if (isCrossfading) {
     isCrossfading = false;
-    currentNextSound?.unloadAsync().catch(() => {});
-    currentNextSound = null;
+    currentNextPlayer?.remove();
+    currentNextPlayer = null;
   }
   await TrackPlayer.pause();
   await TrackPlayer.reset();
