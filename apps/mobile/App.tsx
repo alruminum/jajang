@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { NavigationContainer, DarkTheme, createNavigationContainerRef } from '@react-navigation/native';
+import { NavigationContainer, DarkTheme, DefaultTheme, createNavigationContainerRef } from '@react-navigation/native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { initializeAdMob } from '@services/adMobService';
 import RootNavigator from '@navigation/RootNavigator';
@@ -10,6 +10,7 @@ import { useAuth } from '@hooks/useAuth';
 import { RootStackParamList } from '@navigation/types';
 import { configurePurchases } from '@services/revenue-cat';
 import { useEntitlementSync } from '@hooks/useEntitlement';
+import { useTheme } from '@hooks/useTheme';
 
 // 앱 레벨 1회 초기화 (컴포넌트 외부 — 어떤 화면도 열리기 전 SDK 준비)
 configurePurchases();
@@ -50,22 +51,14 @@ function SessionExpiredListener() {
   return null;
 }
 
-const AppTheme = {
-  ...DarkTheme,
-  colors: {
-    ...DarkTheme.colors,
-    primary: '#F5C97A',
-    background: '#0D0F1A',
-    card: '#12152B',
-    text: '#EEF0F8',
-    border: '#2A2E48',
-    notification: '#F5C97A',
-  },
-};
-
 export default function App() {
   // entitlement 동기화 (포그라운드 복귀 + 실시간 리스너)
   useEntitlementSync();
+  const { isDark } = useTheme();
+
+  const navTheme = isDark
+    ? { ...DarkTheme, colors: { ...DarkTheme.colors, primary: '#F5C97A', background: '#0D0F1A', card: '#12152B', text: '#EEF0F8', border: '#2A2E48', notification: '#F5C97A' } }
+    : { ...DefaultTheme, colors: { ...DefaultTheme.colors, primary: '#F5C97A', background: '#FBF7F0', card: '#FFFFFF', text: '#1A1A2E', border: '#E0E2F0', notification: '#F5C97A' } };
 
   useEffect(() => {
     // AdMob 초기화 (첫 광고 요청 전 완료 필요 — adMobService)
@@ -76,7 +69,7 @@ export default function App() {
     <SafeAreaProvider>
       <StatusBar style="light" backgroundColor="#0D0F1A" />
       <SessionExpiredListener />
-      <NavigationContainer ref={navigationRef} theme={AppTheme}>
+      <NavigationContainer ref={navigationRef} theme={navTheme}>
         <RootNavigator />
       </NavigationContainer>
     </SafeAreaProvider>

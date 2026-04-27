@@ -32,7 +32,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 
-import { useAuthStore } from '@store';
+import { useAuthStore, useThemeStore } from '@store';
+import type { ThemePref } from '@store';
 import { getManagementURL, revenueCatLogout } from '@services/revenue-cat';
 import {
   getVoiceSampleStatus,
@@ -184,6 +185,47 @@ function SubscriptionSection({ navigation }: SubscriptionSectionProps) {
   );
 }
 
+// ─── ThemeSection (S16 테마 토글) ────────────────────────────────────────────
+
+const THEME_OPTIONS: { label: string; value: ThemePref }[] = [
+  { label: '시스템 설정 따라가기', value: 'system' },
+  { label: '다크 모드', value: 'dark' },
+  { label: '라이트 모드', value: 'light' },
+];
+
+function ThemeSection() {
+  const pref = useThemeStore((s) => s.pref);
+  const setPref = useThemeStore((s) => s.setPref);
+
+  return (
+    <View>
+      <View style={styles.themeSectionHeader}>
+        <Text style={styles.themeSectionTitle}>테마</Text>
+      </View>
+      {THEME_OPTIONS.map((opt) => (
+        <TouchableOpacity
+          key={opt.value}
+          style={styles.themeRow}
+          onPress={() => setPref(opt.value)}
+          accessibilityLabel={opt.label}
+          accessibilityRole="radio"
+          accessibilityState={{ checked: pref === opt.value }}
+        >
+          <View
+            style={[
+              styles.radioOuter,
+              pref === opt.value && styles.radioOuterSelected,
+            ]}
+          >
+            {pref === opt.value && <View style={styles.radioInner} />}
+          </View>
+          <Text style={styles.themeRowLabel}>{opt.label}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
+
 // ─── S16SettingsScreen (메인 화면) ────────────────────────────────────────────
 
 interface S16SettingsScreenProps {
@@ -282,6 +324,11 @@ export default function S16SettingsScreen({ navigation }: S16SettingsScreenProps
           onPress={() => Linking.openSettings()}
           accessibilityLabel="알림 설정"
         />
+
+        <Divider />
+
+        {/* 테마 */}
+        <ThemeSection />
 
         <Divider />
 
@@ -472,6 +519,50 @@ const styles = StyleSheet.create({
     fontSize: 12,
     paddingHorizontal: 20,
     paddingVertical: 12,
+  },
+
+  // 테마 섹션
+  themeSectionHeader: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  themeSectionTitle: {
+    color: '#7B80A0',
+    fontSize: 13,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  themeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    gap: 12,
+    minHeight: 48,
+  },
+  themeRowLabel: {
+    color: '#E0E2F0',
+    fontSize: 15,
+  },
+  radioOuter: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#2A2E48',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioOuterSelected: {
+    borderColor: '#5A7AA8',
+  },
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#5A7AA8',
   },
 
   // 로그아웃 버튼
