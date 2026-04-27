@@ -328,19 +328,19 @@ const styles = StyleSheet.create({
   subscriptionBanner: {
     backgroundColor: '#2A1A0F',
     borderWidth: 1,
-    borderColor: '#82B090',
+    borderColor: '#5A7AA8',
     borderRadius: 10,
     padding: 14,
     marginBottom: 24,
   },
   subscriptionBannerText: {
-    color: '#82B090',
+    color: '#5A7AA8',
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 6,
   },
   subscriptionBannerLink: {
-    color: '#82B090',
+    color: '#5A7AA8',
     fontSize: 13,
     textDecorationLine: 'underline',
   },
@@ -378,13 +378,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   radioSelected: {
-    borderColor: '#82B090',
+    borderColor: '#5A7AA8',
   },
   radioDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#82B090',
+    backgroundColor: '#5A7AA8',
   },
   reasonLabel: {
     color: '#E0E2F0',

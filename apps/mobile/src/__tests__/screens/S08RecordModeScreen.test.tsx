@@ -241,7 +241,7 @@ describe('RecordModeScreen (S08) — 엣지 케이스', () => {
       ? hummingCard.props.style
       : [hummingCard.props.style]
     const hasActiveStyle = styleArray.some(
-      (s: any) => s && typeof s === 'object' && s.borderColor === '#82B090'
+      (s: any) => s && typeof s === 'object' && s.borderColor === '#5A7AA8'
     )
     expect(hasActiveStyle).toBe(true)
   })
@@ -255,7 +255,7 @@ describe('RecordModeScreen (S08) — 엣지 케이스', () => {
       ? hummingCard.props.style
       : [hummingCard.props.style]
     const hasActiveStyle = styleArray.some(
-      (s: any) => s && typeof s === 'object' && s.borderColor === '#82B090'
+      (s: any) => s && typeof s === 'object' && s.borderColor === '#5A7AA8'
     )
     expect(hasActiveStyle).toBe(false)
   })

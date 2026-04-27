@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
   playPauseBtn: {
     height: 56,
     width: 120,
-    backgroundColor: '#82B090',
+    backgroundColor: '#5A7AA8',
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
 
   // TimerRemainingLabel: 앰버 색상 (tabular-nums)
   timerLabel: {
-    color: '#82B090',
+    color: '#5A7AA8',
     fontSize: 15,
     fontVariant: ['tabular-nums'],
   },
