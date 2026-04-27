@@ -23,16 +23,16 @@ vi.mock('../store/theme-store', () => ({
 }));
 
 import { useColorScheme } from 'react-native';
-import { useThemeStore } from '../store/theme-store';
+import { useThemeStore, ThemePref } from '../store/theme-store';
 import { useTheme } from '@hooks/useTheme';
 import { darkColors, lightColors } from '../theme/tokens';
 
 const mockUseColorScheme = vi.mocked(useColorScheme);
 const mockUseThemeStore = vi.mocked(useThemeStore);
 
-/** pref 값을 selector 패턴으로 주입 */
-function setPref(pref: string) {
-  mockUseThemeStore.mockImplementation((selector: (s: { pref: string; setPref: ReturnType<typeof vi.fn> }) => unknown) =>
+/** pref 값을 selector 패턴으로 주입 — store action의 setPref와 구분하기 위해 mockWithPref 명칭 사용 */
+function mockWithPref(pref: ThemePref) {
+  mockUseThemeStore.mockImplementation((selector: (s: { pref: ThemePref; setPref: ReturnType<typeof vi.fn> }) => unknown) =>
     selector({ pref, setPref: vi.fn() })
   );
 }
@@ -42,7 +42,7 @@ function setPref(pref: string) {
 // ────────────────────────────────────────────────
 describe('useTheme — scheme 분기 (pref=system)', () => {
   beforeEach(() => {
-    setPref('system');
+    mockWithPref('system');
   });
 
   afterEach(() => {
@@ -99,37 +99,37 @@ describe('useTheme — ThemePref override', () => {
   });
 
   it("pref='dark' → isDark=true (OS scheme='light'이어도)", () => {
-    setPref('dark');
+    mockWithPref('dark');
     mockUseColorScheme.mockReturnValue('light');
     expect(useTheme().isDark).toBe(true);
   });
 
   it("pref='dark' → colors === darkColors", () => {
-    setPref('dark');
+    mockWithPref('dark');
     mockUseColorScheme.mockReturnValue('light');
     expect(useTheme().colors).toBe(darkColors);
   });
 
   it("pref='light' → isDark=false (OS scheme='dark'이어도)", () => {
-    setPref('light');
+    mockWithPref('light');
     mockUseColorScheme.mockReturnValue('dark');
     expect(useTheme().isDark).toBe(false);
   });
 
   it("pref='light' → colors === lightColors", () => {
-    setPref('light');
+    mockWithPref('light');
     mockUseColorScheme.mockReturnValue('dark');
     expect(useTheme().colors).toBe(lightColors);
   });
 
   it("pref='system' + scheme='dark' → isDark=true (기존 동작 유지)", () => {
-    setPref('system');
+    mockWithPref('system');
     mockUseColorScheme.mockReturnValue('dark');
     expect(useTheme().isDark).toBe(true);
   });
 
   it("pref='system' + scheme='light' → isDark=false (기존 동작 유지)", () => {
-    setPref('system');
+    mockWithPref('system');
     mockUseColorScheme.mockReturnValue('light');
     expect(useTheme().isDark).toBe(false);
   });
@@ -140,7 +140,7 @@ describe('useTheme — ThemePref override', () => {
 // ────────────────────────────────────────────────
 describe('useTheme — 반환값 shape', () => {
   beforeEach(() => {
-    setPref('system');
+    mockWithPref('system');
     mockUseColorScheme.mockReturnValue('dark');
   });
 
@@ -176,7 +176,7 @@ describe('useTheme — 반환값 shape', () => {
 // ────────────────────────────────────────────────
 describe('useTheme — light 모드 토큰 샘플', () => {
   beforeEach(() => {
-    setPref('system');
+    mockWithPref('system');
     mockUseColorScheme.mockReturnValue('light');
   });
 
