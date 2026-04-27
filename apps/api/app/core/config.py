@@ -41,6 +41,9 @@ class Settings(BaseSettings):
     # RevenueCat
     REVENUECAT_WEBHOOK_SECRET: str = ""
 
+    # Storage — mock (개발환경 S3 우회)
+    MOCK_S3: bool = False   # true 시 boto3 skip → 로컬 /static/previews/ URL 반환
+
     # Storage — presigned URL
     S3_PREVIEW_EXPIRY_SECONDS: int = 3600  # presigned URL 유효 시간 (1시간)
 

@@ -18,12 +18,12 @@ class SongMeta:
 
 
 SONGS: list[SongMeta] = [
-    SongMeta("brahms", "브람스 자장가", "Brahms' Lullaby", "요하네스 브람스", 180, "previews/brahms_preview.mp3"),
-    SongMeta("mozart", "모차르트 자장가", "Mozart's Lullaby", "볼프강 모차르트", 150, "previews/mozart_preview.mp3"),
-    SongMeta("schubert", "슈베르트 자장가", "Schubert's Lullaby", "프란츠 슈베르트", 200, "previews/schubert_preview.mp3"),
-    SongMeta("twinkle", "반짝반짝 작은 별", "Twinkle Twinkle", "전통 민요", 120, "previews/twinkle_preview.mp3"),
-    SongMeta("rockabye", "자장자장 (영)", "Rock-a-bye Baby", "전통 민요", 130, "previews/rockabye_preview.mp3"),
-    SongMeta("hush", "허쉬 리틀 베이비", "Hush Little Baby", "전통 민요", 140, "previews/hush_preview.mp3"),
+    SongMeta("brahms",   "브람스 자장가",      "Brahms' Lullaby",    "요하네스 브람스", 180, "previews/brahms_preview.wav"),
+    SongMeta("mozart",   "모차르트 자장가",     "Mozart's Lullaby",   "볼프강 모차르트", 150, "previews/mozart_preview.wav"),
+    SongMeta("schubert", "슈베르트 자장가",     "Schubert's Lullaby", "프란츠 슈베르트", 200, "previews/schubert_preview.wav"),
+    SongMeta("twinkle",  "반짝반짝 작은 별",    "Twinkle Twinkle",    "전통 민요",       120, "previews/twinkle_preview.wav"),
+    SongMeta("rockabye", "자장자장 (영)",       "Rock-a-bye Baby",    "전통 민요",       130, "previews/rockabye_preview.wav"),
+    SongMeta("hush",     "허쉬 리틀 베이비",    "Hush Little Baby",   "전통 민요",       140, "previews/hush_preview.wav"),
 ]
 
 SONGS_BY_KEY: dict[str, SongMeta] = {s.key: s for s in SONGS}
@@ -47,33 +47,42 @@ def get_all_songs() -> SongListResponse:
 
 def get_preview_url(song_key: str) -> PreviewUrlResponse:
     """
-    S3 presigned GET URL 발급 (만료 S3_PREVIEW_EXPIRY_SECONDS).
+    MOCK_S3=True → 로컬 /static/previews/{key}_preview.wav URL 반환 (boto3 skip).
+    MOCK_S3=False → S3 presigned GET URL 발급 (기존 동작, 프로덕션 회귀 없음).
     존재하지 않는 song_key → ValueError.
-    S3 ClientError → 그대로 상위로 전파 (라우터에서 500 처리).
+    S3 ClientError → 상위로 전파 (라우터에서 500 처리).
     """
     if song_key not in SONGS_BY_KEY:
         raise ValueError(f"Unknown song_key: {song_key}")
 
     meta = SONGS_BY_KEY[song_key]
-    expiry = settings.S3_PREVIEW_EXPIRY_SECONDS  # default 3600
+
+    # ── MOCK_S3 분기 ──────────────────────────────────────────────────────────
+    if settings.MOCK_S3:
+        base_url = "http://localhost:8000"
+        local_url = f"{base_url}/static/{meta.preview_s3_key}"
+        return PreviewUrlResponse(
+            song_key=song_key,
+            preview_url=local_url,
+            expires_in_seconds=0,   # mock이므로 만료 없음
+        )
+    # ── S3 presigned 분기 (기존 코드) ──────────────────────────────────────────
+    expiry = settings.S3_PREVIEW_EXPIRY_SECONDS
 
     s3_kwargs: dict = {
         "region_name": settings.S3_REGION,
         "aws_access_key_id": settings.S3_ACCESS_KEY,
         "aws_secret_access_key": settings.S3_SECRET_KEY,
     }
-    # Cloudflare R2 지원: S3_ENDPOINT_URL 설정 시 자동 사용
     if settings.S3_ENDPOINT_URL:
         s3_kwargs["endpoint_url"] = settings.S3_ENDPOINT_URL
 
     s3_client = boto3.client("s3", **s3_kwargs)
-
     url: str = s3_client.generate_presigned_url(
         "get_object",
         Params={"Bucket": settings.S3_BUCKET_NAME, "Key": meta.preview_s3_key},
         ExpiresIn=expiry,
     )
-
     return PreviewUrlResponse(
         song_key=song_key,
         preview_url=url,
