@@ -12,6 +12,8 @@ import { MainStackParamList } from '@navigation/types';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'SongSelect'>;
 
+const FREE_GENERATION_LIMIT = 3;
+
 export function SongSelectScreen({ navigation }: Props) {
   const [songs, setSongs] = useState<Song[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,7 +33,7 @@ export function SongSelectScreen({ navigation }: Props) {
   const { entitlement, generationCount } = authState;
 
   const isFreeUser = entitlement === 'free';
-  const generationsLeft = Math.max(0, 3 - generationCount); // 0~3
+  const generationsLeft = Math.max(0, FREE_GENERATION_LIMIT - generationCount); // 0~FREE_GENERATION_LIMIT
 
   // 기존 음원 존재 여부 (S07 재녹음 안내 다이얼로그)
   // V1 첫 빌드: false 하드코딩 — Epic 03 완료 후 연동
@@ -127,7 +129,7 @@ export function SongSelectScreen({ navigation }: Props) {
         <Text style={styles.title}>어떤 멜로디로{'\n'}만들까요?</Text>
         {isFreeUser && (
           <View style={styles.counterChip}>
-            <Text style={styles.counterText}>생성 {generationCount}/3</Text>
+            <Text style={styles.counterText}>생성 {generationCount}/{FREE_GENERATION_LIMIT}</Text>
           </View>
         )}
       </View>
