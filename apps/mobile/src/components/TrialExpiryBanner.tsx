@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTrialDaysRemaining } from '@hooks/useEntitlement';
 import { useAuthStore } from '@store/auth-store';
 import { MainStackParamList } from '@navigation/types';
+import { useTheme } from '@hooks/useTheme';
 
 type NavProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -17,6 +18,32 @@ export default function TrialExpiryBanner() {
   const { entitlement } = useAuthStore();
   const daysRemaining = useTrialDaysRemaining();
   const navigation = useNavigation<NavProp>();
+  const { colors } = useTheme();
+  const styles = useMemo(() => StyleSheet.create({
+    banner: {
+      backgroundColor: colors.accentPrimary14,
+      borderTopWidth: 1,
+      borderBottomWidth: 1,
+      borderColor: colors.accentPrimary20,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      marginHorizontal: 0,
+    },
+    message: {
+      color: colors.textPrimary,
+      fontSize: 13,
+      flex: 1,
+    },
+    cta: {
+      color: colors.accentPrimary,
+      fontSize: 13,
+      fontWeight: '600',
+      marginLeft: 12,
+    },
+  }), [colors]);
 
   // D-1 이하에서만 표시 (daysRemaining = 0 또는 1)
   if (entitlement !== 'trial' || daysRemaining === null || daysRemaining > 1) return null;
@@ -39,29 +66,3 @@ export default function TrialExpiryBanner() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  banner: {
-    backgroundColor: 'rgba(130, 176, 144, 0.1)',
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: 'rgba(130, 176, 144, 0.25)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    marginHorizontal: 0,
-  },
-  message: {
-    color: '#EEF0F8',
-    fontSize: 13,
-    flex: 1,
-  },
-  cta: {
-    color: '#5A7AA8',
-    fontSize: 13,
-    fontWeight: '600',
-    marginLeft: 12,
-  },
-});

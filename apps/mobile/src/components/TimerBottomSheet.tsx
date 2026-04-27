@@ -10,7 +10,7 @@
  * - S13 PlayScreen → TimerBottomSheet: visible, onClose, currentEndsAt props 전달
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Modal,
   View,
@@ -20,6 +20,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { setTimer, clearTimer } from '@audio/AudioEngine';
+import { useTheme } from '@hooks/useTheme';
 
 // ─── 타이머 옵션 상수 ──────────────────────────────────────────────────────────
 
@@ -47,6 +48,48 @@ export default function TimerBottomSheet({
   currentEndsAt,
   onClose,
 }: TimerBottomSheetProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: colors.overlay,
+    },
+    sheet: {
+      backgroundColor: colors.surface,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      paddingTop: 24,
+      paddingBottom: 40,
+      paddingHorizontal: 24,
+    },
+    title: {
+      color: colors.textPrimary,
+      fontSize: 18,
+      fontWeight: '600',
+      marginBottom: 20,
+      textAlign: 'center',
+    },
+    option: {
+      paddingVertical: 16,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+    },
+    optionLabel: {
+      color: colors.textPrimary,
+      fontSize: 16,
+      textAlign: 'center',
+    },
+    clearOption: {
+      paddingVertical: 16,
+      marginTop: 8,
+    },
+    clearLabel: {
+      color: colors.accentPrimary,
+      fontSize: 16,
+      textAlign: 'center',
+    },
+  }), [colors]);
+
   const handleSelect = (durationMs: number) => {
     setTimer(durationMs);
     onClose();
@@ -88,55 +131,3 @@ export default function TimerBottomSheet({
     </Modal>
   );
 }
-
-// ─── 스타일 ───────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  // 반투명 배경 오버레이
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-
-  // 바텀시트 컨테이너
-  sheet: {
-    backgroundColor: '#1A1D2E',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 24,
-    paddingBottom: 40,
-    paddingHorizontal: 24,
-  },
-
-  // 제목
-  title: {
-    color: '#EEF0F8',
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-
-  // 타이머 옵션 행
-  option: {
-    paddingVertical: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#2D3050',
-  },
-  optionLabel: {
-    color: '#EEF0F8',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-
-  // 타이머 끄기 행
-  clearOption: {
-    paddingVertical: 16,
-    marginTop: 8,
-  },
-  clearLabel: {
-    color: '#5A7AA8',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-});
