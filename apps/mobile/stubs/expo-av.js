@@ -1,5 +1,8 @@
-// Stub for expo-av (deprecated in Expo SDK 55).
-// All methods are no-ops returning resolved promises so the app can boot.
+// ⚠️  테스트 전용 스텁 (TEST-ONLY STUB)
+// 런타임(Expo/Babel) 에서는 절대 사용하지 않는다.
+// babel.config.js의 module-resolver alias에서 expo-av 항목이 제거되었으므로
+// 이 파일은 apps/mobile/src/__tests__/setup.ts의 vi.mock() 참조용으로만 보관.
+// 런타임 권한 요청이 필요하면 node_modules/expo-av 를 직접 사용한다.
 
 const noop = () => {};
 const noopAsync = async () => {};
