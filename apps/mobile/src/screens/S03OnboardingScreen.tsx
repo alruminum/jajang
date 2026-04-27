@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   },
   emoji: { fontSize: 64, marginBottom: 32 },
   slideTitle: {
-    fontSize: 24, fontWeight: '600', color: '#82B090',
+    fontSize: 24, fontWeight: '600', color: '#5A7AA8',
     textAlign: 'center', marginBottom: 16,
   },
   slideBody: {
@@ -134,10 +134,10 @@ const styles = StyleSheet.create({
   },
   dots: { flexDirection: 'row', justifyContent: 'center', paddingBottom: 16 },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#2A2E48', marginHorizontal: 4 },
-  dotActive: { backgroundColor: '#82B090', width: 18 },
+  dotActive: { backgroundColor: '#5A7AA8', width: 18 },
   footer: { padding: 24 },
   primaryBtn: {
-    backgroundColor: '#82B090', height: 56, borderRadius: 28,
+    backgroundColor: '#5A7AA8', height: 56, borderRadius: 28,
     alignItems: 'center', justifyContent: 'center', marginBottom: 12,
   },
   primaryBtnText: { color: '#0D0F1A', fontSize: 16, fontWeight: '600' },

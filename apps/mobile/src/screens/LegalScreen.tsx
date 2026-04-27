@@ -47,7 +47,7 @@ const LEGAL_ITEMS: LegalItem[] = [
 const BROWSER_OPTIONS = {
   presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
   toolbarColor: '#0D0F1A',
-  controlsColor: '#82B090',
+  controlsColor: '#5A7AA8',
 } as const;
 
 function getAppVersion(): string {

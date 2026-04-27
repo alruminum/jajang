@@ -155,7 +155,7 @@ const waveformStyles = StyleSheet.create({
   bar: {
     width: 3,
     borderRadius: 2,
-    backgroundColor: '#82B090',
+    backgroundColor: '#5A7AA8',
     marginRight: 3,
   },
 });

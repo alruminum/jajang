@@ -232,7 +232,7 @@ export default function S11PreviewScreen({ navigation }: Props) {
         <WaveformVisualizer
           mode="static"
           levels={recordingLevels}
-          color="#8BAED4"
+          color="#C49A8A"
           playbackPosition={playbackPosition}
         />
         <View style={styles.playbackRow}>
@@ -258,7 +258,7 @@ export default function S11PreviewScreen({ navigation }: Props) {
       {/* 처리 중 상태 */}
       {isProcessing && (
         <View style={styles.processingBanner}>
-          <ActivityIndicator size="small" color="#82B090" style={{ marginRight: 8 }} />
+          <ActivityIndicator size="small" color="#5A7AA8" style={{ marginRight: 8 }} />
           <Text style={styles.processingText}>{phaseMessages[phase]}</Text>
         </View>
       )}
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   playIcon: {
-    color: '#8BAED4',
+    color: '#C49A8A',
     fontSize: 22,
     marginRight: 12,
   },
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
   },
   primaryBtn: {
     height: 56,
-    backgroundColor: '#82B090',
+    backgroundColor: '#5A7AA8',
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   secondaryBtnText: {
-    color: '#8BAED4',
+    color: '#C49A8A',
     fontSize: 15,
   },
   btnDisabled: {

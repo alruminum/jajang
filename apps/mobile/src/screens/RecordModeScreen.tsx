@@ -122,10 +122,10 @@ const styles = StyleSheet.create({
     minHeight: 160,
     justifyContent: 'center',
   },
-  cardPressed: { transform: [{ scale: 1.02 }], borderColor: '#82B090' },
+  cardPressed: { transform: [{ scale: 1.02 }], borderColor: '#5A7AA8' },
   cardEmoji:   { fontSize: 36, marginBottom: 12 },
   cardTitle:   { color: '#EEF0F8', fontSize: 18, fontFamily: 'NotoSansKR-Regular', marginBottom: 8 },
   cardDesc:    { color: '#7B80A0', fontSize: 14, textAlign: 'center', lineHeight: 22 },
   badge:       { marginTop: 10, backgroundColor: '#21253E', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
-  badgeText:   { color: '#82B090', fontSize: 12 },
+  badgeText:   { color: '#5A7AA8', fontSize: 12 },
 });

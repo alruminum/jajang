@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   clearLabel: {
-    color: '#82B090',
+    color: '#5A7AA8',
     fontSize: 16,
     textAlign: 'center',
   },

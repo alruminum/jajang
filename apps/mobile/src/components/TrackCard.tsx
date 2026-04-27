@@ -89,10 +89,10 @@ const styles = StyleSheet.create({
   cardPending:     { opacity: 0.8, borderWidth: 1, borderColor: '#2A2E48' },
   iconWrap:        { width: 44, height: 44, borderRadius: 12, backgroundColor: '#21253E', justifyContent: 'center', alignItems: 'center', marginRight: 14 },
   iconWrapPending: { backgroundColor: '#1A1D30', borderWidth: 1, borderColor: '#2A2E48' },
-  icon:            { color: '#8BAED4', fontSize: 20 },
+  icon:            { color: '#C49A8A', fontSize: 20 },
   textWrap:        { flex: 1 },
   songName:        { color: '#EEF0F8', fontSize: 16, fontFamily: 'NotoSansKR-Regular', marginBottom: 4 },
   subText:         { color: '#7B80A0', fontSize: 13 },
   playBtn:         { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
-  playIcon:        { color: '#82B090', fontSize: 18 },
+  playIcon:        { color: '#5A7AA8', fontSize: 18 },
 })

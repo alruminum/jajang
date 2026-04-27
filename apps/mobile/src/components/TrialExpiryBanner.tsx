@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cta: {
-    color: '#82B090',
+    color: '#5A7AA8',
     fontSize: 13,
     fontWeight: '600',
     marginLeft: 12,

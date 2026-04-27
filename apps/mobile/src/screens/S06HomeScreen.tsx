@@ -95,7 +95,7 @@ export default function S06HomeScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={() => loadTracks(true)}
-            tintColor="#82B090"
+            tintColor="#5A7AA8"
           />
         }
         ListHeaderComponent={
@@ -230,12 +230,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 14,
   },
-  trackIconText: { color: '#8BAED4', fontSize: 20 },
+  trackIconText: { color: '#C49A8A', fontSize: 20 },
   trackText:     { flex: 1 },
   trackName:     { color: '#EEF0F8', fontSize: 16, marginBottom: 4 },
   trackDate:     { color: '#7B80A0', fontSize: 13 },
-  playIcon:      { color: '#82B090', fontSize: 18 },
+  playIcon:      { color: '#5A7AA8', fontSize: 18 },
 
-  fab:     { position: 'absolute', bottom: 32, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: '#82B090', justifyContent: 'center', alignItems: 'center', elevation: 4 },
+  fab:     { position: 'absolute', bottom: 32, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: '#5A7AA8', justifyContent: 'center', alignItems: 'center', elevation: 4 },
   fabIcon: { color: '#0D0F1A', fontSize: 28, lineHeight: 32 },
 });
