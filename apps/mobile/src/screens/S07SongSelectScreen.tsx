@@ -1,8 +1,9 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { View, FlatList, Text, Pressable, StyleSheet, Alert } from 'react-native';
 import { createAudioPlayer } from 'expo-audio';
 import type { AudioPlayer, AudioStatus } from 'expo-audio';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
 
 import { songsApi, type Song } from '@services/api/songs';
 import { useRecordingStore } from '@store/recordingSlice';
@@ -44,13 +45,20 @@ export function SongSelectScreen({ navigation }: Props) {
       .then(r => setSongs(r.songs))
       .catch(() => Alert.alert('', '목록을 불러오지 못했어요. 다시 시도해주세요'))
       .finally(() => setIsLoading(false));
-
-    return () => {
-      // 화면 언마운트 시 미리듣기 정리
-      playerRef.current?.pause();
-      playerRef.current?.remove();
-    };
   }, []);
+
+  // NativeStack push-navigate는 unmount를 일으키지 않으므로 useFocusEffect로 blur를 잡는다 (#129).
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        playerRef.current?.pause();
+        playerRef.current?.remove();
+        playerRef.current = null;
+        setPreviewingKey(null);
+        setPreviewLoadingKey(null);
+      };
+    }, []),
+  );
 
   // 미리듣기 토글 (동시 2곡 재생 불가)
   const handlePreviewToggle = async (songKey: string) => {
