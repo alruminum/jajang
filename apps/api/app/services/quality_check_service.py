@@ -101,6 +101,15 @@ async def validate_sample(
     if not sample:
         return QualityCheckResult(passed=False, snr_db=None, fail_reason="sample_not_found")
 
+    # MOCK_S3=true → SNR 검증 skip, 항상 통과 (#127). 임계값(15.0)보다 충분히 큰 mock 값 사용.
+    if settings.MOCK_S3:
+        mock_snr_db = 30.0
+        sample.snr_db = mock_snr_db
+        sample.status = "validated"
+        await db.commit()
+        logger.info("quality_check.mock_passed", sample_id=str(sample_id))
+        return QualityCheckResult(passed=True, snr_db=mock_snr_db)
+
     # S3 다운로드
     try:
         audio_bytes = await _download_from_s3(sample.s3_key)

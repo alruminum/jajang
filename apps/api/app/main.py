@@ -53,6 +53,10 @@ def create_app() -> FastAPI:
     app.include_router(tracks_router, prefix="/api/v1")
     app.include_router(users_router, prefix="/api/v1")
     app.include_router(webhooks_router, prefix="/api/v1")
+    # MOCK_S3=true 시만 mock S3 PUT 수신 라우트 등록 (#127). 프로덕션 노출 차단을 위한 조건부 import.
+    if settings.MOCK_S3:
+        from app.api.v1.mock_s3 import router as mock_s3_router
+        app.include_router(mock_s3_router, prefix="/api/v1")
     # 로컬 개발 환경 정적 파일 서빙 (MOCK_S3=true 시 미리듣기 음원)
     _static_dir = pathlib.Path(__file__).parent.parent / "static"
     if _static_dir.exists():
