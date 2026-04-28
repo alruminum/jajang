@@ -5,7 +5,8 @@
   "scripts": {
     "start": "expo start",
     "ios": "expo run:ios",
-    "android": "expo run:android",
+    "android": "bash scripts/setup-adb-reverse.sh && expo run:android",
+    "reverse": "bash scripts/setup-adb-reverse.sh",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx"
   },
