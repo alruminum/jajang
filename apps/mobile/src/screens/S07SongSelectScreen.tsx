@@ -47,7 +47,6 @@ export function SongSelectScreen({ navigation }: Props) {
       .finally(() => setIsLoading(false));
   }, []);
 
-  // 미리듣기 cleanup — blur(다른 화면 navigate)/unmount 시 player 정지·해제 + 상태 리셋
   // NativeStack push-navigate는 unmount를 일으키지 않으므로 useFocusEffect로 blur를 잡는다 (#129).
   useFocusEffect(
     useCallback(() => {
