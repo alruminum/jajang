@@ -12,3 +12,14 @@ build/
 dist/
 .expo/
 .expo-shared/
+
+# harness worktrees
+.worktrees/
+
+# macOS
+.DS_Store
+
+# audio reference dumps (analysis-only, not source assets)
+music/*.wav
+music/*.mp3
+music/*.ogg
