@@ -42,6 +42,28 @@ vi.mock('@store/authSlice', () => ({
   useAuthStore: vi.fn(),
 }))
 
+// useFocusEffect mock — focus 콜백을 즉시 실행하고, cleanup을 외부에서 호출 가능하게 노출.
+// unmount 시에도 cleanup이 호출되도록 React.useEffect의 cleanup return으로 위임 (AC-09 호환).
+const mockUseFocusEffect = vi.hoisted(() => ({
+  cleanup: null as (() => void) | null,
+}))
+
+vi.mock('@react-navigation/native', () => ({
+  useFocusEffect: (cb: () => void | (() => void)) => {
+    React.useEffect(() => {
+      const cleanup = cb()
+      if (typeof cleanup === 'function') {
+        mockUseFocusEffect.cleanup = cleanup
+      }
+      return () => {
+        if (typeof cleanup === 'function') {
+          cleanup()
+        }
+      }
+    }, [])
+  },
+}))
+
 import { songsApi } from '@services/api/songs'
 import { createAudioPlayer } from 'expo-audio'
 import { useRecordingStore } from '@store/recordingSlice'
@@ -111,6 +133,7 @@ function setupStoreMocks({
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mockUseFocusEffect.cleanup = null
   // 기본: 곡 목록 API 성공
   vi.mocked(songsApi.listSongs).mockResolvedValue({ songs: MOCK_SONGS })
 })
@@ -412,6 +435,41 @@ describe('S07SongSelectScreen — AC-09: 언마운트 시 사운드 정리', () 
     // 언마운트
     unmount()
 
+    expect(mockPlayer.remove).toHaveBeenCalled()
+  })
+})
+
+// ────────────────────────────────────────────
+// #129: 화면 blur 시 미리듣기 정리
+// ────────────────────────────────────────────
+describe('S07SongSelectScreen — #129: blur 시 미리듣기 정리', () => {
+  it('다른 화면으로 이동(blur)하면 player.remove와 상태 리셋이 호출된다', async () => {
+    setupStoreMocks()
+
+    const mockPlayer = makeMockPlayer()
+    vi.mocked(createAudioPlayer).mockReturnValue(mockPlayer as any)
+    vi.mocked(songsApi.getPreviewUrl).mockResolvedValue({
+      song_key: 'brahms',
+      preview_url: 'https://cdn.example.com/brahms.mp3',
+      expires_in_seconds: 3600,
+    })
+
+    const navigation = makeMockNavigation()
+    render(<SongSelectScreen navigation={navigation as any} route={{} as any} />)
+    await waitFor(() => screen.getByText('자장가'))
+
+    // 미리듣기 시작
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText('자장가 미리듣기'))
+    })
+    expect(mockPlayer.play).toHaveBeenCalled()
+
+    // blur 시뮬레이션 — useFocusEffect cleanup 강제 실행
+    await act(async () => {
+      mockUseFocusEffect.cleanup?.()
+    })
+
+    expect(mockPlayer.pause).toHaveBeenCalled()
     expect(mockPlayer.remove).toHaveBeenCalled()
   })
 })
