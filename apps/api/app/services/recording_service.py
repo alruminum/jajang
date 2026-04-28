@@ -61,6 +61,23 @@ async def init_upload(
     db.add(sample)
     await db.commit()
 
+    # MOCK_S3=true → boto3 우회. 서버 내부 mock 라우트(/_mock_s3/{key})가 PUT 수신.
+    # 개발환경 dummy AWS 키로 발급된 presigned URL을 AWS가 SignatureDoesNotMatch로 거부하는 문제 회피 (#127).
+    if settings.MOCK_S3:
+        upload_url = f"http://localhost:8000/api/v1/_mock_s3/{s3_key}"
+        logger.info(
+            "recording.upload.init.mock",
+            user_id=str(user_id),
+            sample_id=str(sample_id),
+            song_key=req.song_key,
+        )
+        return UploadInitResponse(
+            sample_id=str(sample_id),
+            upload_url=upload_url,
+            s3_key=s3_key,
+            expires_in_seconds=SAMPLE_UPLOAD_EXPIRY,
+        )
+
     # presigned PUT URL 발급
     try:
         s3 = _s3_client()
