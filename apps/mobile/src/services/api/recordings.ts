@@ -1,6 +1,8 @@
 // apps/mobile/src/services/api/recordings.ts
 // /recordings/init, /complete, /validate API 클라이언트
 
+import * as FileSystem from 'expo-file-system/legacy'
+
 import { api } from '../api.ts'
 
 export interface UploadInitResponse {
@@ -35,22 +37,20 @@ export const recordingsApi = {
   /**
    * S3 presigned PUT URL로 파일 직접 업로드.
    * axios 인터셉터(JWT) 우회 — presigned URL은 S3로 직접 전송.
-   * expo-file-system 미사용 — fetch + Blob API 사용 (React Native 내장).
+   * file:// URI 업로드는 expo-file-system 사용 (RN/Hermes의 fetch+Blob이 file:// 미지원).
    */
   uploadToS3: async (
     presignedUrl: string,
     fileUri: string,
     contentType: string,
   ): Promise<void> => {
-    const fileResponse = await fetch(fileUri)
-    const blob = await fileResponse.blob()
-    const uploadResponse = await fetch(presignedUrl, {
-      method: 'PUT',
+    const result = await FileSystem.uploadAsync(presignedUrl, fileUri, {
+      httpMethod: 'PUT',
+      uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
       headers: { 'Content-Type': contentType },
-      body: blob,
     })
-    if (!uploadResponse.ok) {
-      throw new Error(`S3 upload failed: ${uploadResponse.status}`)
+    if (result.status < 200 || result.status >= 300) {
+      throw new Error(`S3 upload failed: ${result.status}`)
     }
   },
 
