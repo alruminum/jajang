@@ -6,7 +6,6 @@
 
 export { api } from '../api.ts';
 
-export * from './challenges';
 export * from './songs';
 export * from './generations';
 export * from './recordings';
