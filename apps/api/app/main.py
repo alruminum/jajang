@@ -1,4 +1,3 @@
-import pathlib
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -7,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.core.config import settings
+from app.core.config import STATIC_ROOT, settings
 from app.core.db import create_all_if_dev, init_db
 
 logger = structlog.get_logger()
@@ -58,9 +57,8 @@ def create_app() -> FastAPI:
         from app.api.v1.mock_s3 import router as mock_s3_router
         app.include_router(mock_s3_router, prefix="/api/v1")
     # 로컬 개발 환경 정적 파일 서빙 (MOCK_S3=true 시 미리듣기 음원)
-    _static_dir = pathlib.Path(__file__).parent.parent / "static"
-    if _static_dir.exists():
-        app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
+    if STATIC_ROOT.exists():
+        app.mount("/static", StaticFiles(directory=str(STATIC_ROOT)), name="static")
     return app
 
 
