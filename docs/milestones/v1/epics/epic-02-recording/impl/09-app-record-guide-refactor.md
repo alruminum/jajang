@@ -1,6 +1,6 @@
 ---
 depth: std
-design: required
+design: optional
 ---
 
 # impl/09 — 앱: 녹음 가이드 화면 리팩토링 (S09) — #133

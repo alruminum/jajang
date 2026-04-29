@@ -30,49 +30,73 @@
 
 ## Story 2 — 녹음 모드 선택 & 가이드
 
-**As a** 유저  
-**I want** 허밍과 쉬 중 내게 맞는 녹음 방식을 선택하고 싶다  
-**So that** 더 자연스러운 목소리로 녹음할 수 있다
+**As a** 유저
+**I want** 허밍과 쉬 중 내게 맞는 녹음 방식을 선택하고, 허밍 모드에서는 가사 미리보기와 헤드폰 권장 안내를 보고 싶다
+**So that** 더 자연스럽고 준비된 상태로 녹음할 수 있다
+
+> v1.2.1 갱신 (#133): challenge-response 폐기 → 가사 미리보기 + 헤드폰 chip 추가
 
 ### 태스크 체크리스트
 
-- [ ] 모드 선택 화면: 허밍 / 쉬 카드 UI + 각 모드 설명
-- [ ] 각 모드별 가이드 화면 (예시 오디오 재생 + 텍스트 안내)
-- [ ] Challenge-response 문구 표시 ("지금 이 문구를 읽으며 시작해주세요: [문구]")
-- [ ] 환경 점검 안내 ("조용한 곳에서 30cm 거리 유지")
-- [ ] 준비됐어요 버튼 → 녹음 화면 이동
+- [ ] 모드 선택 화면: 허밍 / 쉬 카드 UI + 각 모드 설명 (기존 유지)
+- [ ] 가사 자산 모듈 신규 생성 (`data/lyrics.ts` — 6곡 한국어 1절 4~6줄)
+- [ ] BGM 트랙 메타 모듈 신규 생성 (`data/bgmTracks.ts`)
+- [ ] `LyricsBox` 컴포넌트 신규 생성 (가사 미리보기/녹음 모드 공통)
+- [ ] S09 가이드 화면: challenge-response 박스 제거
+- [ ] S09 허밍 모드: 헤드폰 권장 chip 노출 (세이지 그린 outline, 비인터랙티브)
+- [ ] S09 허밍 모드: 선택 곡 가사 박스 노출 (1절 4~6줄, 400ms fade-in)
+- [ ] S09 쉬 모드: 헤드폰 chip / 가사 박스 미노출
+- [ ] S09 가사 미준비 fallback: 가사 박스 숨김 + "허밍해 주세요" 텍스트
+- [ ] navigation/types.ts: RecordGuide 파라미터에 songKey 추가
+- [ ] RecordModeScreen: navigate('RecordGuide', { mode, songKey }) 수정
+- [ ] challenges API 클라이언트 삭제 (`services/api/challenges.ts`)
+- [ ] 서버 challenges 엔드포인트 → 410 Gone 처리
 
 ### 수용 기준
 
-- Given 모드 선택 / When 허밍 선택 / Then 허밍 가이드 화면 이동 (쉬 반대)
-- Given 가이드 화면 / When 예시 오디오 탭 / Then 해당 모드 예시 재생
-- Given 준비됐어요 탭 / When / Then 카운트다운 3초 후 녹음 시작
+- Given 허밍 모드 S09 진입 / When 화면 로드 / Then 헤드폰 chip + 선택 곡 가사 박스 노출 (challengesApi 호출 없음)
+- Given 쉬 모드 S09 진입 / When 화면 로드 / Then 헤드폰 chip / 가사 박스 미노출
+- Given 가사 미준비 songKey / When S09 진입 / Then 가사 박스 숨김 + "허밍해 주세요" 텍스트 (chip 유지)
+- Given 녹음 시작할게요 탭 / When 권한 허용 / Then navigate('Record', { mode, songKey }) 전달됨
+- Given GET /api/v1/challenges/random / When 호출 / Then HTTP 410 반환
 
 ---
 
 ## Story 3 — 실시간 녹음
 
-**As a** 유저  
-**I want** 마이크로 내 목소리를 30~60초 녹음하고 싶다  
-**So that** AI 자장가 생성에 사용할 샘플을 만들 수 있다
+**As a** 유저
+**I want** 마이크로 내 목소리를 30~60초 녹음하고 싶다. 허밍 모드에서는 BGM 30%와 가사 박스가 함께 나오길 원한다
+**So that** AI 자장가 생성에 사용할 좋은 샘플을 만들 수 있다
+
+> v1.2.1 갱신 (#133): 허밍 모드 BGM 30% 재생 + 가사 박스 추가
 
 ### 태스크 체크리스트
 
-- [ ] 마이크 권한 요청 (미승인 시 설정 이동 유도 팝업)
-- [ ] 카운트다운 3초 UI
-- [ ] 실시간 음량 파형 시각화
-- [ ] 타이머 표시 (경과 시간 / 최대 60초)
-- [ ] 30초 미만 종료 시: "조금 더 녹음해주세요" 다이얼로그 (이어서 / 재시작)
-- [ ] 60초 도달 시: 자동 종료 → 미리듣기 화면 이동
-- [ ] 종료 버튼 탭 → 미리듣기 화면 이동
-- [ ] 무음 감지 10초 이상 → 경고 ("소리가 감지되지 않아요")
+- [ ] 마이크 권한 요청 (기존 유지)
+- [ ] 카운트다운 3초 UI (기존 유지 — BGM/가사 박스 미노출)
+- [ ] 실시간 음량 파형 시각화 (기존 유지)
+- [ ] 타이머 표시 경과/최대 (기존 유지)
+- [ ] 30초 미만 종료 다이얼로그 (기존 유지)
+- [ ] 60초 자동 종료 (기존 유지)
+- [ ] 무음 감지 10초 경고 (기존 유지)
+- [ ] `useBgmPlayer` 훅 신규 생성 (BGM 재생/정지, volume ramp 0→30% 300ms)
+- [ ] 허밍 모드: 카운트다운 종료 → BGM 재생 시작 (volume ramp)
+- [ ] 허밍 모드: 녹음 종료(수동/자동/취소) → BGM 정지 (volume ramp 30%→0 200ms)
+- [ ] 허밍 모드: 가사 박스 노출 (LyricsBox mode="recording", fade-in 400ms)
+- [ ] 허밍 모드: BGM chip 표시 ("♬ 곡명 · 30%")
+- [ ] 쉬 모드: BGM/가사 박스/BGM chip 미노출
+- [ ] 허밍 모드 다시 녹음: BGM 정지 → 카운트다운 재시작 → BGM 처음부터 재생
+- [ ] BGM 로드 실패: 상단 토스트 "음악 없이 녹음할게요" + 녹음 계속 진행
+- [ ] 가사 미준비 fallback: 가사 박스 숨김 + "허밍해 주세요" (BGM chip 유지)
 
 ### 수용 기준
 
-- Given 마이크 권한 미승인 / When 녹음 버튼 탭 / Then 권한 안내 팝업 + 설정 이동 버튼
-- Given 녹음 중 60초 경과 / When / Then 자동 종료 + 미리듣기 화면
-- Given 30초 미만 종료 / When 종료 탭 / Then 연장 유도 다이얼로그 노출
-- Given 무음 10초 초과 / When 녹음 중 / Then 화면 내 경고 메시지 노출 (녹음 계속)
+- Given 허밍 모드 카운트다운 종료 / When / Then BGM 30% volume ramp 시작 + 가사 박스 fade-in 노출
+- Given 허밍 모드 녹음 종료 / When ⏹ 탭 (30초+) / Then BGM volume ramp 정지 → S11 이동
+- Given 허밍 모드 녹음 중 / When 60초 경과 자동 종료 / Then BGM 즉시 정지
+- Given 쉬 모드 / When 녹음 진행 / Then BGM/가사 박스/BGM chip 미노출 (기존 동작 유지)
+- Given BGM 로드 실패 / When 카운트다운 종료 / Then 토스트 "음악 없이 녹음할게요" + 녹음 계속
+- Given 허밍 모드 다시 녹음 / When S11→S10 재진입 / Then BGM 처음부터 재생 (volume ramp)
 
 ---
 
@@ -132,6 +156,7 @@
 | Epic | [#52](https://github.com/alruminum/jajang/issues/52) |
 | Story 1 | [#53](https://github.com/alruminum/jajang/issues/53) |
 | Story 2 | [#54](https://github.com/alruminum/jajang/issues/54) |
+| Story 2/3 v1.2.1 갱신 | [#133](https://github.com/alruminum/jajang/issues/133) |
 | Story 3 | [#55](https://github.com/alruminum/jajang/issues/55) |
 | Story 4 | [#56](https://github.com/alruminum/jajang/issues/56) |
 | Story 5 | [#57](https://github.com/alruminum/jajang/issues/57) |
