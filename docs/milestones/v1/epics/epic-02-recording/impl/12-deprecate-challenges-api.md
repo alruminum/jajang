@@ -19,12 +19,18 @@ apps/mobile/src/services/api/
 ├── challenges.ts          [삭제]
 └── index.ts               [수정 — challenges re-export 제거]
 
-apps/api/app/api/v1/
-└── challenges.py          [수정 — 엔드포인트 410 Gone 처리]
+apps/mobile/src/__tests__/screens/
+├── S09RecordGuideScreen.test.tsx           [수정 — vi.mock('@services/api/challenges') 제거]
+└── S09RecordGuideScreen.refactor.test.tsx  [수정 — vi.mock('@services/api/challenges') 제거]
 
-apps/api/app/main.py (또는 router 등록 파일)
-                           [수정 — challenges router 등록 제거]
+apps/api/app/api/v1/
+└── challenges.py          [수정 — 엔드포인트 410 Gone, require_auth import 제거]
+
+apps/api/tests/
+└── test_challenges_deprecated.py  [신규 — 410 회귀 검증]
 ```
+
+> **참고**: `apps/api/app/main.py` 의 `include_router(challenges.router, ...)` 는 **그대로 유지**한다 (4절 결정 — 410 Gone 응답 채널을 살려두기 위함). main.py 자체는 수정 없음.
 
 ---
 
@@ -66,18 +72,43 @@ grep -r "challenges" apps/mobile/src --include="*.ts" --include="*.tsx"
 export * from './challenges'
 ```
 
+### 테스트 파일 mock 정리 (GAP-1)
+
+`challenges.ts` 삭제 후 vitest 의 alias 해석이 깨지므로, 잔여 `vi.mock('@services/api/challenges', ...)` 라인을 제거한다.
+
+**S09RecordGuideScreen.refactor.test.tsx** (line 19-22 + 사용 부)
+- `mockGetRandomPhrase` 변수 선언 + `vi.mock('@services/api/challenges', ...)` 블록 삭제
+- `mockGetRandomPhrase.mockReset()` (beforeEach), `expect(mockGetRandomPhrase).not.toHaveBeenCalled()` 단언이 포함된 케이스(line 58, 77) 도 삭제 — 이미 production 코드에 challengesApi import 가 없으므로 호출 자체가 불가능. mock 없이 단언만 남기면 ReferenceError 가 난다.
+
+**S09RecordGuideScreen.test.tsx** (line 22-29 + 사용 부)
+- `mockGetRandomPhrase` 변수 + `vi.mock('@services/api/challenges', ...)` 블록 삭제
+- `beforeEach` 블록들의 `mockGetRandomPhrase.mockResolvedValue(...)` 라인 모두 제거 (line 50, 75, 105, 130, 156)
+- 이 테스트는 권한 분기/모달 동작 중심이므로 challengesApi mock 없이도 시나리오는 통과해야 한다.
+
+> 위 두 파일의 production import 제거는 impl/09 에서 이미 완료됐다. 이번 task 는 **테스트 파일에 살아남은 mock 부산물만** 청소.
+
 ---
 
 ## 4. 서버 변경
 
 ### challenges.py 교체
 
+기존 파일은 다음 import 들을 갖고 있다:
 ```python
-# apps/api/app/api/v1/challenges.py (교체)
+import random
+from fastapi import APIRouter, Depends
+from app.api.deps import require_auth
+```
+
+**전면 교체**한다. `random`, `Depends`, `require_auth`, `CHALLENGE_PHRASES` 모두 미사용이 되므로 함께 삭제 (GAP-3).
+
+```python
+# apps/api/app/api/v1/challenges.py (전체 교체)
 
 from fastapi import APIRouter, HTTPException, status
 
 router = APIRouter(prefix="/challenges", tags=["challenges"])
+
 
 @router.get("/random")
 async def get_random_challenge():
@@ -93,11 +124,37 @@ async def get_random_challenge():
     )
 ```
 
-`require_auth` 의존성도 제거. 410은 인증 없이 반환.
+핵심:
+- `require_auth` 의존성 제거 — 인증 없이도 410 반환 (구버전 클라이언트는 토큰 만료 후일 수 있음).
+- `random.choice` / `CHALLENGE_PHRASES` 모두 제거.
 
-### main.py (또는 router 파일)
+### main.py — 변경 없음
 
-challenges router는 main.py include_router에 그대로 유지 (410 응답용). 단, `__init__.py`에서 import 방식에 따라 별도 수정 필요 없을 수 있음.
+`challenges.router` 의 `include_router(...)` 등록은 그대로 유지한다. 410 응답을 반환하는 채널이기 때문 (라우터를 끊으면 404 가 되어 의도와 어긋난다). 다음 마일스톤에서 라우터 자체를 삭제할 때 main.py 도 함께 정리한다.
+
+### 서버 회귀 테스트 (GAP-4)
+
+`apps/api/tests/test_challenges_deprecated.py` 신규 작성:
+
+```python
+"""
+#133 — challenges API deprecation 회귀 테스트.
+PRD v1.2: challenge-response 폐기. 구버전 클라이언트 호환용 410 응답 보장.
+"""
+
+from fastapi.testclient import TestClient
+
+from app.main import app
+
+
+def test_get_random_challenge_returns_410():
+    """GET /api/v1/challenges/random 은 인증 없이 410 Gone 을 반환한다."""
+    client = TestClient(app)
+    res = client.get("/api/v1/challenges/random")
+    assert res.status_code == 410
+```
+
+> conftest.py 가 환경변수를 선행 주입하므로 별도 픽스처 불필요. 인증 미필요는 의도된 계약 (410 응답에는 인증 가드 없음) — 테스트가 이 계약을 명시적으로 검증한다.
 
 ---
 
@@ -105,7 +162,11 @@ challenges router는 main.py include_router에 그대로 유지 (410 응답용).
 
 - [ ] `apps/mobile/src/services/api/challenges.ts` 파일 없음
 - [ ] `services/api/index.ts`에 challenges re-export 없음
+- [ ] `apps/mobile/src/__tests__/screens/S09RecordGuideScreen.test.tsx` 와 `S09RecordGuideScreen.refactor.test.tsx` 에 `vi.mock('@services/api/challenges', ...)` 라인 없음 (grep `challenges` 결과 0)
+- [ ] `cd apps/mobile && npx vitest run` 통과 (alias 해석 실패 없음)
 - [ ] `GET /api/v1/challenges/random` → HTTP 410 반환
+- [ ] `apps/api/tests/test_challenges_deprecated.py` 가 `pytest` 에서 통과
+- [ ] `apps/api/app/api/v1/challenges.py` 에 `require_auth`, `random`, `Depends` import 없음 (grep 결과 0)
 - [ ] 기존 RecordGuideScreen에서 challenges import 없음 (impl/09 완료 전제)
 
 ---

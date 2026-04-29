@@ -1,6 +1,6 @@
 ---
 depth: std
-design: required
+design: optional
 ---
 
 # impl/10 — 앱: 녹음 화면 BGM + 가사 박스 (S10) — #133
