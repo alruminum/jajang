@@ -4,9 +4,16 @@ export type SongKey = 'brahms' | 'hush' | 'mozart' | 'schubert' | 'twinkle' | 'r
 
 export interface BgmTrackMeta {
   titleKo: string;
+  previewKey: string;
 }
 
+export const BGM_TRACKS: Record<string, BgmTrackMeta> = Object.fromEntries(
+  Object.entries(SONG_NAMES).map(([key, titleKo]) => [
+    key,
+    { titleKo, previewKey: key },
+  ]),
+);
+
 export function getBgmTrackMeta(songKey: string): BgmTrackMeta | null {
-  const titleKo = SONG_NAMES[songKey];
-  return titleKo ? { titleKo } : null;
+  return BGM_TRACKS[songKey] ?? null;
 }
