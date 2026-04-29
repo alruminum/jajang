@@ -1,3 +1,5 @@
+import pathlib
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -56,3 +58,8 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+# /static StaticFiles 마운트 루트. main.py 와 storage_service.py 가 동일 경로를 가리키도록 단일 출처.
+# 위치: apps/api/app/core/config.py → parent(=core) → parent(=app) → parent(=apps/api) / "static"
+STATIC_ROOT: pathlib.Path = pathlib.Path(__file__).parent.parent.parent / "static"
