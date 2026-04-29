@@ -22,7 +22,7 @@ export type MainStackParamList = {
   HomeTabs: undefined;
   SongSelect: undefined;                  // S07
   RecordMode: undefined;                   // S08
-  RecordGuide: { mode: 'humming' | 'shush' };                 // S09
+  RecordGuide: { mode: 'humming' | 'shush'; songKey: string }; // S09
   Record: { songKey: string; mode: 'humming' | 'shush' };     // S10
   Preview: { recordingUri: string; songKey: string };          // S11
   Generating: {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,51 +11,53 @@ import { getRecordingPermissionsAsync, requestRecordingPermissionsAsync } from '
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import type { MainStackParamList } from '../navigation/types';
-import { challengesApi } from '../services/api/challenges';
+import { LyricsBox } from '../components/LyricsBox';
+import { getLyrics } from '../data/lyrics';
+import { SONG_NAMES } from '../services/songs';
 
+type Mode = 'humming' | 'shush';
 type Props = NativeStackScreenProps<MainStackParamList, 'RecordGuide'>;
 
-const GUIDE_ITEMS = [
+const GUIDE_ITEMS_HUMMING = [
   '조용한 방에서 해주세요',
   '마이크를 입에서 20~30cm 거리로',
   '30초 이상 이어주세요',
 ];
 
-const MODE_LABEL: Record<'humming' | 'shush', string> = {
+const GUIDE_ITEMS_SHUSH = [
+  '조용한 방에서 해주세요',
+  '마이크를 입에서 20~30cm 거리로',
+  '쉬이이~ 길게 30초 이상 해주세요',
+];
+
+const MODE_LABEL: Record<Mode, string> = {
   humming: '허밍 모드',
   shush: '쉿 모드',
 };
 
 export function RecordGuideScreen({ navigation, route }: Props) {
-  const { mode } = route.params;
-  const [challengePhrase, setChallengePhrase] = useState<string | null>(null);
+  const { mode, songKey } = route.params;
+
   const [showPermissionModal, setShowPermissionModal] = useState(false);
 
-  useEffect(() => {
-    challengesApi
-      .getRandomPhrase()
-      .then((r) => setChallengePhrase(r.phrase))
-      .catch(() => {
-        setChallengePhrase('자장 자장 우리 아기');
-      });
-  }, []);
+  const guideItems = mode === 'humming' ? GUIDE_ITEMS_HUMMING : GUIDE_ITEMS_SHUSH;
+  const showHeadphoneChip = mode === 'humming';
+  const showLyricsBox = mode === 'humming';
+  const lyricsAvailable = !!getLyrics(songKey) && !!SONG_NAMES[songKey];
 
   const handleStartRecording = async () => {
-    // 1차: 현재 권한 상태 확인 (팝업 없이)
     const current = await getRecordingPermissionsAsync();
 
     if (current.status === 'granted') {
-      navigation.navigate('Record', { mode, songKey: '' });
+      navigation.navigate('Record', { mode, songKey });
       return;
     }
 
-    // canAskAgain === true → OS 팝업 요청 가능
     if (current.canAskAgain) {
       const { status } = await requestRecordingPermissionsAsync();
       if (status === 'granted') {
-        navigation.navigate('Record', { mode, songKey: '' });
+        navigation.navigate('Record', { mode, songKey });
       } else {
-        // 거부 후 canAskAgain 재확인
         const after = await getRecordingPermissionsAsync();
         if (!after.canAskAgain) {
           setShowPermissionModal(true);
@@ -64,7 +66,6 @@ export function RecordGuideScreen({ navigation, route }: Props) {
       return;
     }
 
-    // canAskAgain === false → OS 팝업 불가, 설정 유도
     setShowPermissionModal(true);
   };
 
@@ -74,7 +75,7 @@ export function RecordGuideScreen({ navigation, route }: Props) {
       <Text style={styles.title}>이렇게 해주세요</Text>
 
       <View style={styles.guideList}>
-        {GUIDE_ITEMS.map((item, i) => (
+        {guideItems.map((item, i) => (
           <View key={i} style={styles.guideItem}>
             <Text style={styles.checkmark}>✓</Text>
             <Text style={styles.guideText}>{item}</Text>
@@ -82,17 +83,19 @@ export function RecordGuideScreen({ navigation, route }: Props) {
         ))}
       </View>
 
-      {challengePhrase != null && (
-        <View style={styles.challengeBox}>
-          <Text style={styles.challengeLabel}>지금 직접 따라 읽어주세요:</Text>
-          <Text style={styles.challengePhrase}>"{challengePhrase}"</Text>
-        </View>
+      {showHeadphoneChip && <HeadphoneChip />}
+
+      {showLyricsBox && (
+        lyricsAvailable
+          ? <LyricsBox songKey={songKey} mode="preview" />
+          : <Text style={styles.fallbackText}>허밍해 주세요</Text>
       )}
 
       <Pressable
         style={styles.cta}
         onPress={handleStartRecording}
         accessibilityLabel="녹음 시작"
+        testID="record-guide-cta"
       >
         <Text style={styles.ctaText}>녹음 시작할게요</Text>
       </Pressable>
@@ -105,6 +108,15 @@ export function RecordGuideScreen({ navigation, route }: Props) {
         }}
         onDismiss={() => setShowPermissionModal(false)}
       />
+    </View>
+  );
+}
+
+function HeadphoneChip() {
+  return (
+    <View style={chipStyles.container}>
+      <Text style={chipStyles.icon}>🎧</Text>
+      <Text style={chipStyles.text}>이어폰을 끼면 더 또렷하게 담겨요</Text>
     </View>
   );
 }
@@ -160,7 +172,7 @@ const styles = StyleSheet.create({
     fontFamily: 'NotoSansKR-Regular',
     marginBottom: 28,
   },
-  guideList: { marginBottom: 28 },
+  guideList: { marginBottom: 20 },
   guideItem: {
     flexDirection: 'row',
     marginBottom: 14,
@@ -174,20 +186,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'NotoSansKR-Regular',
   },
-  challengeBox: {
-    backgroundColor: '#1A1D30',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 32,
-    borderWidth: 1,
-    borderColor: '#2A2E48',
-  },
-  challengeLabel: { color: '#7B80A0', fontSize: 13, marginBottom: 8 },
-  challengePhrase: {
-    color: '#EEF0F8',
-    fontSize: 18,
+  fallbackText: {
+    color: '#7B80A0',
+    fontSize: 15,
     fontFamily: 'NotoSansKR-Regular',
-    lineHeight: 28,
+    marginBottom: 24,
   },
   cta: {
     height: 56,
@@ -203,6 +206,22 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontFamily: 'NotoSansKR-Regular',
   },
+});
+
+const chipStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#82B090',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    alignSelf: 'flex-start',
+    marginBottom: 20,
+  },
+  icon: { fontSize: 14, marginRight: 6 },
+  text: { color: '#82B090', fontSize: 13, fontFamily: 'NotoSansKR-Regular' },
 });
 
 const modal = StyleSheet.create({
