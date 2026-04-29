@@ -37,7 +37,7 @@ describe('CompletedTrackCard', () => {
     ['brahms', '브람스 자장가'],
     ['mozart', '모차르트 자장가'],
     ['schubert', '슈베르트 자장가'],
-    ['twinkle', 'Twinkle Twinkle'],
+    ['twinkle', '반짝반짝 작은 별'],
     ['rockabye', 'Rock-a-bye Baby'],
     ['hush', 'Hush Little Baby'],
   ])('song_key="%s" → 곡명 "%s"을 표시한다', (key, expectedName) => {
