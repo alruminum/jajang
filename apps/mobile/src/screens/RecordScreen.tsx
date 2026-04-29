@@ -21,6 +21,7 @@ import { LyricsBox } from '../components/LyricsBox';
 import { useBgmPlayer } from '../hooks/useBgmPlayer';
 import { useRecordingStore } from '../store/recordingSlice';
 import { BGM_TRACKS } from '../data/bgmTracks';
+import { Typography } from '../theme/typography';
 import type { MainStackParamList } from '../navigation/types';
 
 const COUNTDOWN_START = 3;
@@ -380,9 +381,7 @@ const styles = StyleSheet.create({
   },
   cancelText: { color: '#7B80A0', fontSize: 15 },
   timer: {
-    color: '#7B80A0',
-    fontSize: 15,
-    fontVariant: ['tabular-nums'],
+    ...Typography.timerMono,
   },
   bgmChip: {
     color: '#A9B0D0',
@@ -405,8 +404,9 @@ const styles = StyleSheet.create({
     marginVertical: 24,
   },
   durationHint: {
-    color: '#7B80A0',
-    fontSize: 14,
+    color: '#EEF0F8',
+    fontSize: 16,
+    fontWeight: '500',
     textAlign: 'center',
     marginBottom: 16,
   },
