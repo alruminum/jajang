@@ -34,7 +34,7 @@ const MODES: ModeCardData[] = [
 ];
 
 export function RecordModeScreen({ navigation }: Props) {
-  const { setRecordingMode } = useRecordingStore();
+  const { setRecordingMode, selectedSongKey } = useRecordingStore();
   // generationCount는 Epic 03 완료 후 AuthStore에 추가 예정.
   // 현재는 unknown을 경유한 캐스트로 접근 (test mock 호환).
   const authState = useAuthStore() as unknown as {
@@ -46,7 +46,7 @@ export function RecordModeScreen({ navigation }: Props) {
 
   const handleSelectMode = (mode: Mode) => {
     setRecordingMode(mode);
-    navigation.navigate('RecordGuide', { mode });
+    navigation.navigate('RecordGuide', { mode, songKey: selectedSongKey ?? '' });
   };
 
   return (
