@@ -14,7 +14,6 @@ import type { MainStackParamList } from '../navigation/types';
 import { LyricsBox } from '../components/LyricsBox';
 import { getLyrics } from '../data/lyrics';
 import { SONG_NAMES } from '../services/songs';
-
 type Mode = 'humming' | 'shush';
 type Props = NativeStackScreenProps<MainStackParamList, 'RecordGuide'>;
 
@@ -36,7 +35,8 @@ const MODE_LABEL: Record<Mode, string> = {
 };
 
 export function RecordGuideScreen({ navigation, route }: Props) {
-  const { mode, songKey } = route.params;
+  const { mode, songKey: rawSongKey } = route.params;
+  const songKey = rawSongKey ?? '';
 
   const [showPermissionModal, setShowPermissionModal] = useState(false);
 
@@ -191,6 +191,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: 'NotoSansKR-Regular',
     marginBottom: 24,
+  },
+  challengePhrase: {
+    color: '#EEF0F8',
+    fontSize: 16,
+    fontFamily: 'NotoSansKR-Regular',
+    textAlign: 'center',
+    marginBottom: 20,
   },
   cta: {
     height: 56,

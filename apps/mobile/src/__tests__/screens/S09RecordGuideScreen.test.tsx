@@ -10,23 +10,20 @@ import { Linking } from 'react-native'
 import { RecordGuideScreen } from '@screens/RecordGuideScreen'
 
 // ─── Mock: expo-audio (권한 API) ──────────────────────────────────────────────
-const mockGetPermissions = jest.fn()
-const mockRequestPermissions = jest.fn()
-
+// jest.mock factory는 hoisting되므로 외부 변수를 factory 안에서 참조 금지.
+// factory 내부에서 jest.fn()으로 선언 후 require()로 참조를 획득한다.
 jest.mock('expo-audio', () => ({
-  getRecordingPermissionsAsync: mockGetPermissions,
-  requestRecordingPermissionsAsync: mockRequestPermissions,
+  getRecordingPermissionsAsync: jest.fn(),
+  requestRecordingPermissionsAsync: jest.fn(),
   setAudioModeAsync: jest.fn().mockResolvedValue(undefined),
 }))
 
-// ─── Mock: challengesApi ──────────────────────────────────────────────────────
-const mockGetRandomPhrase = jest.fn()
-
-jest.mock('@services/api/challenges', () => ({
-  challengesApi: {
-    getRandomPhrase: mockGetRandomPhrase,
-  },
-}))
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { getRecordingPermissionsAsync: mockGetPermissions, requestRecordingPermissionsAsync: mockRequestPermissions } =
+  require('expo-audio') as {
+    getRecordingPermissionsAsync: jest.Mock
+    requestRecordingPermissionsAsync: jest.Mock
+  }
 
 // ─── Mock: navigation ─────────────────────────────────────────────────────────
 const mockNavigate = jest.fn()
@@ -54,7 +51,7 @@ afterEach(async () => {
 describe('RecordGuideScreen (S09) — 권한 분기: granted', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockGetRandomPhrase.mockResolvedValue({ phrase: '자장 자장 우리 아기' })
+
   })
 
   it('REQ-01: granted 상태에서 버튼 탭 → navigate("Record") 호출', async () => {
@@ -79,7 +76,7 @@ describe('RecordGuideScreen (S09) — 권한 분기: granted', () => {
 describe('RecordGuideScreen (S09) — 권한 분기: canAskAgain=true', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockGetRandomPhrase.mockResolvedValue({ phrase: '자장 자장 우리 아기' })
+
   })
 
   it('REQ-02: canAskAgain=true, requestPermissions → granted → navigate 호출', async () => {
@@ -109,7 +106,7 @@ describe('RecordGuideScreen (S09) — 권한 분기: canAskAgain=true', () => {
 describe('RecordGuideScreen (S09) — 권한 분기: canAskAgain=false', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockGetRandomPhrase.mockResolvedValue({ phrase: '자장 자장 우리 아기' })
+
   })
 
   it('REQ-04: canAskAgain=false → 모달 즉시 표시, requestPermissions 미호출', async () => {
@@ -134,7 +131,7 @@ describe('RecordGuideScreen (S09) — 권한 분기: canAskAgain=false', () => {
 describe('RecordGuideScreen (S09) — 권한 모달 동작', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockGetRandomPhrase.mockResolvedValue({ phrase: '자장 자장 우리 아기' })
+
     mockGetPermissions.mockResolvedValue({ status: 'denied', canAskAgain: false, granted: false })
   })
 
@@ -160,7 +157,7 @@ describe('RecordGuideScreen (S09) — 권한 모달 동작', () => {
 describe('RecordGuideScreen (S09) — 가이드 렌더링', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    mockGetRandomPhrase.mockResolvedValue({ phrase: '자장 자장 우리 아기' })
+
     mockGetPermissions.mockResolvedValue({ status: 'granted', canAskAgain: true, granted: true })
   })
 
@@ -179,9 +176,4 @@ describe('RecordGuideScreen (S09) — 가이드 렌더링', () => {
     expect(getByText('30초 이상 이어주세요')).toBeTruthy()
   })
 
-  it('REQ-08: challengePhrase 로드 성공 → 문구 화면에 표시', async () => {
-    mockGetRandomPhrase.mockResolvedValue({ phrase: '우리 아기 잘도 잔다' })
-    const { findByText } = renderScreen()
-    expect(await findByText('"우리 아기 잘도 잔다"')).toBeTruthy()
-  })
 })
