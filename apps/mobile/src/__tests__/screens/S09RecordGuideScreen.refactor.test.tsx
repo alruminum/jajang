@@ -11,7 +11,7 @@
  */
 
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { render, fireEvent, cleanup } from '@testing-library/react-native';
 
 import { LYRICS } from '../../data/lyrics';
 import { SONG_NAMES } from '../../services/songs';
@@ -38,6 +38,12 @@ function renderWith(params: { mode: 'humming' | 'shush'; songKey: string }) {
 beforeEach(() => {
   mockNavigate.mockReset();
   mockGetRandomPhrase.mockReset();
+});
+
+afterEach(async () => {
+  await Promise.resolve();
+  await Promise.resolve();
+  cleanup();
 });
 
 describe('S09 RecordGuideScreen — 허밍 모드 (impl/09 §9)', () => {

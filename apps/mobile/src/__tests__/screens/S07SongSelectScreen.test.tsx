@@ -16,7 +16,7 @@
  */
 
 import React from 'react'
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react-native'
+import { render, screen, fireEvent, waitFor, act, cleanup } from '@testing-library/react-native'
 import { Alert } from 'react-native'
 
 // ────────────────────────────────────────────
@@ -138,6 +138,12 @@ beforeEach(() => {
   mockUseFocusEffect.cleanup = null
   // 기본: 곡 목록 API 성공
   jest.mocked(songsApi.listSongs).mockResolvedValue({ songs: MOCK_SONGS })
+})
+
+afterEach(async () => {
+  cleanup()
+  await Promise.resolve()
+  await Promise.resolve()
 })
 
 // ────────────────────────────────────────────

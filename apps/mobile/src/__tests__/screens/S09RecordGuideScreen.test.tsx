@@ -5,7 +5,7 @@
  */
 
 import React from 'react'
-import { render, fireEvent } from '@testing-library/react-native'
+import { render, fireEvent, cleanup } from '@testing-library/react-native'
 import { Linking } from 'react-native'
 import { RecordGuideScreen } from '@screens/RecordGuideScreen'
 
@@ -41,6 +41,13 @@ function renderScreen() {
     />
   )
 }
+
+// ─── 전역 teardown: 각 테스트 후 pending async 소진 + 컴포넌트 unmount ──────────
+afterEach(async () => {
+  await Promise.resolve()
+  await Promise.resolve()
+  cleanup()
+})
 
 // ─────────────────────────────────────────────────────────────────────────────
 
