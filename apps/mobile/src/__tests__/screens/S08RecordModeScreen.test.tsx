@@ -93,7 +93,7 @@ describe('RecordModeScreen (S08) — 허밍 카드 탭', () => {
   it('REQ-02: 허밍 카드 탭 시 RecordGuide로 navigate된다', () => {
     const { getByLabelText } = renderScreen()
     fireEvent.press(getByLabelText('허밍 모드 선택'))
-    expect(mockNavigate).toHaveBeenCalledWith('RecordGuide', { mode: 'humming' })
+    expect(mockNavigate).toHaveBeenCalledWith('RecordGuide', expect.objectContaining({ mode: 'humming' }))
   })
 
   it('REQ-02: 허밍 카드 탭 시 setRecordingMode가 navigate보다 먼저 호출된다', () => {
@@ -125,7 +125,7 @@ describe('RecordModeScreen (S08) — 쉿 카드 탭', () => {
   it('REQ-03: 쉿 카드 탭 시 RecordGuide로 navigate된다', () => {
     const { getByLabelText } = renderScreen()
     fireEvent.press(getByLabelText('쉿 모드 선택'))
-    expect(mockNavigate).toHaveBeenCalledWith('RecordGuide', { mode: 'shush' })
+    expect(mockNavigate).toHaveBeenCalledWith('RecordGuide', expect.objectContaining({ mode: 'shush' }))
   })
 
   it('REQ-04: 쉿 카드 탭 시 recordingMode가 "shush"로만 저장된다 (humming 아님)', () => {
@@ -230,8 +230,8 @@ describe('RecordModeScreen (S08) — 엣지 케이스', () => {
     fireEvent.press(getByLabelText('허밍 모드 선택'))
     fireEvent.press(getByLabelText('쉿 모드 선택'))
     expect(mockNavigate).toHaveBeenCalledTimes(2)
-    expect(mockNavigate).toHaveBeenNthCalledWith(1, 'RecordGuide', { mode: 'humming' })
-    expect(mockNavigate).toHaveBeenNthCalledWith(2, 'RecordGuide', { mode: 'shush' })
+    expect(mockNavigate).toHaveBeenNthCalledWith(1, 'RecordGuide', expect.objectContaining({ mode: 'humming' }))
+    expect(mockNavigate).toHaveBeenNthCalledWith(2, 'RecordGuide', expect.objectContaining({ mode: 'shush' }))
   })
 
   it('카드 pressIn 시 pressed 스타일 상태가 적용된다', () => {

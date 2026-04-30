@@ -28,7 +28,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation, CommonActions } from '@react-navigation/native'
-import * as FileSystem from 'expo-file-system/legacy'
+import * as FileSystem from 'expo-file-system'
 
 import { deleteMyAccount, ActiveSubscriptionError } from '@services/accountApi'
 import { useAuthStore } from '@store'

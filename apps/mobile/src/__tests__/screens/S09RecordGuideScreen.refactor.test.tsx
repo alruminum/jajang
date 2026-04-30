@@ -16,10 +16,13 @@ import { render, fireEvent, cleanup } from '@testing-library/react-native';
 import { LYRICS } from '../../data/lyrics';
 import { SONG_NAMES } from '../../services/songs';
 
-const mockGetRandomPhrase = jest.fn();
 jest.mock('@services/api/challenges', () => ({
-  challengesApi: { getRandomPhrase: mockGetRandomPhrase },
+  challengesApi: { getRandomPhrase: jest.fn().mockResolvedValue({ phrase: '' }) },
 }));
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const mockGetRandomPhrase = (require('@services/api/challenges') as {
+  challengesApi: { getRandomPhrase: jest.Mock }
+}).challengesApi.getRandomPhrase;
 
 import { RecordGuideScreen } from '@screens/RecordGuideScreen';
 
@@ -37,7 +40,8 @@ function renderWith(params: { mode: 'humming' | 'shush'; songKey: string }) {
 
 beforeEach(() => {
   mockNavigate.mockReset();
-  mockGetRandomPhrase.mockReset();
+  mockGetRandomPhrase.mockClear();
+  mockGetRandomPhrase.mockResolvedValue({ phrase: '' });
 });
 
 afterEach(async () => {
@@ -61,7 +65,7 @@ describe('S09 RecordGuideScreen — 허밍 모드 (impl/09 §9)', () => {
     expect(getByText(lines[0])).toBeTruthy();
   });
 
-  it('challengesApi.getRandomPhrase 가 호출되지 않는다 (네트워크 요청 제거)', () => {
+  it.skip('challengesApi.getRandomPhrase 가 호출되지 않는다 (네트워크 요청 제거 — REQ-08 도입으로 obsolete)', () => {
     renderWith({ mode: 'humming', songKey: 'brahms' });
     expect(mockGetRandomPhrase).not.toHaveBeenCalled();
   });

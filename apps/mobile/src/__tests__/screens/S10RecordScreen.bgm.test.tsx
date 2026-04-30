@@ -3,7 +3,7 @@
 // issue #133
 
 import React from 'react'
-import { act, render, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 
 // ─── jest.mock factory 내 외부 변수 참조 금지 규칙 우회 ───────────────────────
 // 모든 mock factory 를 jest.fn() 으로 선언하고
@@ -77,6 +77,13 @@ const { useNavigation, useRoute } = require('@react-navigation/native') as {
 }
 
 function applyBgmImpl() {
+  stopBgmMock.mockImplementation(async () => {
+    mockBgmState.isPlaying = false
+  })
+  startBgmMock.mockImplementation(async () => {
+    if (mockBgmState.loadFailed) return
+    mockBgmState.isPlaying = true
+  })
   useBgmPlayer.mockImplementation(
     ({
       enabled,
@@ -87,15 +94,11 @@ function applyBgmImpl() {
     }) => ({
       isPlaying: enabled && mockBgmState.isPlaying,
       loadFailed: mockBgmState.loadFailed,
-      startBgm: jest.fn(async () => {
+      startBgm: async () => {
         await startBgmMock()
         if (mockBgmState.loadFailed) onLoadError?.()
-        else mockBgmState.isPlaying = true
-      }),
-      stopBgm: jest.fn(async () => {
-        await stopBgmMock()
-        mockBgmState.isPlaying = false
-      }),
+      },
+      stopBgm: stopBgmMock,
     }),
   )
 }
@@ -207,8 +210,10 @@ describe('RecordScreen — 허밍 모드 BGM 통합 (impl/10 §4~§5)', () => {
     await advanceCountdown()
 
     const stopBtn = await findByTestId('stop-recording-button')
-    act(() => {
-      stopBtn.props.onPress?.()
+    await act(async () => {
+      fireEvent.press(stopBtn)
+      await Promise.resolve()
+      await Promise.resolve()
     })
 
     await waitFor(() => {
@@ -231,8 +236,10 @@ describe('RecordScreen — 허밍 모드 BGM 통합 (impl/10 §4~§5)', () => {
     await advanceCountdown()
 
     const cancelBtn = await findByTestId('cancel-recording-button')
-    act(() => {
-      cancelBtn.props.onPress?.()
+    await act(async () => {
+      fireEvent.press(cancelBtn)
+      await Promise.resolve()
+      await Promise.resolve()
     })
 
     await waitFor(() => expect(stopBgmMock).toHaveBeenCalled())
@@ -246,8 +253,10 @@ describe('RecordScreen — 허밍 모드 BGM 통합 (impl/10 §4~§5)', () => {
     expect(startBgmMock).toHaveBeenCalledTimes(1)
 
     const restartBtn = await findByTestId('restart-recording-button')
-    act(() => {
-      restartBtn.props.onPress?.()
+    await act(async () => {
+      fireEvent.press(restartBtn)
+      await Promise.resolve()
+      await Promise.resolve()
     })
     await waitFor(() => expect(stopBgmMock).toHaveBeenCalled())
 

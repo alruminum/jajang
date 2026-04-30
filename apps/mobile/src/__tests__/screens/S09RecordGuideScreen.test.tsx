@@ -10,23 +10,29 @@ import { Linking } from 'react-native'
 import { RecordGuideScreen } from '@screens/RecordGuideScreen'
 
 // ─── Mock: expo-audio (권한 API) ──────────────────────────────────────────────
-const mockGetPermissions = jest.fn()
-const mockRequestPermissions = jest.fn()
-
+// jest.mock factory는 hoisting되므로 외부 변수를 factory 안에서 참조 금지.
+// factory 내부에서 jest.fn()으로 선언 후 require()로 참조를 획득한다.
 jest.mock('expo-audio', () => ({
-  getRecordingPermissionsAsync: mockGetPermissions,
-  requestRecordingPermissionsAsync: mockRequestPermissions,
+  getRecordingPermissionsAsync: jest.fn(),
+  requestRecordingPermissionsAsync: jest.fn(),
   setAudioModeAsync: jest.fn().mockResolvedValue(undefined),
 }))
 
-// ─── Mock: challengesApi ──────────────────────────────────────────────────────
-const mockGetRandomPhrase = jest.fn()
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { getRecordingPermissionsAsync: mockGetPermissions, requestRecordingPermissionsAsync: mockRequestPermissions } =
+  require('expo-audio') as {
+    getRecordingPermissionsAsync: jest.Mock
+    requestRecordingPermissionsAsync: jest.Mock
+  }
 
+// ─── Mock: challengesApi ──────────────────────────────────────────────────────
 jest.mock('@services/api/challenges', () => ({
-  challengesApi: {
-    getRandomPhrase: mockGetRandomPhrase,
-  },
+  challengesApi: { getRandomPhrase: jest.fn() },
 }))
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const mockGetRandomPhrase = (require('@services/api/challenges') as {
+  challengesApi: { getRandomPhrase: jest.Mock }
+}).challengesApi.getRandomPhrase
 
 // ─── Mock: navigation ─────────────────────────────────────────────────────────
 const mockNavigate = jest.fn()
