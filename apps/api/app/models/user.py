@@ -53,12 +53,8 @@ class User(Base, TimestampMixin):
     subscription: Mapped[Optional["Subscription"]] = relationship(  # noqa: F821
         back_populates="user", uselist=False
     )
-    # Relationships (Epic 02 범위)
-    voice_samples: Mapped[list["VoiceSample"]] = relationship(  # noqa: F821
-        back_populates="user"
-    )
     # Relationships (Epic 03 범위)
-    generated_tracks: Mapped[list["GeneratedTrack"]] = relationship(  # noqa: F821
+    recording_sessions: Mapped[list["RecordingSession"]] = relationship(  # noqa: F821
         back_populates="user"
     )
     # Relationships (Epic 05 범위)
