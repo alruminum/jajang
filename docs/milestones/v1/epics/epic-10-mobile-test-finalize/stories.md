@@ -180,12 +180,12 @@
 
 ### 태스크 체크리스트
 
-- [ ] 각 describe `.skip` → 일반 describe 로 복원
-- [ ] 첫 실행 fail 메시지 캡처 후 query 패턴 확인
-- [ ] `within(getByTestId('earphone-modal'))` 등 scope 좁힘 도입
-- [ ] 다중 매칭 시 `getAllByText` + index 사용
-- [ ] AsyncStorage `@jajang:earphone_warning_dismissed` mock 시나리오 검증
-- [ ] 14 it 전체 GREEN
+- [x] 각 describe `.skip` → 일반 describe 로 복원
+- [x] 첫 실행 fail 메시지 캡처 후 query 패턴 확인
+- [x] `within(getByTestId('earphone-modal'))` 등 scope 좁힘 도입 — getAllByText 로 처리 (earphone-modal testID 컴포넌트에 없음)
+- [x] 다중 매칭 시 `getAllByText` + index 사용
+- [x] AsyncStorage `@jajang:earphone_warning_dismissed` mock 시나리오 검증
+- [x] 14 it 전체 GREEN
 
 ### 수용 기준
 

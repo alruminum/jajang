@@ -144,4 +144,28 @@ fail 메시지 모두 *테스트 측 query/scope 부재* — 컴포넌트는 PR 
 
 ---
 
+## Verification (PR #149 batch 07) — DONE
+
+**실측 명령 및 결과:**
+
+```
+$ npx jest src/__tests__/screens/S09RecordGuideScreen.refactor.test.tsx
+Tests: 22 passed, 22 total   ← 14 skipped → 14 PASS
+```
+
+```
+$ npx jest 2>&1 | grep "Tests:"
+Tests: 42 failed, 3 skipped, 564 passed, 609 total
+```
+
+- PR #149 baseline: 42 failed / 17 skipped / 550 passed
+- batch 07 after: 42 failed / 3 skipped / 564 passed (+14 PASS, skipped 17→3)
+- 42 failed 는 PR #149 기존 실패분 — 회귀 없음
+
+**적용 패턴:**
+- describe 1번 (chip 텍스트): GUIDE_ITEMS[2] + HeadphoneChip 동일 텍스트 → `getAllByText` 로 다중 매칭 회피
+- describe 2~5번 (modal): `findByText('이어폰을 끼면 더 잘 담겨요')` 그대로 통과 — Modal visible=false 시 RNTL이 children 숨김
+
+---
+
 ## MODULE_PLAN_READY
