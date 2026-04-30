@@ -37,6 +37,7 @@ jest.mock('react-native', () => ({
 }));
 
 jest.mock('@store/auth-store', () => ({
+  __esModule: true,
   useAuthStore: jest.fn(),
 }));
 

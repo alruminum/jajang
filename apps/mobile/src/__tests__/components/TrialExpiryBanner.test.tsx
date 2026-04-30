@@ -14,6 +14,7 @@ jest.mock('@react-navigation/native', () => ({
 }));
 
 jest.mock('@store/auth-store', () => ({
+  __esModule: true,
   useAuthStore: jest.fn(),
 }));
 

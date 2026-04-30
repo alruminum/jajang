@@ -6,11 +6,13 @@
 import React from 'react'
 import { render, fireEvent } from '@testing-library/react-native'
 import { RecordModeScreen } from '@screens/RecordModeScreen'
+import { useAuthStore } from '@store/authSlice'
 
 // ─── Mock: recordingSlice ──────────────────────────────────────────────────
 const mockSetRecordingMode = jest.fn()
 
 jest.mock('@store/recordingSlice', () => ({
+  __esModule: true,
   useRecordingStore: jest.fn(() => ({
     setRecordingMode: mockSetRecordingMode,
     selectedSongKey: 'test-song-key',
@@ -19,11 +21,12 @@ jest.mock('@store/recordingSlice', () => ({
 
 // ─── Mock: authSlice ────────────────────────────────────────────────────────
 // useAuthStore는 Epic 01 store. entitlement: 'free' | 'premium', generationCount: number
-const mockUseAuthStore = jest.fn()
-
 jest.mock('@store/authSlice', () => ({
-  useAuthStore: mockUseAuthStore,
+  __esModule: true,
+  useAuthStore: jest.fn(),
 }))
+
+const mockUseAuthStore = jest.mocked(useAuthStore)
 
 // ─── Mock: navigation ───────────────────────────────────────────────────────
 const mockNavigate = jest.fn()
