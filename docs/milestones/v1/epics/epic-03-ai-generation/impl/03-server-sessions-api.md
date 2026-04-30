@@ -22,13 +22,18 @@ apps/api/app/
 │   ├── sessions.py                  [신규 — 세션 라우터]
 │   ├── masters.py                   [신규 — 마스터 음원 라우터]
 │   ├── generations.py               [수정 — 전체 엔드포인트 410 Gone 처리]
-│   └── __init__.py                  [수정 — sessions/masters router include]
+│   └── __init__.py                  [현행 유지 — 라우터 등록은 main.py에서]
 ├── services/
 │   ├── session_service.py           [신규 — 세션 생성 + 카운터 체크]
-│   └── counter_service.py           [수정 — GenerationCounter 재사용, 신규 함수 보완]
-└── schemas/
-    └── sessions.py                  [신규 — Pydantic v2 스키마]
+│   ├── storage_service.py           [수정 — generate_presigned_put_url() 추가]
+│   └── counter_service.py           [현행 유지 — PAID_ENTITLEMENTS 재사용만]
+├── schemas/
+│   └── sessions.py                  [신규 — Pydantic v2 스키마]
+└── main.py                          [수정 — sessions/masters router include 추가]
 ```
+
+> **[SPEC_GAP 보강]** `api/v1/__init__.py` 는 docstring만 있는 빈 패키지 파일 — 라우터 등록은 기존 패턴대로 `main.py`의 `create_app()`에서 수행.
+> `counter_service.py` 는 `PAID_ENTITLEMENTS` 상수 재사용만. 신규 함수 추가 불필요.
 
 ---
 
@@ -205,7 +210,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 
 from app.core.db import get_db
-from app.api.deps import require_auth
+from app.api.deps import require_auth_with_entitlement
 from app.schemas.sessions import (
     SessionInitRequest, SessionInitResponse,
     RecordingRegisterRequest, RecordingRegisterResponse,
@@ -225,7 +230,7 @@ logger = structlog.get_logger()
 @router.post("/init", response_model=SessionInitResponse, status_code=201)
 async def session_init(
     body: SessionInitRequest,
-    auth: dict = Depends(require_auth),
+    auth: dict = Depends(require_auth_with_entitlement),
     db: AsyncSession = Depends(get_db),
 ):
     user_id     = uuid.UUID(auth["sub"])
@@ -237,7 +242,7 @@ async def session_init(
 async def register_recording(
     session_id: str,
     body: RecordingRegisterRequest,
-    auth: dict = Depends(require_auth),
+    auth: dict = Depends(require_auth_with_entitlement),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -271,7 +276,7 @@ async def register_recording(
 @router.post("/{session_id}/generate", status_code=202)
 async def generate(
     session_id: str,
-    auth: dict = Depends(require_auth),
+    auth: dict = Depends(require_auth_with_entitlement),
     db: AsyncSession = Depends(get_db),
 ):
     """DSP Celery task dispatch."""
@@ -319,7 +324,7 @@ async def generate(
 @router.get("/{session_id}/status", response_model=SessionStatusResponse)
 async def get_session_status(
     session_id: str,
-    auth: dict = Depends(require_auth),
+    auth: dict = Depends(require_auth_with_entitlement),
     db: AsyncSession = Depends(get_db),
 ):
     _session_id = uuid.UUID(session_id)
@@ -365,7 +370,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.core.db import get_db
-from app.api.deps import require_auth
+from app.api.deps import require_auth_with_entitlement
 from app.schemas.sessions import MastersListResponse, MasterAudioItem
 from app.models.master_audio import MasterAudio
 from app.models.recording_session import RecordingSession
@@ -377,7 +382,7 @@ logger = structlog.get_logger()
 
 @router.get("/me", response_model=MastersListResponse)
 async def get_my_masters(
-    auth: dict = Depends(require_auth),
+    auth: dict = Depends(require_auth_with_entitlement),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -451,7 +456,65 @@ async def generations_deprecated(path: str):
 
 ---
 
-## 8. 폴링 흐름 (클라이언트 ↔ 서버)
+## 8. storage_service.py — generate_presigned_put_url 추가
+
+> **[SPEC_GAP 보강]** 기존 `storage_service.py`에 presigned GET URL(`generate_presigned_url`)만 있고 PUT URL이 없음.  
+> `session_service.py`가 호출하는 `storage_service.generate_presigned_put_url(s3_key)`를 신규 추가.
+
+```python
+# apps/api/app/services/storage_service.py — 기존 파일에 함수 추가 (나머지 코드 유지)
+
+UPLOAD_PRESIGN_EXPIRY = 900     # presigned PUT URL 만료: 15분 (클립 업로드 시간 여유)
+
+def generate_presigned_put_url(s3_key: str) -> str:
+    """
+    클립 업로드용 presigned PUT URL 반환 (15분 만료).
+    클라이언트가 직접 S3에 m4a 파일을 PUT 업로드할 때 사용.
+    """
+    if settings.MOCK_S3:
+        # MOCK_S3=true → mock_s3 라우터가 PUT 요청 수신 (apps/api/app/api/v1/mock_s3.py)
+        # mock_s3 router prefix = "/_mock_s3" → 최종 경로: /api/v1/_mock_s3/{s3_key}
+        return f"{_MOCK_BASE_URL}/api/v1/_mock_s3/{s3_key}"
+
+    s3 = _s3_client()
+    try:
+        url = s3.generate_presigned_url(
+            "put_object",
+            Params={
+                "Bucket": settings.S3_BUCKET_NAME,
+                "Key": s3_key,
+                "ContentType": "audio/x-m4a",
+            },
+            ExpiresIn=UPLOAD_PRESIGN_EXPIRY,
+        )
+        return url
+    except ClientError as e:
+        logger.error("storage.presign_put.failed", s3_key=s3_key, error=str(e))
+        raise
+```
+
+> MOCK_S3 분기: `mock_s3.py` 라우터 prefix `/_mock_s3`, `main.py` include prefix `/api/v1` → 최종 PUT 경로 `/api/v1/_mock_s3/{key}` (코드베이스 실측 확인 완료).
+
+---
+
+## 9. main.py — sessions/masters 라우터 등록
+
+> **[SPEC_GAP 보강]** `api/v1/__init__.py` 는 빈 docstring 파일. 라우터 등록은 기존 패턴대로 `main.py`의 `create_app()`에 추가.
+
+```python
+# apps/api/app/main.py — create_app() 내 기존 include_router 블록에 추가
+
+from app.api.v1.sessions import router as sessions_router
+from app.api.v1.masters import router as masters_router
+app.include_router(sessions_router, prefix="/api/v1")
+app.include_router(masters_router, prefix="/api/v1")
+```
+
+등록 순서 주의: `sessions_router`는 기존 `recordings_router` 뒤에, `masters_router`는 `sessions_router` 뒤에 추가.
+
+---
+
+## 11. 폴링 흐름 (클라이언트 ↔ 서버)
 
 ```
 [S12 화면 진입]
@@ -481,7 +544,7 @@ async def generations_deprecated(path: str):
 
 ---
 
-## 9. 수용 기준
+## 12. 수용 기준
 
 ### POST /sessions/init
 - [ ] (TEST) JWT 없음 → 401
@@ -512,7 +575,7 @@ async def generations_deprecated(path: str):
 
 ---
 
-## 10. 주의사항
+## 13. 주의사항
 
 - `generations.py` 410 교체 후 `main.py`의 `include_router(generations.router, ...)` 는 **그대로 유지**. 라우터 제거하면 404 반환 (410과 다름).
 - `require_auth` 의존성은 기존 Epic 01 구현 재사용. `api/deps.py`에 존재 확인 필수.
