@@ -18,11 +18,15 @@ jest-expo preset의 react-native mock이 `Pressable` 을 `string` ('Pressable') 
 `fireEvent.press(element)` 시 실제 이벤트 객체 대신 빈 객체 또는 `undefined` 가 `onPress(e)` 로 전달됨.
 `SongListItem` 의 inner Pressable이 `onPress={(e) => { e.stopPropagation(); ... }}` 호출 → `TypeError`.
 
-**실측 확인:**
-```bash
-npm test 2>&1 | grep "stopPropagation"
-```
-예상 파일: SongListItem, (MiniPlayer — 별도 확인)
+**실측 확인 (grep 완료):**
+
+소스 파일 `stopPropagation` 실재 위치:
+- `apps/mobile/src/components/SongListItem.tsx:77` — inner `Pressable` `onPress` 핸들러. **수정 대상.**
+- `apps/mobile/src/components/MiniPlayer.tsx:161` — `handlePlayPause(e: GestureResponderEvent)`. **수정 불필요** (아래 §MiniPlayer 제외 근거 참조).
+
+영향 테스트 파일 실재 목록 (grep 완료):
+- `apps/mobile/src/__tests__/components/SongListItem.test.tsx` — `'자장가 미리듣기'` label fireEvent.press 3건
+- `apps/mobile/src/__tests__/screens/S07SongSelectScreen.test.tsx` — `'자장가 미리듣기'` / `'자장가 미리듣기 정지'` label fireEvent.press 9건 (AC-02/03/09/#129 describe)
 
 ---
 
@@ -57,7 +61,9 @@ fireEvent.press(element, {
 | 파일 | 변경 내용 |
 |---|---|
 | `apps/mobile/src/components/SongListItem.tsx` | inner Pressable `onPress={(e) => { e.stopPropagation(); onPreviewToggle(); }}` → `onPress={onPreviewToggle}` |
-| `apps/mobile/src/components/MiniPlayer.tsx` | `e.stopPropagation()` 호출 존재 확인 → 동일 패턴 적용 (grep으로 확인 후) |
+
+**MiniPlayer.tsx 제외 근거 (실측):**
+`handlePlayPause`는 `TouchableOpacity` `onPress`에 연결 (line 190). `TouchableOpacity`는 inner 전용 핸들러라 버블링 이슈가 다른 패턴. MiniPlayer 전용 테스트 파일 없음 (`grep MiniPlayer src/__tests__` → 0건). 현재 fails 목록과 무관하므로 수정 X.
 
 ### 테스트 파일 수정 (전략 B — 필요한 경우만)
 
@@ -72,32 +78,39 @@ fireEvent.press(element, {
 })
 ```
 
-**잠재 대상 (grep 후 확인):**
-- `apps/mobile/src/__tests__/components/SongListItem.test.tsx` (이벤트 핸들러 describe)
-- `apps/mobile/src/__tests__/components/TrackCard.test.tsx`
-- `apps/mobile/src/__tests__/components/TrialBadge.test.tsx`
-- `apps/mobile/src/__tests__/components/EmptyTrackState.test.tsx`
+**확정 영향 테스트 파일 (grep 실측):**
+- `apps/mobile/src/__tests__/components/SongListItem.test.tsx` — 이벤트 핸들러 describe 3 케이스
+- `apps/mobile/src/__tests__/screens/S07SongSelectScreen.test.tsx` — AC-02/03/09/#129 describe, `'자장가 미리듣기'` label fireEvent.press 9건
+
+**제외 확정 (stopPropagation 무관):**
+- `TrackCard.test.tsx` — TrackCard 소스에 stopPropagation 없음
+- `TrialBadge.test.tsx` — react-test-renderer create 방식, fireEvent 없음
+- `EmptyTrackState.test.tsx` — TouchableOpacity 문자열 mock, Pressable 무관
 
 ---
 
 ## 의사코드 (수정 절차)
 
 ```
-1. npm test 2>&1 | grep "stopPropagation" 으로 정확한 영향 파일 목록 확인
-
-2. SongListItem.tsx 수정
+1. SongListItem.tsx 수정 (단일 파일, 단일 라인)
    - inner Pressable onPress: (e) => { e.stopPropagation(); onPreviewToggle() }
      → onPress={onPreviewToggle}
-   - SongListItem.test.tsx 의 '이벤트 전파 분리' 케이스 여전히 PASS 확인
-     (nested Pressable → RNTL이 이벤트 버블링 자동 차단)
+   - GestureResponderEvent import 불필요 여부 확인 (SongListItem은 e 미사용 후 import 없음 — 확인 완료)
 
-3. MiniPlayer.tsx stopPropagation 존재 시 동일 패턴 적용
+2. SongListItem.test.tsx 이벤트 전파 분리 케이스 PASS 확인 (자동 분리 원리):
+   - RNTL의 fireEvent.press는 해당 element의 onPress만 호출
+   - outer Pressable('자장가 선택')를 press해도 inner Pressable onPress는 호출 X
+   - inner Pressable('자장가 미리듣기')를 press해도 outer Pressable onPress는 호출 X
+   → e.stopPropagation() 없어도 이벤트 분리 테스트 PASS
+
+3. S07SongSelectScreen.test.tsx 확인:
+   - SongListItem 내부를 거쳐 미리듣기 버튼 press → stopPropagation 제거 후 동일 동작
 
 4. npm test 2>&1 | grep "stopPropagation" 재확인
-   - 0건이면 완료
-   - 잔여 있으면 전략 B (테스트 fireEvent mock event 추가) 적용
+   - 소스 2건(SongListItem line 77, MiniPlayer line 161) 중 SongListItem만 제거됨
+   - MiniPlayer는 테스트 없으므로 TypeError 발생 안 함 → 0 test failures
 
-5. 각 영향 파일 npm test <파일> GREEN 확인
+5. 전략 B는 전략 A로 완전 해결되면 불필요 (SongListItem 단일 수정으로 충분 예상)
 ```
 
 ---
@@ -110,15 +123,19 @@ fireEvent.press(element, {
 - 소스 단순화 → 이후 어떤 test runner에서도 동일 동작
 
 **전략 B fallback 이유:**
-- 컴포넌트 로직 변경 없이 테스트만 조정하는 경우 (MiniPlayer 등 실제로 event 객체가 의미있는 경우)
+- 컴포넌트 로직 변경 없이 테스트만 조정하는 경우
+- MiniPlayer는 테스트 없어 현재 fails에 기여 X → 전략 B 대상에서도 제외
+
+**MiniPlayer.tsx 보존 결정:**
+`handlePlayPause`의 `e.stopPropagation()`은 nested TouchableOpacity 분리 목적. 현재 MiniPlayer 테스트 없어 TypeError 발생 안 함. 테스트 추가 시점에 재검토.
 
 ---
 
 ## 수용 기준
 
-- (TEST) `npm test 2>&1 | grep "stopPropagation"` 결과 0건
 - (TEST) `npm test apps/mobile/src/__tests__/components/SongListItem.test.tsx` GREEN
   - 특히 `'미리듣기 버튼 탭 시 onSelect는 호출되지 않는다 (이벤트 전파 분리)'` PASS
-- (TEST) 카테고리 B 영향 파일 각각 `npm test <파일>` GREEN
-- (MANUAL) `npm test` 실행 후 총 fails 수 이전 대비 ~39 감소
-- **회귀 보호:** `npm test 2>&1 | grep -E 'Tests:.*passed'` 수치 >= 442
+- (TEST) `npm test apps/mobile/src/__tests__/screens/S07SongSelectScreen.test.tsx` GREEN
+  - AC-02/03/09/#129 describe 포함 (미리듣기 버튼 press 9건)
+- (MANUAL) `npm test` 실행 후 총 fails 수 이전 대비 감소 (SongListItem + S07 영향 케이스 해소)
+- **회귀 보호:** `npm test 2>&1 | grep -E 'Tests:.*passed'` 수치 >= 478 (batch 1 완료 후 기준)
