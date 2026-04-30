@@ -1,8 +1,10 @@
 # Epic 04 — 재생 & 백그라운드
 
 **포함 기능:** F6 (재생), F7 (백그라운드 재생), F8 (타이머), F9 (Lockscreen 컨트롤)  
-**선행 조건:** Epic 03 완료 (mp3 파일 로컬 캐시 준비)  
+**선행 조건:** Epic 03 완료 (master.mp3 S3 완료 + 로컬 캐시 준비)  
 **완료 기준:** 재생 → 화면 잠금 → 백그라운드 재생 10시간 전체 플로우 동작
+
+> v1.3.1 피벗 (2026-04-30): crossfade는 서버 DSP acrossfade로 사전 처리 완료. 클라이언트는 단일 master.mp3를 `RepeatMode.Queue` 단순 loop만 수행. 클라이언트 crossfade 구현 불필요. N≥2 셔플도 서버 acrossfade concat에서 처리 완료 — 클라이언트 추가 분기 없음.
 
 ---
 
@@ -28,25 +30,28 @@
 
 ---
 
-## Story 2 — Seamless Loop (crossfade)
+## Story 2 — Seamless Loop (단순 RepeatMode.Queue)
 
 **As a** 유저  
 **I want** 자장가가 끊김 없이 무한 반복되길 원한다  
 **So that** 아기가 자는 내내 자연스럽게 들릴 수 있다
 
+> v1.3.1 갱신: crossfade는 서버 DSP acrossfade(d=0.3)로 master.mp3에 사전 처리됨. 클라이언트는 RNTP `RepeatMode.Queue` 단순 loop만 설정. 별도 crossfade 로직 불필요. 셔플 분기도 서버에서 처리 완료 — 클라이언트 N=1/N≥2 분기 없음.
+
 ### 태스크 체크리스트
 
-- [ ] react-native-track-player 기반 seamless loop 설정
-- [ ] 트랙 끝 300ms 전부터 crossfade 시작 (다음 루프 페이드인)
-- [ ] 최대 10시간 연속 재생 (클라이언트 루프, 서버 재요청 없음)
+- [ ] react-native-track-player `RepeatMode.Queue` 설정 (단일 master.mp3 반복)
+- [ ] 최대 10시간 연속 재생 (클라이언트 loop, 서버 재요청 없음)
 - [ ] 10시간 경과 시 페이드아웃 후 자동 종료 + 화면 알림
 - [ ] 로컬 캐시 파일 기반 재생 (스트리밍 아님)
+- [ ] PlayerSlice.currentSessionId 로 현재 재생 세션 추적 (구 currentTrackId 대체)
 
 ### 수용 기준
 
-- Given 재생 중 트랙 끝 도달 / When crossfade 구간 / Then 무음 없이 루프 재생
+- Given 재생 중 트랙 끝 도달 / When RepeatMode.Queue 루프 / Then 무음 없이 재시작 (crossfade 서버 처리)
 - Given 10시간 경과 / When 타이머 미설정 / Then 페이드아웃 + 자동 종료 알림
 - Given 오프라인 상태 (Premium 다운로드) / When 재생 / Then 인터넷 없이 정상 재생
+- Given PlayerSlice / When 재생 화면 진입 / Then currentSessionId = master_audio.session_id 설정
 
 ---
 
