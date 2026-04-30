@@ -7,6 +7,7 @@ import {
   Linking,
   Modal,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getRecordingPermissionsAsync, requestRecordingPermissionsAsync } from 'expo-audio';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -15,48 +16,47 @@ import { LyricsBox } from '../components/LyricsBox';
 import { getLyrics } from '../data/lyrics';
 import { SONG_NAMES } from '../services/songs';
 
-type Mode = 'humming' | 'shush';
 type Props = NativeStackScreenProps<MainStackParamList, 'RecordGuide'>;
 
-const GUIDE_ITEMS_HUMMING = [
+const EARPHONE_WARNING_KEY = '@jajang:earphone_warning_dismissed';
+
+const GUIDE_ITEMS = [
   '조용한 방에서 해주세요',
   '마이크를 입에서 20~30cm 거리로',
-  '30초 이상 이어주세요',
+  '이어폰을 끼면 더 또렷하게 담겨요',
 ];
-
-const GUIDE_ITEMS_SHUSH = [
-  '조용한 방에서 해주세요',
-  '마이크를 입에서 20~30cm 거리로',
-  '쉬이이~ 길게 30초 이상 해주세요',
-];
-
-const MODE_LABEL: Record<Mode, string> = {
-  humming: '허밍 모드',
-  shush: '쉿 모드',
-};
 
 export function RecordGuideScreen({ navigation, route }: Props) {
-  const { mode, songKey } = route.params;
+  const { songKey } = route.params;
 
   const [showPermissionModal, setShowPermissionModal] = useState(false);
+  const [showEarphoneModal, setShowEarphoneModal] = useState(false);
 
-  const guideItems = mode === 'humming' ? GUIDE_ITEMS_HUMMING : GUIDE_ITEMS_SHUSH;
-  const showHeadphoneChip = mode === 'humming';
-  const showLyricsBox = mode === 'humming';
   const lyricsAvailable = !!getLyrics(songKey) && !!SONG_NAMES[songKey];
 
   const handleStartRecording = async () => {
     const current = await getRecordingPermissionsAsync();
 
     if (current.status === 'granted') {
-      navigation.navigate('Record', { mode, songKey });
+      // 이어폰 경고 1회 정책 체크 (자동 감지 없음 — PRD §위험/완화)
+      const warningDismissed = await AsyncStorage.getItem(EARPHONE_WARNING_KEY);
+      if (!warningDismissed) {
+        setShowEarphoneModal(true);
+        return;
+      }
+      navigation.navigate('Record', { songKey });
       return;
     }
 
     if (current.canAskAgain) {
       const { status } = await requestRecordingPermissionsAsync();
       if (status === 'granted') {
-        navigation.navigate('Record', { mode, songKey });
+        const warningDismissed = await AsyncStorage.getItem(EARPHONE_WARNING_KEY);
+        if (!warningDismissed) {
+          setShowEarphoneModal(true);
+          return;
+        }
+        navigation.navigate('Record', { songKey });
       } else {
         const after = await getRecordingPermissionsAsync();
         if (!after.canAskAgain) {
@@ -69,13 +69,22 @@ export function RecordGuideScreen({ navigation, route }: Props) {
     setShowPermissionModal(true);
   };
 
+  const handleProceedWithoutEarphones = async () => {
+    await AsyncStorage.setItem(EARPHONE_WARNING_KEY, 'true');
+    setShowEarphoneModal(false);
+    navigation.navigate('Record', { songKey });
+  };
+
+  const handleCancelEarphoneModal = () => {
+    setShowEarphoneModal(false);
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.modeLabel}>[{MODE_LABEL[mode]}]</Text>
       <Text style={styles.title}>이렇게 해주세요</Text>
 
       <View style={styles.guideList}>
-        {guideItems.map((item, i) => (
+        {GUIDE_ITEMS.map((item, i) => (
           <View key={i} style={styles.guideItem}>
             <Text style={styles.checkmark}>✓</Text>
             <Text style={styles.guideText}>{item}</Text>
@@ -83,13 +92,12 @@ export function RecordGuideScreen({ navigation, route }: Props) {
         ))}
       </View>
 
-      {showHeadphoneChip && <HeadphoneChip />}
+      <HeadphoneChip />
 
-      {showLyricsBox && (
-        lyricsAvailable
-          ? <LyricsBox songKey={songKey} mode="preview" />
-          : <Text style={styles.fallbackText}>허밍해 주세요</Text>
-      )}
+      {lyricsAvailable
+        ? <LyricsBox songKey={songKey} mode="preview" />
+        : <Text style={styles.fallbackText}>자유롭게 따라불러 주세요</Text>
+      }
 
       <Pressable
         style={styles.cta}
@@ -107,6 +115,12 @@ export function RecordGuideScreen({ navigation, route }: Props) {
           Linking.openSettings();
         }}
         onDismiss={() => setShowPermissionModal(false)}
+      />
+
+      <EarphoneWarningModal
+        visible={showEarphoneModal}
+        onProceed={handleProceedWithoutEarphones}
+        onCancel={handleCancelEarphoneModal}
       />
     </View>
   );
@@ -158,6 +172,47 @@ function PermissionModal({
   );
 }
 
+interface EarphoneWarningModalProps {
+  visible: boolean;
+  onProceed: () => void;
+  onCancel: () => void;
+}
+
+function EarphoneWarningModal({ visible, onProceed, onCancel }: EarphoneWarningModalProps) {
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onCancel}
+    >
+      <View style={modal.overlay}>
+        <View style={modal.sheet}>
+          <Text style={modal.title}>이어폰을 끼면 더 잘 담겨요</Text>
+          <Text style={modal.desc}>
+            이어폰 없이 녹음하면 스피커 소리가 마이크에 섞일 수 있어요.{'\n'}
+            그래도 진행할까요?
+          </Text>
+          <Pressable
+            style={modal.primaryBtn}
+            onPress={onProceed}
+            accessibilityLabel="이어폰 없이 진행하기"
+          >
+            <Text style={modal.primaryBtnText}>그래도 진행</Text>
+          </Pressable>
+          <Pressable
+            style={modal.secondaryBtn}
+            onPress={onCancel}
+            accessibilityLabel="돌아가기"
+          >
+            <Text style={modal.secondaryBtnText}>이어폰 끼고 할게요</Text>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -165,7 +220,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 24,
   },
-  modeLabel: { color: '#5A7AA8', fontSize: 13, marginBottom: 6 },
   title: {
     color: '#EEF0F8',
     fontSize: 22,

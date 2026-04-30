@@ -97,9 +97,9 @@ export default function S11PreviewScreen({ navigation }: Props) {
       await FileSystem.deleteAsync(localAudioUri, { idempotent: true });
     }
     resetRecordingFlow();
+    // mode 파라미터 제거 (impl/13 — Record params에서 mode 필드 삭제)
     navigation.navigate('Record', {
       songKey: selectedSongKey ?? '',
-      mode: recordingMode ?? 'humming',
     });
   };
 

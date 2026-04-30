@@ -1,11 +1,11 @@
+// RecordModeScreen.tsx — S08 폐기 (impl/13). Navigation stack 등록 해제됨. 파일 삭제는 별도 클린업.
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useRecordingStore } from '@store/recordingSlice';
 import { useAuthStore } from '@store/authSlice';
-import type { MainStackParamList } from '@navigation/types';
 
-type Props = NativeStackScreenProps<MainStackParamList, 'RecordMode'>;
+// Props: RecordMode route 폐기로 타입 참조 제거
+type Props = { navigation: any };
 
 type Mode = 'humming' | 'shush';
 

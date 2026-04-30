@@ -21,9 +21,9 @@ export type AuthStackParamList = {
 export type MainStackParamList = {
   HomeTabs: undefined;
   SongSelect: undefined;                  // S07
-  RecordMode: undefined;                   // S08
-  RecordGuide: { mode: 'humming' | 'shush'; songKey: string }; // S09
-  Record: { songKey: string; mode: 'humming' | 'shush' };     // S10
+  // RecordMode (S08) 폐기 — impl/13. 파일 삭제는 별도 클린업 태스크.
+  RecordGuide: { songKey: string };       // S09 — mode 제거 (impl/13)
+  Record: { songKey: string };            // S10 — mode 제거 (impl/13)
   Preview: { recordingUri: string; songKey: string };          // S11
   Generating: {
     sampleId: string;   // voice_sample_id (서버 검증 완료)
@@ -54,6 +54,6 @@ export type SplashScreenProps = NativeStackScreenProps<RootStackParamList, 'Spla
 export type SignupScreenProps = NativeStackScreenProps<AuthStackParamList, 'Signup'>;
 export type LoginScreenProps = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 export type HomeScreenProps = NativeStackScreenProps<MainStackParamList, 'HomeTabs'>;
-export type RecordModeScreenProps = NativeStackScreenProps<MainStackParamList, 'RecordMode'>;
+// RecordModeScreenProps 삭제 (S08 폐기 — impl/13)
 export type PlayScreenProps = NativeStackScreenProps<MainStackParamList, 'Play'>;
 export type UpgradeSheetProps = NativeStackScreenProps<MainStackParamList, 'Upgrade'>;

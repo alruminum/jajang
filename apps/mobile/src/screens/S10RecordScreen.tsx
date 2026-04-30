@@ -229,7 +229,8 @@ export default function S10RecordScreen({ navigation, route }: Props) {
         style: 'destructive',
         onPress: async () => {
           await cleanupRecording();
-          navigation.navigate('RecordMode');
+          // RecordMode(S08) 폐기 (impl/13) — SongSelect로 fallback
+          navigation.navigate('SongSelect');
         },
       },
     ]);

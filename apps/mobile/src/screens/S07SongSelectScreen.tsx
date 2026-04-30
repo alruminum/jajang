@@ -119,7 +119,7 @@ export function SongSelectScreen({ navigation }: Props) {
             text: '확인',
             onPress: () => {
               resetRecordingFlow();
-              navigation.navigate('RecordMode');
+              navigation.navigate('RecordGuide', { songKey: selectedSongKey });
             },
           },
         ],
@@ -127,7 +127,8 @@ export function SongSelectScreen({ navigation }: Props) {
       return;
     }
 
-    navigation.navigate('RecordMode');
+    // S07 → S09 직결 (S08 RecordMode 폐기 — impl/13)
+    navigation.navigate('RecordGuide', { songKey: selectedSongKey });
   };
 
   return (

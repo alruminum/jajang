@@ -9,7 +9,7 @@ import S16SettingsScreen from '@screens/S16SettingsScreen';
 
 // Stack screens
 import S07SongSelectScreen from '@screens/S07SongSelectScreen';
-import { RecordModeScreen } from '@screens/RecordModeScreen';
+// RecordModeScreen (S08) — import 제거 (impl/13 폐기). 파일 삭제는 별도 클린업.
 import { RecordGuideScreen } from '@screens/RecordGuideScreen';
 import S10RecordScreen from '@screens/S10RecordScreen';
 import S11PreviewScreen from '@screens/S11PreviewScreen';
@@ -53,7 +53,7 @@ export default function MainNavigator() {
     >
       <Stack.Screen name="HomeTabs" component={HomeTabs} />
       <Stack.Screen name="SongSelect" component={S07SongSelectScreen} />
-      <Stack.Screen name="RecordMode" component={RecordModeScreen} />
+      {/* RecordMode (S08) — Stack에서 제거 (impl/13 폐기) */}
       <Stack.Screen name="RecordGuide" component={RecordGuideScreen} />
       <Stack.Screen name="Record" component={S10RecordScreen} />
       <Stack.Screen name="Preview" component={S11PreviewScreen} />

@@ -73,8 +73,9 @@ export function RecordScreen() {
   const navigation = useNavigation<NavigationProp<MainStackParamList>>();
   const route = useRoute<RouteProp<MainStackParamList, 'Record'>>();
   const { setLocalAudioUri } = useRecordingStore();
-  const { songKey, mode } = route.params;
-  const isHummingMode = mode === 'humming';
+  const { songKey } = route.params;
+  // mode 파라미터 제거 (impl/13) — 단일 흐름, 항상 허밍 모드 동작
+  const isHummingMode = true;
   const bgmTitle = BGM_TRACKS[songKey]?.titleKo;
 
   const [phase, setPhase] = useState<ScreenPhase>('countdown');
@@ -215,7 +216,8 @@ export function RecordScreen() {
         style: 'destructive',
         onPress: async () => {
           await cleanupRecording();
-          navigation.navigate('RecordMode');
+          // RecordMode(S08) 폐기 (impl/13) — SongSelect로 fallback
+          navigation.navigate('SongSelect');
         },
       },
     ]);

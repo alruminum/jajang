@@ -2,6 +2,7 @@
  * S07SongSelectScreen.test.tsx
  * S07 자장가 선택 화면 — 수용 기준 전체 검증
  * impl: docs/milestones/v1/epics/epic-02-recording/impl/04-app-song-select-screen.md §5,7
+ *       docs/milestones/v1/epics/epic-02-recording/impl/13-app-record-guide-pivot.md §4 (S07→S09 직결)
  *
  * 수용 기준 매핑:
  * AC-01 진입 시 6곡 목록 표시
@@ -11,7 +12,7 @@
  * AC-05 미선택 상태에서 CTA disabled
  * AC-06 무료 유저 횟수 소진 → UpgradeSheet 이동
  * AC-07 무료 유저 생성 카운트 칩 표시
- * AC-08 곡 선택 후 CTA → RecordMode 이동
+ * AC-08 곡 선택 후 CTA → RecordGuide({ songKey }) 이동 (RecordMode 경유 제거 — impl/13 §4)
  * AC-09 언마운트 시 Audio.Sound unload
  */
 
@@ -217,9 +218,9 @@ describe('S07SongSelectScreen — AC-05: 미선택 시 CTA 비활성화', () => 
 })
 
 // ────────────────────────────────────────────
-// AC-04, AC-08: 곡 선택 → CTA 활성화 → RecordMode 이동
+// AC-04, AC-08: 곡 선택 → CTA 활성화 → RecordGuide 이동 (impl/13 §4)
 // ────────────────────────────────────────────
-describe('S07SongSelectScreen — AC-04/AC-08: 곡 선택 후 CTA', () => {
+describe('S07SongSelectScreen — AC-04/AC-08: 곡 선택 후 CTA (impl/13: RecordMode 경유 제거)', () => {
   it('selectedSongKey 설정 시 CTA 버튼이 활성화된다', async () => {
     setupStoreMocks({ selectedSongKey: 'brahms' })
     const navigation = makeMockNavigation()
@@ -231,7 +232,7 @@ describe('S07SongSelectScreen — AC-04/AC-08: 곡 선택 후 CTA', () => {
     expect(cta).toHaveAccessibilityState({ disabled: false })
   })
 
-  it('곡 선택 후 CTA 탭 시 RecordMode 화면으로 이동한다', async () => {
+  it('곡 선택 후 CTA 탭 시 RecordGuide 화면으로 이동한다 (RecordMode 경유 없음)', async () => {
     setupStoreMocks({ selectedSongKey: 'brahms', entitlement: 'premium' })
     const navigation = makeMockNavigation()
     render(<SongSelectScreen navigation={navigation as any} route={{} as any} />)
@@ -239,7 +240,18 @@ describe('S07SongSelectScreen — AC-04/AC-08: 곡 선택 후 CTA', () => {
     await waitFor(() => screen.getByText('이 곡으로 시작'))
     fireEvent.press(screen.getByLabelText('이 곡으로 시작'))
 
-    expect(navigation.navigate).toHaveBeenCalledWith('RecordMode')
+    expect(navigation.navigate).toHaveBeenCalledWith('RecordGuide', { songKey: 'brahms' })
+  })
+
+  it('곡 선택 후 CTA 탭 시 RecordMode로 이동하지 않는다 (S08 폐기 확인)', async () => {
+    setupStoreMocks({ selectedSongKey: 'brahms', entitlement: 'premium' })
+    const navigation = makeMockNavigation()
+    render(<SongSelectScreen navigation={navigation as any} route={{} as any} />)
+
+    await waitFor(() => screen.getByText('이 곡으로 시작'))
+    fireEvent.press(screen.getByLabelText('이 곡으로 시작'))
+
+    expect(navigation.navigate).not.toHaveBeenCalledWith('RecordMode')
   })
 })
 
@@ -292,7 +304,7 @@ describe('S07SongSelectScreen — AC-06: 무료 유저 횟수 소진', () => {
     expect(navigation.navigate).toHaveBeenCalledWith('UpgradeSheet', { variant: 'generation_exhausted' })
   })
 
-  it('free 유저 3/3 소진 시 RecordMode로 이동하지 않는다', async () => {
+  it('free 유저 3/3 소진 시 RecordGuide로 이동하지 않는다', async () => {
     setupStoreMocks({ selectedSongKey: 'brahms', entitlement: 'free', generationCount: 3 })
     const navigation = makeMockNavigation()
     render(<SongSelectScreen navigation={navigation as any} route={{} as any} />)
@@ -300,10 +312,10 @@ describe('S07SongSelectScreen — AC-06: 무료 유저 횟수 소진', () => {
     await waitFor(() => screen.getByText('이 곡으로 시작'))
     fireEvent.press(screen.getByLabelText('이 곡으로 시작'))
 
-    expect(navigation.navigate).not.toHaveBeenCalledWith('RecordMode')
+    expect(navigation.navigate).not.toHaveBeenCalledWith('RecordGuide', expect.anything())
   })
 
-  it('free 유저 2/3 사용 시(잔여 1회) CTA 탭 → RecordMode로 이동한다', async () => {
+  it('free 유저 2/3 사용 시(잔여 1회) CTA 탭 → RecordGuide({ songKey })로 이동한다', async () => {
     setupStoreMocks({ selectedSongKey: 'brahms', entitlement: 'free', generationCount: 2 })
     const navigation = makeMockNavigation()
     render(<SongSelectScreen navigation={navigation as any} route={{} as any} />)
@@ -311,7 +323,7 @@ describe('S07SongSelectScreen — AC-06: 무료 유저 횟수 소진', () => {
     await waitFor(() => screen.getByText('이 곡으로 시작'))
     fireEvent.press(screen.getByLabelText('이 곡으로 시작'))
 
-    expect(navigation.navigate).toHaveBeenCalledWith('RecordMode')
+    expect(navigation.navigate).toHaveBeenCalledWith('RecordGuide', { songKey: 'brahms' })
   })
 })
 
