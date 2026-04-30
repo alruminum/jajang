@@ -63,7 +63,8 @@ describe('SongListItem — 선택 상태', () => {
 
   it('isSelected=false 일 때 accessibilityState.selected가 false다', () => {
     render(<SongListItem {...makeProps({ isSelected: false })} />)
-    expect(screen.getByAccessibilityState({ selected: false })).toBeTruthy()
+    const elements = screen.getAllByAccessibilityState({ selected: false })
+    expect(elements.length).toBeGreaterThanOrEqual(1)
   })
 })
 

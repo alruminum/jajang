@@ -1,6 +1,7 @@
 import React from 'react';
-import { create } from 'react-test-renderer';
+import { act, create } from 'react-test-renderer';
 import { cleanup } from '@testing-library/react-native';
+import { TouchableOpacity } from 'react-native';
 import type { GeneratedTrack } from '@services/tracks-api';
 
 // react-native는 jest-expo preset mock 사용 (수동 mock 제거)
@@ -37,11 +38,17 @@ const makeTrack = (overrides: Partial<GeneratedTrack> = {}): GeneratedTrack => (
   ...overrides,
 });
 
-afterEach(async () => {
+afterEach(() => {
   cleanup();
-  await Promise.resolve();
-  await Promise.resolve();
 });
+
+function renderTree(props: { track: GeneratedTrack; onDismiss: () => void }) {
+  let tree: ReturnType<typeof create>;
+  act(() => {
+    tree = create(<CompletedTrackCard {...props} />);
+  });
+  return tree!;
+}
 
 describe('CompletedTrackCard', () => {
   beforeEach(() => {
@@ -59,14 +66,14 @@ describe('CompletedTrackCard', () => {
     ['hush', 'Hush Little Baby'],
   ])('song_key="%s" → 곡명 "%s"을 표시한다', (key, expectedName) => {
     const track = makeTrack({ song_key: key });
-    const tree = create(<CompletedTrackCard track={track} onDismiss={jest.fn()} />);
+    const tree = renderTree({ track, onDismiss: jest.fn() });
     const json = JSON.stringify(tree.toJSON());
     expect(json).toContain(expectedName);
   });
 
   it('알 수 없는 song_key는 key 값 자체를 표시한다 (fallback)', () => {
     const track = makeTrack({ song_key: 'custom-unknown-key' });
-    const tree = create(<CompletedTrackCard track={track} onDismiss={jest.fn()} />);
+    const tree = renderTree({ track, onDismiss: jest.fn() });
     const json = JSON.stringify(tree.toJSON());
     expect(json).toContain('custom-unknown-key');
   });
@@ -74,13 +81,13 @@ describe('CompletedTrackCard', () => {
   // --- 배지 / 안내 텍스트 ---
 
   it('"새 자장가 완성" 배지 텍스트를 표시한다', () => {
-    const tree = create(<CompletedTrackCard track={makeTrack()} onDismiss={jest.fn()} />);
+    const tree = renderTree({ track: makeTrack(), onDismiss: jest.fn() });
     const json = JSON.stringify(tree.toJSON());
     expect(json).toContain('새 자장가 완성');
   });
 
   it('"내 목소리로 만든 자장가가 준비됐어요" 안내 문구를 표시한다', () => {
-    const tree = create(<CompletedTrackCard track={makeTrack()} onDismiss={jest.fn()} />);
+    const tree = renderTree({ track: makeTrack(), onDismiss: jest.fn() });
     const json = JSON.stringify(tree.toJSON());
     expect(json).toContain('내 목소리로 만든 자장가가 준비됐어요');
   });
@@ -89,23 +96,27 @@ describe('CompletedTrackCard', () => {
 
   it('"들어볼게요" 버튼 탭 시 onDismiss를 호출한다', () => {
     const onDismiss = jest.fn();
-    const tree = create(<CompletedTrackCard track={makeTrack()} onDismiss={onDismiss} />);
-    const touchables = tree.root.findAllByType('TouchableOpacity' as any);
-    touchables[0].props.onPress();
+    const tree = renderTree({ track: makeTrack(), onDismiss });
+    const touchables = tree.root.findAllByType(TouchableOpacity);
+    act(() => {
+      touchables[0].props.onPress();
+    });
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 
   it('"들어볼게요" 버튼 탭 시 Play 화면으로 이동한다', () => {
     const track = makeTrack({ id: 'track-42' });
-    const tree = create(<CompletedTrackCard track={track} onDismiss={jest.fn()} />);
-    const touchables = tree.root.findAllByType('TouchableOpacity' as any);
-    touchables[0].props.onPress();
+    const tree = renderTree({ track, onDismiss: jest.fn() });
+    const touchables = tree.root.findAllByType(TouchableOpacity);
+    act(() => {
+      touchables[0].props.onPress();
+    });
     expect(mockNavigate).toHaveBeenCalledWith('Play', { trackId: 'track-42' });
   });
 
   it('"들어볼게요" 버튼의 accessibilityLabel이 "들어볼게요"이다', () => {
-    const tree = create(<CompletedTrackCard track={makeTrack()} onDismiss={jest.fn()} />);
-    const touchables = tree.root.findAllByType('TouchableOpacity' as any);
+    const tree = renderTree({ track: makeTrack(), onDismiss: jest.fn() });
+    const touchables = tree.root.findAllByType(TouchableOpacity);
     expect(touchables[0].props.accessibilityLabel).toBe('들어볼게요');
   });
 
@@ -113,22 +124,26 @@ describe('CompletedTrackCard', () => {
 
   it('"나중에 들을게요" 버튼 탭 시 onDismiss를 호출한다', () => {
     const onDismiss = jest.fn();
-    const tree = create(<CompletedTrackCard track={makeTrack()} onDismiss={onDismiss} />);
-    const touchables = tree.root.findAllByType('TouchableOpacity' as any);
-    touchables[1].props.onPress();
+    const tree = renderTree({ track: makeTrack(), onDismiss });
+    const touchables = tree.root.findAllByType(TouchableOpacity);
+    act(() => {
+      touchables[1].props.onPress();
+    });
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 
   it('"나중에 들을게요" 버튼 탭 시 navigate는 호출되지 않는다', () => {
-    const tree = create(<CompletedTrackCard track={makeTrack()} onDismiss={jest.fn()} />);
-    const touchables = tree.root.findAllByType('TouchableOpacity' as any);
-    touchables[1].props.onPress();
+    const tree = renderTree({ track: makeTrack(), onDismiss: jest.fn() });
+    const touchables = tree.root.findAllByType(TouchableOpacity);
+    act(() => {
+      touchables[1].props.onPress();
+    });
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   it('"나중에 들을게요" 버튼의 accessibilityLabel이 "나중에 들을게요"이다', () => {
-    const tree = create(<CompletedTrackCard track={makeTrack()} onDismiss={jest.fn()} />);
-    const touchables = tree.root.findAllByType('TouchableOpacity' as any);
+    const tree = renderTree({ track: makeTrack(), onDismiss: jest.fn() });
+    const touchables = tree.root.findAllByType(TouchableOpacity);
     expect(touchables[1].props.accessibilityLabel).toBe('나중에 들을게요');
   });
 });

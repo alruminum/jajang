@@ -77,6 +77,13 @@ const { useNavigation, useRoute } = require('@react-navigation/native') as {
 }
 
 function applyBgmImpl() {
+  stopBgmMock.mockImplementation(async () => {
+    mockBgmState.isPlaying = false
+  })
+  startBgmMock.mockImplementation(async () => {
+    if (mockBgmState.loadFailed) return
+    mockBgmState.isPlaying = true
+  })
   useBgmPlayer.mockImplementation(
     ({
       enabled,
@@ -87,15 +94,11 @@ function applyBgmImpl() {
     }) => ({
       isPlaying: enabled && mockBgmState.isPlaying,
       loadFailed: mockBgmState.loadFailed,
-      startBgm: jest.fn(async () => {
+      startBgm: async () => {
         await startBgmMock()
         if (mockBgmState.loadFailed) onLoadError?.()
-        else mockBgmState.isPlaying = true
-      }),
-      stopBgm: jest.fn(async () => {
-        await stopBgmMock()
-        mockBgmState.isPlaying = false
-      }),
+      },
+      stopBgm: stopBgmMock,
     }),
   )
 }
@@ -170,9 +173,7 @@ describe('RecordScreen — 허밍 모드 BGM 통합 (impl/10 §4~§5)', () => {
     })
   })
 
-  it.skip('shush 모드에서는 startBgm 호출하지 않고 가사 박스도 미렌더', async () => {
-    // impl/13: mode 파라미터 폐기 — RecordScreen은 항상 humming 동작(isHummingMode=true).
-    // shush 분기가 제거되어 이 테스트는 성립 불가. impl/07 이후 별도 처리.
+  it('shush 모드에서는 startBgm 호출하지 않고 가사 박스도 미렌더', async () => {
     setRoute({ songKey: 'twinkle', mode: 'shush' })
 
     const { queryByTestId } = render(<RecordScreen />)
@@ -209,7 +210,11 @@ describe('RecordScreen — 허밍 모드 BGM 통합 (impl/10 §4~§5)', () => {
     await advanceCountdown()
 
     const stopBtn = await findByTestId('stop-recording-button')
-    fireEvent.press(stopBtn)
+    await act(async () => {
+      fireEvent.press(stopBtn)
+      await Promise.resolve()
+      await Promise.resolve()
+    })
 
     await waitFor(() => {
       expect(stopBgmMock).toHaveBeenCalled()
@@ -231,7 +236,11 @@ describe('RecordScreen — 허밍 모드 BGM 통합 (impl/10 §4~§5)', () => {
     await advanceCountdown()
 
     const cancelBtn = await findByTestId('cancel-recording-button')
-    fireEvent.press(cancelBtn)
+    await act(async () => {
+      fireEvent.press(cancelBtn)
+      await Promise.resolve()
+      await Promise.resolve()
+    })
 
     await waitFor(() => expect(stopBgmMock).toHaveBeenCalled())
   })
@@ -246,15 +255,10 @@ describe('RecordScreen — 허밍 모드 BGM 통합 (impl/10 §4~§5)', () => {
     const restartBtn = await findByTestId('restart-recording-button')
     await act(async () => {
       fireEvent.press(restartBtn)
-      // restartRecording: stopBgm(+stopBgmMock) + cleanupRecording(recorder.stop) + setPhase('countdown')
-      // 각 async 단계 drain (5 ticks)
-      await Promise.resolve()
-      await Promise.resolve()
-      await Promise.resolve()
       await Promise.resolve()
       await Promise.resolve()
     })
-    expect(stopBgmMock).toHaveBeenCalled()
+    await waitFor(() => expect(stopBgmMock).toHaveBeenCalled())
 
     await advanceCountdown()
     await waitFor(() => expect(startBgmMock).toHaveBeenCalledTimes(2))

@@ -1,3 +1,6 @@
+// ─── A11Y matchers (@testing-library/jest-native) ────────────────────────────
+import '@testing-library/jest-native/extend-expect';
+
 // ─── React Native globals ────────────────────────────────────────────────────
 (global as unknown as Record<string, unknown>).__DEV__ = false;
 

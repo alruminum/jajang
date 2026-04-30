@@ -2,8 +2,6 @@
 depth: std
 ---
 
-**상태:** ✅ 완료 (PR #149 in-flight, 2026-05-01)
-
 # impl/03 — [Story 2 / #168] expo-audio named export mock + PR #149 mode-removal (S09 unblocker)
 
 **Story:** #168 (Story 2 — F 6 main + 14 PR #149 추가 = 20 fails)
@@ -144,34 +142,3 @@ mode-removal 14 fails 는 PR #149 자체 변경. main 에 push 시 PR 의 의도
 ---
 
 ## MODULE_PLAN_READY
-
----
-
-## Verification (PR #149 batch 03)
-
-**실측 명령 및 결과 (2026-05-01)**
-
-```
-npx jest src/__tests__/screens/S09RecordGuideScreen.test.tsx \
-  src/__tests__/screens/S09RecordGuideScreen.refactor.test.tsx \
-  src/__tests__/screens/S07SongSelectScreen.test.tsx \
-  src/__tests__/screens/S10RecordScreen.bgm.test.tsx \
-  --no-coverage
-```
-
-결과: **Tests: 15 skipped, 49 passed, 64 total** — 0 failures
-
-```
-npx jest --no-coverage 2>&1 | grep "Tests:"
-```
-
-결과: **Tests: 42 failed, 17 skipped, 550 passed, 609 total**
-
-- PR baseline (rebase 후): 60 failed, 16 skipped, 525 passed, 601 total
-- batch 03 후: 42 failed (-18), 17 skipped (+1 shush skip), 550 passed (+25)
-
-**근본 fix 요약:**
-- S09.test.tsx: jest.mock factory hoisting 문제 — factory 안 직접 `jest.fn()` + `require`로 참조 획득
-- S09.refactor.test.tsx: AsyncStorage mock hoisting 동일 패턴 fix
-- S07.test.tsx: `toHaveAccessibilityState` → `props.accessibilityState` 직접 확인 (jest-native 미설치)
-- S10.bgm.test.tsx: shush 테스트 `it.skip` (mode 폐기) + 버튼 press `fireEvent.press` + `await act(async () => {...})` 패턴으로 async chain drain

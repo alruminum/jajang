@@ -100,10 +100,10 @@ function renderScreen() {
   return render(<S16SettingsScreen navigation={mockNavigation as any} />)
 }
 
-/** trialExpiresAt: 지금으로부터 daysLeft일 후 (5초 버퍼 포함) */
+/** trialExpiresAt: 지금으로부터 daysLeft일 후 (버퍼 없음 — ceil 오버플로 방지) */
 function trialExpiry(daysLeft: number): string {
   return new Date(
-    Date.now() + daysLeft * 24 * 60 * 60 * 1000 + 5_000
+    Date.now() + daysLeft * 24 * 60 * 60 * 1000
   ).toISOString()
 }
 
@@ -340,30 +340,25 @@ describe('AC-10 — 로그아웃', () => {
 describe('AC-11 — 개인정보처리방침 / 이용약관', () => {
   beforeEach(() => setupAuthStore({ entitlement: 'free' }))
 
-  it('개인정보처리방침 탭 → Linking.openURL 호출', () => {
+  it('개인정보처리방침 탭 → Legal 화면으로 navigate', () => {
     const { getByText } = renderScreen()
     fireEvent.press(getByText('개인정보처리방침'))
-    expect(Linking.openURL).toHaveBeenCalledWith(expect.any(String))
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('Legal')
   })
 
-  it('이용약관 탭 → Linking.openURL 호출', () => {
+  it('이용약관 탭 → Legal 화면으로 navigate', () => {
     const { getByText } = renderScreen()
     fireEvent.press(getByText('이용약관'))
-    expect(Linking.openURL).toHaveBeenCalledWith(expect.any(String))
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('Legal')
   })
 
-  it('개인정보처리방침과 이용약관은 서로 다른 URL', () => {
+  it('개인정보처리방침과 이용약관 탭 시 각각 Legal 화면으로 navigate됨', () => {
     const { getByText } = renderScreen()
 
     fireEvent.press(getByText('개인정보처리방침'))
-    const privacyURL = jest.mocked(Linking.openURL).mock.calls[0][0]
-
-    jest.mocked(Linking.openURL).mockClear()
-
     fireEvent.press(getByText('이용약관'))
-    const termsURL = jest.mocked(Linking.openURL).mock.calls[0][0]
-
-    expect(privacyURL).not.toBe(termsURL)
+    expect(mockNavigation.navigate).toHaveBeenCalledTimes(2)
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('Legal')
   })
 })
 

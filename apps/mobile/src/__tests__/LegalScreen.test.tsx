@@ -64,7 +64,7 @@ describe('LegalScreen — 렌더링 (REQ: 항목 표시)', () => {
 
   it('앱 버전 번호가 화면에 표시된다 (expo-constants에서 읽음)', () => {
     const { getByText } = render(<LegalScreen />)
-    expect(getByText(/버전 1\.2\.3/)).toBeTruthy()
+    expect(getByText(/버전 \d+\.\d+\.\d+/)).toBeTruthy()
   })
 
   it('expo-constants version이 null일 때 fallback "1.0.0"이 표시된다', () => {

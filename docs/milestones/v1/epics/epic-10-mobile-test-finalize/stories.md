@@ -84,14 +84,14 @@
 
 ### 태스크 체크리스트
 
-- [x] PR #149 브랜치 (`feat/149-batch4-record-guide-pivot`) 체크아웃 후 작업
-- [x] 공통 mock 위치 결정: `src/__tests__/_setup.ts` 에 이미 named exports mock 존재. S09 test 파일의 jest.mock factory hoisting 문제 fix.
-- [x] mock factory 에 `getRecordingPermissionsAsync`, `requestRecordingPermissionsAsync`, `setAudioModeAsync`, `useAudioRecorder` 등 named exports jest.fn() export
-- [x] S09 main 의 6 fails GREEN
-- [x] PR #149 의 S09 mode-removal 4 fails GREEN (CTA 네비게이션 + 가사 박스)
-- [x] PR #149 의 S07 mode-removal 2 fails GREEN (`toHaveAccessibilityState` → props 직접 확인)
-- [x] PR #149 의 S10 4 fails GREEN: shush it.skip (mode 폐기) + 녹음 종료/취소/재시작 fireEvent.press fix
-- [x] PR 브랜치 `npx jest src/__tests__/screens/S09*.tsx S07*.tsx S10*.tsx` 0 failures (15 skip, 49 pass)
+- [ ] PR #149 브랜치 (`feat/149-batch4-record-guide-pivot`) 체크아웃 후 작업
+- [ ] 공통 mock 위치 결정: `src/__tests__/_setup.ts` 에 `jest.mock('expo-audio', ...)` 추가 또는 `__mocks__/expo-audio.ts` 신설
+- [ ] mock factory 에 `getRecordingPermissionsAsync`, `requestRecordingPermissionsAsync`, `setAudioModeAsync`, `RecordingOptionsPresets`, `useAudioRecorder` 등 named exports 모두 jest.fn() 으로 export
+- [ ] S09 main 의 6 fails GREEN
+- [ ] PR #149 의 S09 mode-removal 8 fails (`mode 파라미터 없음`, `impl/13`) GREEN
+- [ ] PR #149 의 S07 mode-removal 1 fail (`AC-04/AC-08: RecordMode 경유 제거`) GREEN
+- [ ] PR #149 의 S10 1 fail (`shush 모드`) — mode 폐기 후에도 shush 분기는 살아있는지 확인 필요. impl/13 검토.
+- [ ] PR 브랜치 `npx jest src/__tests__/screens/S09*.tsx S07*.tsx S10*.tsx` 0 failures
 
 ### 수용 기준
 
@@ -117,10 +117,10 @@
 
 ### 태스크 체크리스트
 
-- [ ] 각 it 마다 명시적 `unmount()` + `afterEach(cleanup)` 추가
-- [ ] text query 패턴 변환: literal → regex 또는 `findByText` 비동기
-- [ ] fake timer 사용 시 `jest.useRealTimers` 보강
-- [ ] 파일 GREEN 확인
+- [x] 각 it 마다 명시적 `unmount()` + `afterEach(cleanup)` 추가
+- [x] text query 패턴 변환: literal → regex 또는 `findByText` 비동기
+- [x] fake timer 사용 시 `jest.useRealTimers` 보강
+- [x] 파일 GREEN 확인
 
 ### 수용 기준
 
@@ -148,13 +148,13 @@
 
 ### 태스크 체크리스트
 
-- [ ] D-1 google-signin mock 정정 (`__mocks__/@react-native-google-signin/google-signin.ts`)
-- [ ] D-2 S08 처리 결정 (skip/삭제) — PR #149 와 정렬
-- [ ] D-3~D-6 개별 triage + fix
-- [ ] D-7 bgmTracks expectation 갱신 (DSP 피벗 후 데이터 확인)
-- [ ] D-8 A11Y matcher 도입 또는 v12 prop 검증으로 변환
-- [ ] D-9 LegalScreen 버전 동적화 (또는 expect.stringMatching)
-- [ ] 모든 D fail suites GREEN
+- [x] D-1 google-signin mock 정정 — SocialAuthButtons 7 → 0 fails (batch 05: `__esModule`, Apple mock, Google signIn 형식 + A11Y extend-expect) ✅
+- [x] D-2 S08 처리 결정 (skip/삭제) — PR #149 와 정렬
+- [x] D-3~D-6 개별 triage + fix
+- [x] D-7 bgmTracks expectation 갱신 (DSP 피벗 후 데이터 확인)
+- [x] D-8 A11Y matcher 도입 — `@testing-library/jest-native/extend-expect` + S07 A11Y 2 → 0 fails (batch 05) ✅ (SongListItem 1 → 0 (batch 06))
+- [x] D-9 LegalScreen 버전 동적화 (또는 expect.stringMatching)
+- [x] 모든 D fail suites GREEN ✅ (594 PASS, 0 main failures)
 
 ### 수용 기준
 
@@ -180,12 +180,12 @@
 
 ### 태스크 체크리스트
 
-- [x] 각 describe `.skip` → 일반 describe 로 복원
-- [x] 첫 실행 fail 메시지 캡처 후 query 패턴 확인
-- [x] `within(getByTestId('earphone-modal'))` 등 scope 좁힘 도입 — getAllByText 로 처리 (earphone-modal testID 컴포넌트에 없음)
-- [x] 다중 매칭 시 `getAllByText` + index 사용
-- [x] AsyncStorage `@jajang:earphone_warning_dismissed` mock 시나리오 검증
-- [x] 14 it 전체 GREEN
+- [ ] 각 describe `.skip` → 일반 describe 로 복원
+- [ ] 첫 실행 fail 메시지 캡처 후 query 패턴 확인
+- [ ] `within(getByTestId('earphone-modal'))` 등 scope 좁힘 도입
+- [ ] 다중 매칭 시 `getAllByText` + index 사용
+- [ ] AsyncStorage `@jajang:earphone_warning_dismissed` mock 시나리오 검증
+- [ ] 14 it 전체 GREEN
 
 ### 수용 기준
 
