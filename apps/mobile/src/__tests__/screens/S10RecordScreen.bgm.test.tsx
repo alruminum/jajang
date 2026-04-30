@@ -3,7 +3,7 @@
 // issue #133
 
 import React from 'react'
-import { act, render, waitFor } from '@testing-library/react-native'
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 
 // ─── jest.mock factory 내 외부 변수 참조 금지 규칙 우회 ───────────────────────
 // 모든 mock factory 를 jest.fn() 으로 선언하고
@@ -170,7 +170,9 @@ describe('RecordScreen — 허밍 모드 BGM 통합 (impl/10 §4~§5)', () => {
     })
   })
 
-  it('shush 모드에서는 startBgm 호출하지 않고 가사 박스도 미렌더', async () => {
+  it.skip('shush 모드에서는 startBgm 호출하지 않고 가사 박스도 미렌더', async () => {
+    // impl/13: mode 파라미터 폐기 — RecordScreen은 항상 humming 동작(isHummingMode=true).
+    // shush 분기가 제거되어 이 테스트는 성립 불가. impl/07 이후 별도 처리.
     setRoute({ songKey: 'twinkle', mode: 'shush' })
 
     const { queryByTestId } = render(<RecordScreen />)
@@ -207,9 +209,7 @@ describe('RecordScreen — 허밍 모드 BGM 통합 (impl/10 §4~§5)', () => {
     await advanceCountdown()
 
     const stopBtn = await findByTestId('stop-recording-button')
-    act(() => {
-      stopBtn.props.onPress?.()
-    })
+    fireEvent.press(stopBtn)
 
     await waitFor(() => {
       expect(stopBgmMock).toHaveBeenCalled()
@@ -231,9 +231,7 @@ describe('RecordScreen — 허밍 모드 BGM 통합 (impl/10 §4~§5)', () => {
     await advanceCountdown()
 
     const cancelBtn = await findByTestId('cancel-recording-button')
-    act(() => {
-      cancelBtn.props.onPress?.()
-    })
+    fireEvent.press(cancelBtn)
 
     await waitFor(() => expect(stopBgmMock).toHaveBeenCalled())
   })
@@ -246,10 +244,17 @@ describe('RecordScreen — 허밍 모드 BGM 통합 (impl/10 §4~§5)', () => {
     expect(startBgmMock).toHaveBeenCalledTimes(1)
 
     const restartBtn = await findByTestId('restart-recording-button')
-    act(() => {
-      restartBtn.props.onPress?.()
+    await act(async () => {
+      fireEvent.press(restartBtn)
+      // restartRecording: stopBgm(+stopBgmMock) + cleanupRecording(recorder.stop) + setPhase('countdown')
+      // 각 async 단계 drain (5 ticks)
+      await Promise.resolve()
+      await Promise.resolve()
+      await Promise.resolve()
+      await Promise.resolve()
+      await Promise.resolve()
     })
-    await waitFor(() => expect(stopBgmMock).toHaveBeenCalled())
+    expect(stopBgmMock).toHaveBeenCalled()
 
     await advanceCountdown()
     await waitFor(() => expect(startBgmMock).toHaveBeenCalledTimes(2))

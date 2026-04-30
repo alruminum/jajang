@@ -202,7 +202,8 @@ describe('S07SongSelectScreen — AC-05: 미선택 시 CTA 비활성화', () => 
     await waitFor(() => screen.getByText('이 곡으로 시작'))
 
     const cta = screen.getByLabelText('이 곡으로 시작')
-    expect(cta).toHaveAccessibilityState({ disabled: true })
+    // @testing-library/jest-native 미설치 환경 — props 직접 확인
+    expect(cta.props.accessibilityState?.disabled).toBe(true)
   })
 
   it('selectedSongKey=null 일 때 CTA 탭해도 navigate가 호출되지 않는다', async () => {
@@ -229,7 +230,8 @@ describe('S07SongSelectScreen — AC-04/AC-08: 곡 선택 후 CTA (impl/13: Reco
     await waitFor(() => screen.getByText('이 곡으로 시작'))
 
     const cta = screen.getByLabelText('이 곡으로 시작')
-    expect(cta).toHaveAccessibilityState({ disabled: false })
+    // @testing-library/jest-native 미설치 환경 — props 직접 확인
+    expect(cta.props.accessibilityState?.disabled).toBeFalsy()
   })
 
   it('곡 선택 후 CTA 탭 시 RecordGuide 화면으로 이동한다 (RecordMode 경유 없음)', async () => {

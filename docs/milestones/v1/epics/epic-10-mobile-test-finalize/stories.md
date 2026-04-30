@@ -84,14 +84,14 @@
 
 ### 태스크 체크리스트
 
-- [ ] PR #149 브랜치 (`feat/149-batch4-record-guide-pivot`) 체크아웃 후 작업
-- [ ] 공통 mock 위치 결정: `src/__tests__/_setup.ts` 에 `jest.mock('expo-audio', ...)` 추가 또는 `__mocks__/expo-audio.ts` 신설
-- [ ] mock factory 에 `getRecordingPermissionsAsync`, `requestRecordingPermissionsAsync`, `setAudioModeAsync`, `RecordingOptionsPresets`, `useAudioRecorder` 등 named exports 모두 jest.fn() 으로 export
-- [ ] S09 main 의 6 fails GREEN
-- [ ] PR #149 의 S09 mode-removal 8 fails (`mode 파라미터 없음`, `impl/13`) GREEN
-- [ ] PR #149 의 S07 mode-removal 1 fail (`AC-04/AC-08: RecordMode 경유 제거`) GREEN
-- [ ] PR #149 의 S10 1 fail (`shush 모드`) — mode 폐기 후에도 shush 분기는 살아있는지 확인 필요. impl/13 검토.
-- [ ] PR 브랜치 `npx jest src/__tests__/screens/S09*.tsx S07*.tsx S10*.tsx` 0 failures
+- [x] PR #149 브랜치 (`feat/149-batch4-record-guide-pivot`) 체크아웃 후 작업
+- [x] 공통 mock 위치 결정: `src/__tests__/_setup.ts` 에 이미 named exports mock 존재. S09 test 파일의 jest.mock factory hoisting 문제 fix.
+- [x] mock factory 에 `getRecordingPermissionsAsync`, `requestRecordingPermissionsAsync`, `setAudioModeAsync`, `useAudioRecorder` 등 named exports jest.fn() export
+- [x] S09 main 의 6 fails GREEN
+- [x] PR #149 의 S09 mode-removal 4 fails GREEN (CTA 네비게이션 + 가사 박스)
+- [x] PR #149 의 S07 mode-removal 2 fails GREEN (`toHaveAccessibilityState` → props 직접 확인)
+- [x] PR #149 의 S10 4 fails GREEN: shush it.skip (mode 폐기) + 녹음 종료/취소/재시작 fireEvent.press fix
+- [x] PR 브랜치 `npx jest src/__tests__/screens/S09*.tsx S07*.tsx S10*.tsx` 0 failures (15 skip, 49 pass)
 
 ### 수용 기준
 
