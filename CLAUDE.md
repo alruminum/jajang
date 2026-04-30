@@ -18,7 +18,7 @@ npm install              # 또는 pnpm install
 npx expo prebuild        # 네이티브 코드 생성 (최초 1회)
 npx expo run:ios         # iOS 시뮬레이터 (Bare workflow)
 npx expo run:android     # Android 에뮬레이터
-npx vitest run           # 테스트
+npm test                 # 테스트 (jest-expo — epic-08 완료 후 활성)
 ```
 
 ### API (apps/api)
