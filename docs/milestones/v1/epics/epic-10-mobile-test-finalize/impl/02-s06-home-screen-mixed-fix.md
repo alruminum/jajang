@@ -7,6 +7,7 @@ depth: std
 **Story:** #167 (Story 1b — S06 전체 11 fails)
 **선행 조건:** 없음 (병렬 가능 batch)
 **후행 조건:** S06HomeScreen 0 failures
+**상태:** ✅ 완료 (PR #174, 2026-05-01)
 
 **context budget:** file edits ≤ 4 / tool uses ≤ 35
 
@@ -128,3 +129,28 @@ impl/01 (S04/S05) 와 mock 시스템이 다름. 추출 시 S06 격리 깨짐.
 ---
 
 ## MODULE_PLAN_READY
+
+---
+
+## Verification (PR #174)
+
+### 적용 fix 패턴
+
+- **A 6** — `usePlayerStore`, `useTrialExpiredGuard`, `MiniPlayer` mock 에 `__esModule: true` + named export key 추가 (batch 01 패턴 재사용)
+- **B 1** — text query 회귀 없음 (다른 fix 흡수)
+- **C 3** — `tree.root.findByLabel(...)` 직접 접근 → `findByLabel(tree.toJSON(), ...)` 헬퍼 + microtask `flushPromises()` (Promise.resolve × 3 체인) 으로 act 안 unmount 회피
+- **I 1** — AsyncStorage hoisting: `jest.requireMock('@react-native-async-storage/async-storage')` 으로 hoisting race 회피
+
+### 실측 결과
+
+```bash
+$ npx jest src/__tests__/screens/S06HomeScreen.test.tsx
+Tests:       12 passed, 12 total
+
+$ npx jest 2>&1 | grep "Tests:"
+Tests:       56 failed, 2 skipped, 540 passed, 598 total
+```
+
+- **S06HomeScreen**: 12/12 PASS (11 fails 제거)
+- **전체**: 529 → **540 PASS** (+11)
+- 회귀 보호 ≥ 529 충족
