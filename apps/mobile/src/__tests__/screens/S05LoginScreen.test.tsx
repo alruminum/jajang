@@ -10,33 +10,32 @@
  * - 비밀번호 찾기 → Alert (V1 임시 처리)
  */
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { AxiosError } from 'axios';
 
 // ─── 의존 모듈 Mock ──────────────────────────────────────────────────────────
-const mockReplace = vi.fn();
-const mockNavigate = vi.fn();
+const mockReplace = jest.fn();
+const mockNavigate = jest.fn();
 
-vi.mock('@react-navigation/native', () => ({
+jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ replace: mockReplace, navigate: mockNavigate }),
 }));
 
-const mockSaveSession = vi.fn();
+const mockSaveSession = jest.fn();
 
-vi.mock('@hooks/useAuth', () => ({
+jest.mock('@hooks/useAuth', () => ({
   useAuth: () => ({ saveSession: mockSaveSession }),
 }));
 
-const mockEmailLogin = vi.fn();
-const mockSocialAuth = vi.fn();
+const mockEmailLogin = jest.fn();
+const mockSocialAuth = jest.fn();
 
-vi.mock('@services/auth-api', () => ({
+jest.mock('@services/auth-api', () => ({
   emailLogin: (...args: unknown[]) => mockEmailLogin(...args),
   socialAuth: (...args: unknown[]) => mockSocialAuth(...args),
 }));
 
-vi.mock('@components/SocialAuthButtons', () => ({
+jest.mock('@components/SocialAuthButtons', () => ({
   default: ({ onSuccess, onError }: {
     onSuccess: (provider: 'apple' | 'google', token: string) => void;
     onError?: (e: unknown) => void;
@@ -66,13 +65,9 @@ vi.mock('@components/SocialAuthButtons', () => ({
   },
 }));
 
-const mockAlertFn = vi.fn();
-vi.mock('react-native', async (importOriginal) => {
-  const actual = await importOriginal();
-  return { ...actual, Alert: { alert: mockAlertFn } };
-});
-
+import { Alert } from 'react-native';
 import S05LoginScreen from '@screens/S05LoginScreen';
+
 
 const MOCK_AUTH_RESPONSE = {
   access_token: 'token-abc',
@@ -82,8 +77,15 @@ const MOCK_AUTH_RESPONSE = {
   user_id: 'user-002',
 };
 
+let mockAlertSpy: jest.SpyInstance;
+
 beforeEach(() => {
-  vi.clearAllMocks();
+  jest.clearAllMocks();
+  mockAlertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
 });
 
 // ─── 빈 입력 검사 ────────────────────────────────────────────────────────────
@@ -150,7 +152,7 @@ describe('REQ-S05: 잘못된 이메일/비밀번호 (401)', () => {
     fireEvent.press(getByLabelText('로그인하기'));
 
     await waitFor(() => {
-      expect(mockAlertFn).not.toHaveBeenCalled();
+      expect(mockAlertSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -166,7 +168,7 @@ describe('REQ-S05: 잘못된 이메일/비밀번호 (401)', () => {
     fireEvent.press(getByLabelText('로그인하기'));
 
     await waitFor(() => {
-      expect(mockAlertFn).toHaveBeenCalledWith('로그인 실패', expect.any(String));
+      expect(mockAlertSpy).toHaveBeenCalledWith('로그인 실패', expect.any(String));
     });
   });
 });
@@ -259,7 +261,7 @@ describe('REQ-S05: 소셜 로그인 처리', () => {
     fireEvent.press(getByTestId('social-error-trigger'));
 
     await waitFor(() => {
-      expect(mockAlertFn).toHaveBeenCalledWith(
+      expect(mockAlertSpy).toHaveBeenCalledWith(
         '로그인 실패',
         expect.stringContaining('소셜 로그인에 실패했어요'),
       );
@@ -274,7 +276,7 @@ describe('REQ-S05: 비밀번호 찾기 (V1 임시 처리)', () => {
 
     fireEvent.press(getByLabelText('비밀번호를 잊으셨나요'));
 
-    expect(mockAlertFn).toHaveBeenCalledWith(
+    expect(mockAlertSpy).toHaveBeenCalledWith(
       '비밀번호 찾기',
       expect.any(String),
       expect.any(Array),

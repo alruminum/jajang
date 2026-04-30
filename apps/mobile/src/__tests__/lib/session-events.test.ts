@@ -32,7 +32,7 @@ describe('session-events (REQ-SESSION-05)', () => {
   // ─── 이벤트 발행/구독 ────────────────────────────────────────────────────
   describe('이벤트 발행', () => {
     it('emit 시 on으로 등록된 핸들러가 호출된다', () => {
-      const handler = vi.fn();
+      const handler = jest.fn();
       sessionEvents.on(SESSION_EXPIRED_EVENT, handler);
 
       sessionEvents.emit(SESSION_EXPIRED_EVENT);
@@ -41,8 +41,8 @@ describe('session-events (REQ-SESSION-05)', () => {
     });
 
     it('여러 핸들러를 등록하면 모두 호출된다', () => {
-      const handler1 = vi.fn();
-      const handler2 = vi.fn();
+      const handler1 = jest.fn();
+      const handler2 = jest.fn();
       sessionEvents.on(SESSION_EXPIRED_EVENT, handler1);
       sessionEvents.on(SESSION_EXPIRED_EVENT, handler2);
 
@@ -53,7 +53,7 @@ describe('session-events (REQ-SESSION-05)', () => {
     });
 
     it('once 핸들러는 첫 번째 emit에서만 호출된다', () => {
-      const handler = vi.fn();
+      const handler = jest.fn();
       sessionEvents.once(SESSION_EXPIRED_EVENT, handler);
 
       sessionEvents.emit(SESSION_EXPIRED_EVENT);
@@ -66,7 +66,7 @@ describe('session-events (REQ-SESSION-05)', () => {
   // ─── 구독 해제 ───────────────────────────────────────────────────────────
   describe('리스너 해제', () => {
     it('off 이후 emit 시 핸들러가 호출되지 않는다', () => {
-      const handler = vi.fn();
+      const handler = jest.fn();
       sessionEvents.on(SESSION_EXPIRED_EVENT, handler);
       sessionEvents.off(SESSION_EXPIRED_EVENT, handler);
 
@@ -76,8 +76,8 @@ describe('session-events (REQ-SESSION-05)', () => {
     });
 
     it('특정 핸들러만 off 하면 나머지 핸들러는 계속 동작한다', () => {
-      const handler1 = vi.fn();
-      const handler2 = vi.fn();
+      const handler1 = jest.fn();
+      const handler2 = jest.fn();
       sessionEvents.on(SESSION_EXPIRED_EVENT, handler1);
       sessionEvents.on(SESSION_EXPIRED_EVENT, handler2);
       sessionEvents.off(SESSION_EXPIRED_EVENT, handler1);

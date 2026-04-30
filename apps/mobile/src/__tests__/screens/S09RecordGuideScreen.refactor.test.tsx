@@ -16,14 +16,14 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { LYRICS } from '../../data/lyrics';
 import { SONG_NAMES } from '../../services/songs';
 
-const mockGetRandomPhrase = vi.fn();
-vi.mock('@services/api/challenges', () => ({
+const mockGetRandomPhrase = jest.fn();
+jest.mock('@services/api/challenges', () => ({
   challengesApi: { getRandomPhrase: mockGetRandomPhrase },
 }));
 
 import { RecordGuideScreen } from '@screens/RecordGuideScreen';
 
-const mockNavigate = vi.fn();
+const mockNavigate = jest.fn();
 const mockNavigation = { navigate: mockNavigate } as any;
 
 function renderWith(params: { mode: 'humming' | 'shush'; songKey: string }) {

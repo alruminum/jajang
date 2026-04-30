@@ -4,28 +4,27 @@
  * 수용 기준: §8 수용 기준 + §3 핵심 로직 (포그라운드 동기화, 실시간 리스너)
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react-native';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
-vi.mock('@store/auth-store', () => ({
-  useAuthStore: vi.fn(() => ({
-    setEntitlement: vi.fn(),
+jest.mock('@store/auth-store', () => ({
+  useAuthStore: jest.fn(() => ({
+    setEntitlement: jest.fn(),
     isAuthenticated: true,
     entitlement: 'trial',
     trialExpiresAt: null,
   })),
 }));
 
-vi.mock('@services/revenue-cat', () => ({
-  getCustomerInfo: vi.fn(),
-  extractEntitlement: vi.fn(),
-  addCustomerInfoListener: vi.fn(() => vi.fn()),
+jest.mock('@services/revenue-cat', () => ({
+  getCustomerInfo: jest.fn(),
+  extractEntitlement: jest.fn(),
+  addCustomerInfoListener: jest.fn(() => jest.fn()),
 }));
 
-vi.mock('react-native', () => ({
+jest.mock('react-native', () => ({
   AppState: {
-    addEventListener: vi.fn(() => ({ remove: vi.fn() })),
+    addEventListener: jest.fn(() => ({ remove: jest.fn() })),
   },
 }));
 
@@ -40,10 +39,10 @@ function mockAuthStore(overrides: {
   isAuthenticated?: boolean;
   entitlement?: 'free' | 'trial' | 'premium';
   trialExpiresAt?: string | null;
-  setEntitlement?: ReturnType<typeof vi.fn>;
+  setEntitlement?: jest.Mock;
 }) {
-  const setEntitlement = overrides.setEntitlement ?? vi.fn();
-  vi.mocked(useAuthStore).mockReturnValue({
+  const setEntitlement = overrides.setEntitlement ?? jest.fn();
+  jest.mocked(useAuthStore).mockReturnValue({
     setEntitlement,
     isAuthenticated: overrides.isAuthenticated ?? true,
     entitlement: overrides.entitlement ?? 'trial',
@@ -54,7 +53,7 @@ function mockAuthStore(overrides: {
 
 // ─── Helper: AppState change 핸들러 캡처 ─────────────────────────────────────
 function captureAppStateHandler(): ((state: string) => void) | undefined {
-  const calls = vi.mocked(AppState.addEventListener).mock.calls;
+  const calls = jest.mocked(AppState.addEventListener).mock.calls;
   const changeCall = calls.find(([event]) => event === 'change');
   return changeCall?.[1] as ((state: string) => void) | undefined;
 }
@@ -62,14 +61,14 @@ function captureAppStateHandler(): ((state: string) => void) | undefined {
 // ─── Tests ────────────────────────────────────────────────────────────────────
 describe('REQ-useEntitlement: useEntitlement 훅', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    vi.mocked(revenueCatService.addCustomerInfoListener).mockReturnValue(vi.fn());
+    jest.clearAllMocks();
+    jest.mocked(revenueCatService.addCustomerInfoListener).mockReturnValue(jest.fn());
   });
 
   // ─── useTrialDaysRemaining ──────────────────────────────────────────────────
   describe('useTrialDaysRemaining — 수용 기준: D-1 배너 표시용 잔여일 계산', () => {
     afterEach(() => {
-      vi.useRealTimers();
+      jest.useRealTimers();
     });
 
     it('entitlement !== trial이면 null을 반환한다', () => {
@@ -89,8 +88,8 @@ describe('REQ-useEntitlement: useEntitlement 훅', () => {
     });
 
     it('이미 만료된 날짜면 0을 반환한다', () => {
-      vi.useFakeTimers();
-      vi.setSystemTime(new Date('2024-02-10T12:00:00Z'));
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2024-02-10T12:00:00Z'));
       mockAuthStore({
         entitlement: 'trial',
         trialExpiresAt: '2024-02-09T00:00:00Z', // 어제 만료
@@ -102,8 +101,8 @@ describe('REQ-useEntitlement: useEntitlement 훅', () => {
     });
 
     it('정확히 1일(24시간) 남았으면 1을 반환한다', () => {
-      vi.useFakeTimers();
-      vi.setSystemTime(new Date('2024-02-07T00:00:00Z'));
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2024-02-07T00:00:00Z'));
       mockAuthStore({
         entitlement: 'trial',
         trialExpiresAt: '2024-02-08T00:00:00Z',
@@ -115,8 +114,8 @@ describe('REQ-useEntitlement: useEntitlement 훅', () => {
     });
 
     it('0.5일(12시간) 남았으면 Math.ceil로 1을 반환한다', () => {
-      vi.useFakeTimers();
-      vi.setSystemTime(new Date('2024-02-07T12:00:00Z'));
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2024-02-07T12:00:00Z'));
       mockAuthStore({
         entitlement: 'trial',
         trialExpiresAt: '2024-02-08T00:00:00Z', // 12시간 남음
@@ -146,8 +145,8 @@ describe('REQ-useEntitlement: useEntitlement 훅', () => {
     it('AppState active 이벤트 → getCustomerInfo 호출 후 setEntitlement가 실행된다', async () => {
       const fakeInfo = {};
       const { setEntitlement } = mockAuthStore({ isAuthenticated: true });
-      vi.mocked(revenueCatService.getCustomerInfo).mockResolvedValue(fakeInfo as any);
-      vi.mocked(revenueCatService.extractEntitlement).mockReturnValue({
+      jest.mocked(revenueCatService.getCustomerInfo).mockResolvedValue(fakeInfo as any);
+      jest.mocked(revenueCatService.extractEntitlement).mockReturnValue({
         entitlement: 'trial',
         trialExpiresAt: '2024-02-07T00:00:00Z',
       });
@@ -178,7 +177,7 @@ describe('REQ-useEntitlement: useEntitlement 훅', () => {
 
     it('getCustomerInfo 실패 시 에러를 흡수하고 throw하지 않는다', async () => {
       mockAuthStore({ isAuthenticated: true });
-      vi.mocked(revenueCatService.getCustomerInfo).mockRejectedValue(
+      jest.mocked(revenueCatService.getCustomerInfo).mockRejectedValue(
         new Error('RevenueCat 네트워크 오류'),
       );
 
@@ -210,8 +209,8 @@ describe('REQ-useEntitlement: useEntitlement 훅', () => {
 
     it('unmount 시 AppState subscription이 제거된다', () => {
       mockAuthStore({ isAuthenticated: true });
-      const mockRemove = vi.fn();
-      vi.mocked(AppState.addEventListener).mockReturnValue({ remove: mockRemove } as any);
+      const mockRemove = jest.fn();
+      jest.mocked(AppState.addEventListener).mockReturnValue({ remove: mockRemove } as any);
 
       const { unmount } = renderHook(() => useEntitlementSync());
       unmount();
@@ -222,11 +221,11 @@ describe('REQ-useEntitlement: useEntitlement 훅', () => {
     it('CustomerInfo 리스너 콜백 호출 시 setEntitlement가 업데이트된다', async () => {
       const { setEntitlement } = mockAuthStore({ isAuthenticated: true });
       let capturedCallback: ((info: any) => void) | undefined;
-      vi.mocked(revenueCatService.addCustomerInfoListener).mockImplementation((cb) => {
+      jest.mocked(revenueCatService.addCustomerInfoListener).mockImplementation((cb) => {
         capturedCallback = cb;
-        return vi.fn();
+        return jest.fn();
       });
-      vi.mocked(revenueCatService.extractEntitlement).mockReturnValue({
+      jest.mocked(revenueCatService.extractEntitlement).mockReturnValue({
         entitlement: 'premium',
         trialExpiresAt: null,
       });

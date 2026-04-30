@@ -70,6 +70,5 @@ module.exports = {
   testPathIgnorePatterns: [
     '/node_modules/',
     '/src/__tests__/_setup\\.ts$',
-    '/src/__tests__/(?!(_smoke|audio/AudioEngine-timer|useBgmPlayer|screens/S01SplashScreen|screens/S10RecordScreen\\.bgm)\\.test\\.(ts|tsx))',
   ],
 };

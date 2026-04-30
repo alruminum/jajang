@@ -6,23 +6,19 @@
  * AC 연관: AC-04 (구독 관리 URL 조회 로직)
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-
-// react-native-purchases mock — getManagementURL 내부에서 Purchases.getCustomerInfo() 호출
-vi.mock('react-native-purchases', () => ({
-  default: {
-    getCustomerInfo: vi.fn(),
-  },
-}))
 
 import Purchases from 'react-native-purchases'
 import { getManagementURL } from '@services/revenue-cat'
 
-const mockGetCustomerInfo = vi.mocked(Purchases.getCustomerInfo)
-
 describe('getManagementURL — RevenueCat 구독 관리 URL 조회', () => {
+  let mockGetCustomerInfo: jest.SpyInstance
+
   beforeEach(() => {
-    vi.clearAllMocks()
+    mockGetCustomerInfo = jest.spyOn(Purchases, 'getCustomerInfo')
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
   })
 
   // ─── 정상 흐름 ──────────────────────────────────────────────────────────────

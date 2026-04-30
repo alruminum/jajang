@@ -4,7 +4,6 @@
  * impl: docs/milestones/v1/epics/epic-02-recording/impl/04-app-song-select-screen.md §2
  */
 
-import { describe, it, expect, beforeEach } from 'vitest'
 import { useRecordingStore } from '@store/recordingSlice'
 
 // 각 테스트 전 스토어를 초기 상태로 복원

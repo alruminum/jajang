@@ -12,7 +12,6 @@
  */
 
 import React from 'react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native'
 import { Alert } from 'react-native'
 
@@ -20,53 +19,55 @@ import { Alert } from 'react-native'
 // 모듈 Mocks
 // ──────────────────────────────────────────────────────────────────────────────
 
-const mockNavigationDispatch = vi.fn()
-const mockNavigationGoBack = vi.fn()
+const mockNavigationDispatch = jest.fn()
+const mockNavigationGoBack = jest.fn()
 
-vi.mock('@react-navigation/native', () => ({
+jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
     dispatch: mockNavigationDispatch,
     goBack: mockNavigationGoBack,
   }),
   CommonActions: {
-    reset: vi.fn((payload) => payload),
+    reset: jest.fn((payload) => payload),
   },
 }))
 
-vi.mock('@react-native-async-storage/async-storage', () => ({
+jest.mock('@react-native-async-storage/async-storage', () => ({
   default: {
-    clear: vi.fn().mockResolvedValue(undefined),
+    clear: jest.fn().mockResolvedValue(undefined),
   },
 }))
 
-vi.mock('expo-file-system', () => ({
+jest.mock('expo-file-system', () => ({
   cacheDirectory: 'file:///cache/',
-  deleteAsync: vi.fn().mockResolvedValue(undefined),
+  deleteAsync: jest.fn().mockResolvedValue(undefined),
 }))
 
-vi.mock('@services/accountApi', () => ({
-  deleteMyAccount: vi.fn(),
+jest.mock('@services/accountApi', () => ({
+  deleteMyAccount: jest.fn(),
   ActiveSubscriptionError: class ActiveSubscriptionError extends Error {
-    constructor(public detail: { code: string; message: string; subscriptionPlatform: 'ios' | 'android' }) {
-      super(detail.message)
+    detail: { code: string; message: string; subscriptionPlatform: 'ios' | 'android' }
+    constructor(mockDetail: { code: string; message: string; subscriptionPlatform: 'ios' | 'android' }) {
+      super(mockDetail.message)
+      this.detail = mockDetail
       this.name = 'ActiveSubscriptionError'
     }
   },
 }))
 
-vi.mock('@store', () => ({
-  useAuthStore: vi.fn(),
+jest.mock('@store', () => ({
+  useAuthStore: jest.fn(),
 }))
 
-vi.mock('@store/generationSlice', () => ({
-  useGenerationStore: vi.fn(),
+jest.mock('@store/generationSlice', () => ({
+  useGenerationStore: jest.fn(),
 }))
 
-vi.mock('@audio/AudioEngine', () => ({
-  stopPlayback: vi.fn().mockResolvedValue(undefined),
+jest.mock('@audio/AudioEngine', () => ({
+  stopPlayback: jest.fn().mockResolvedValue(undefined),
 }))
 
-vi.mock('react-native-safe-area-context', () => ({
+jest.mock('react-native-safe-area-context', () => ({
   SafeAreaView: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
 
@@ -85,17 +86,17 @@ import { CommonActions } from '@react-navigation/native'
 // Helpers
 // ──────────────────────────────────────────────────────────────────────────────
 
-const mockClearAuthState = vi.fn()
-const mockClearAllTracks = vi.fn()
+const mockClearAuthState = jest.fn()
+const mockClearAllTracks = jest.fn()
 
 function setupMocks({
   entitlement = 'free' as 'free' | 'trial' | 'premium' | null,
 } = {}) {
-  vi.mocked(useAuthStore).mockReturnValue({
+  jest.mocked(useAuthStore).mockReturnValue({
     entitlement,
     clearAuthState: mockClearAuthState,
   } as any)
-  vi.mocked(useGenerationStore).mockReturnValue({
+  jest.mocked(useGenerationStore).mockReturnValue({
     clearAllTracks: mockClearAllTracks,
   } as any)
 }
@@ -106,7 +107,7 @@ function setupMocks({
 
 describe('AccountDeletionScreen — Step 1 화면', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     setupMocks()
   })
 
@@ -148,7 +149,7 @@ describe('AccountDeletionScreen — Step 1 화면', () => {
 
 describe('AccountDeletionScreen — Step 2 바텀 시트', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     setupMocks()
   })
 
@@ -172,9 +173,9 @@ describe('AccountDeletionScreen — Step 2 바텀 시트', () => {
 
 describe('AccountDeletionScreen — 탈퇴 성공 (202)', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     setupMocks()
-    vi.mocked(deleteMyAccount).mockResolvedValue(undefined)
+    jest.mocked(deleteMyAccount).mockResolvedValue(undefined)
   })
 
   it('탈퇴 성공 시 AsyncStorage.clear(), Zustand 초기화, Auth 스택으로 이동한다', async () => {
@@ -186,10 +187,10 @@ describe('AccountDeletionScreen — 탈퇴 성공 (202)', () => {
     })
 
     await waitFor(() => {
-      expect(deleteMyAccount).toHaveBeenCalledOnce()
-      expect(AsyncStorage.clear).toHaveBeenCalledOnce()
-      expect(mockClearAuthState).toHaveBeenCalledOnce()
-      expect(mockClearAllTracks).toHaveBeenCalledOnce()
+      expect(deleteMyAccount).toHaveBeenCalledTimes(1)
+      expect(AsyncStorage.clear).toHaveBeenCalledTimes(1)
+      expect(mockClearAuthState).toHaveBeenCalledTimes(1)
+      expect(mockClearAllTracks).toHaveBeenCalledTimes(1)
       expect(mockNavigationDispatch).toHaveBeenCalledWith(
         expect.objectContaining({ index: 0, routes: [{ name: 'Auth' }] }),
       )
@@ -199,9 +200,9 @@ describe('AccountDeletionScreen — 탈퇴 성공 (202)', () => {
 
 describe('AccountDeletionScreen — 탈퇴 422 ACTIVE_SUBSCRIPTION', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     setupMocks()
-    vi.mocked(deleteMyAccount).mockRejectedValue(
+    jest.mocked(deleteMyAccount).mockRejectedValue(
       new ActiveSubscriptionError({
         code: 'ACTIVE_SUBSCRIPTION',
         message: 'active subscription',
@@ -211,7 +212,7 @@ describe('AccountDeletionScreen — 탈퇴 422 ACTIVE_SUBSCRIPTION', () => {
   })
 
   it('422 수신 시 Alert.alert가 구독 취소 안내로 호출된다', async () => {
-    const alertSpy = vi.spyOn(Alert, 'alert')
+    const alertSpy = jest.spyOn(Alert, 'alert')
     const { getByText } = render(<AccountDeletionScreen />)
     fireEvent.press(getByText('다음으로'))
 
@@ -237,14 +238,14 @@ describe('AccountDeletionScreen — 탈퇴 422 ACTIVE_SUBSCRIPTION', () => {
 
 describe('AccountDeletionScreen — 탈퇴 중 로딩 상태', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     setupMocks()
   })
 
   it('탈퇴 중 "네, 탈퇴할게요" 버튼이 비활성된다', async () => {
     // deleteMyAccount가 pending 상태를 시뮬레이션
     let resolveDelete!: () => void
-    vi.mocked(deleteMyAccount).mockReturnValue(
+    jest.mocked(deleteMyAccount).mockReturnValue(
       new Promise<void>((resolve) => {
         resolveDelete = resolve
       }),
@@ -266,7 +267,7 @@ describe('AccountDeletionScreen — 탈퇴 중 로딩 상태', () => {
 
 describe('AccountDeletionScreen — accessibilityLabel', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     setupMocks()
   })
 

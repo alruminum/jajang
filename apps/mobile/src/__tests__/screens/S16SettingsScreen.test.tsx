@@ -11,47 +11,46 @@
  */
 
 import React from 'react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, fireEvent, waitFor } from '@testing-library/react-native'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // 모듈 Mocks (vi.mock은 호이스팅 — import 전 선언)
 // ──────────────────────────────────────────────────────────────────────────────
 
-vi.mock('@store', () => ({
-  useAuthStore: vi.fn(),
+jest.mock('@store', () => ({
+  useAuthStore: jest.fn(),
 }))
 
-vi.mock('@services/revenue-cat', () => ({
-  getManagementURL: vi.fn(),
-  revenueCatLogout: vi.fn(),
+jest.mock('@services/revenue-cat', () => ({
+  getManagementURL: jest.fn(),
+  revenueCatLogout: jest.fn(),
 }))
 
 // Epic-06에서 추가된 의존성 — S16SettingsScreen이 import하므로 mock 필요
-vi.mock('@services/dataManagementApi', () => ({
-  getVoiceSampleStatus: vi.fn().mockResolvedValue({ hasSample: false, sampleStatus: 'deleted' }),
-  deleteVoiceSample: vi.fn(),
-  deleteTrack: vi.fn(),
-  deleteAllTracks: vi.fn(),
+jest.mock('@services/dataManagementApi', () => ({
+  getVoiceSampleStatus: jest.fn().mockResolvedValue({ hasSample: false, sampleStatus: 'deleted' }),
+  deleteVoiceSample: jest.fn(),
+  deleteTrack: jest.fn(),
+  deleteAllTracks: jest.fn(),
 }))
 
-vi.mock('@store/generationSlice', () => ({
-  useGenerationStore: vi.fn(),
+jest.mock('@store/generationSlice', () => ({
+  useGenerationStore: jest.fn(),
 }))
 
-vi.mock('@components/DeleteTracksSheet', () => ({
+jest.mock('@components/DeleteTracksSheet', () => ({
   DeleteTracksSheet: () => null,
 }))
 
 // react-native is mocked globally in setup.ts (Linking, Platform, Alert, etc.)
 // Do not re-mock here with importOriginal() — it triggers Flow syntax errors.
 
-vi.mock('@utils/dialog', () => ({
-  showConfirmDialog: vi.fn(),
+jest.mock('@utils/dialog', () => ({
+  showConfirmDialog: jest.fn(),
 }))
 
-vi.mock('@utils/toast', () => ({
-  showToast: vi.fn(),
+jest.mock('@utils/toast', () => ({
+  showToast: jest.fn(),
 }))
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -71,11 +70,11 @@ import S16SettingsScreen from '@screens/S16SettingsScreen'
 // ──────────────────────────────────────────────────────────────────────────────
 
 const mockNavigation = {
-  navigate: vi.fn(),
-  goBack: vi.fn(),
+  navigate: jest.fn(),
+  goBack: jest.fn(),
 }
 
-const mockClearSession = vi.fn()
+const mockClearSession = jest.fn()
 
 function setupAuthStore(overrides: {
   entitlement?: 'premium' | 'trial' | 'free'
@@ -88,8 +87,8 @@ function setupAuthStore(overrides: {
     email: 'test@example.com',
     ...overrides,
   }
-  vi.mocked(useAuthStore).mockReturnValue(state as any)
-  ;(useAuthStore as any).getState = vi.fn().mockReturnValue({
+  jest.mocked(useAuthStore).mockReturnValue(state as any)
+  ;(useAuthStore as any).getState = jest.fn().mockReturnValue({
     ...state,
     clearSession: mockClearSession,
   })
@@ -111,15 +110,15 @@ function trialExpiry(daysLeft: number): string {
 // ──────────────────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
-  vi.clearAllMocks()
+  jest.clearAllMocks()
   setupAuthStore({ entitlement: 'free' })
   // showConfirmDialog 기본: 취소 (의도치 않은 부수효과 방지)
-  vi.mocked(showConfirmDialog).mockResolvedValue(false)
+  jest.mocked(showConfirmDialog).mockResolvedValue(false)
   // API 기본: 성공
-  vi.mocked(revenueCatLogout).mockResolvedValue(undefined)
-  vi.mocked(getManagementURL).mockResolvedValue('https://example.com/manage')
+  jest.mocked(revenueCatLogout).mockResolvedValue(undefined)
+  jest.mocked(getManagementURL).mockResolvedValue('https://example.com/manage')
   // generationStore 기본: 빈 트랙 목록
-  vi.mocked(useGenerationStore).mockImplementation((selector: any) =>
+  jest.mocked(useGenerationStore).mockImplementation((selector: any) =>
     selector({ tracks: [] }),
   )
 })
@@ -218,7 +217,7 @@ describe('AC-04 — 구독 관리 탭', () => {
 
   it('managementURL 있을 때 Linking.openURL 호출', async () => {
     const url = 'itms-apps://subscriptions'
-    vi.mocked(getManagementURL).mockResolvedValue(url)
+    jest.mocked(getManagementURL).mockResolvedValue(url)
 
     const { getByText } = renderScreen()
     fireEvent.press(getByText('구독 관리'))
@@ -229,7 +228,7 @@ describe('AC-04 — 구독 관리 탭', () => {
   })
 
   it('managementURL이 null이면 토스트 "관리할 구독이 없어요", openURL 미호출', async () => {
-    vi.mocked(getManagementURL).mockResolvedValue(null)
+    jest.mocked(getManagementURL).mockResolvedValue(null)
 
     const { getByText } = renderScreen()
     fireEvent.press(getByText('구독 관리'))
@@ -282,20 +281,20 @@ describe('AC-10 — 로그아웃', () => {
   beforeEach(() => setupAuthStore({ entitlement: 'premium' }))
 
   it('확인 후 revenueCatLogout + clearSession + Login 이동', async () => {
-    vi.mocked(showConfirmDialog).mockResolvedValue(true)
+    jest.mocked(showConfirmDialog).mockResolvedValue(true)
 
     const { getByText } = renderScreen()
     fireEvent.press(getByText('로그아웃'))
 
     await waitFor(() => {
-      expect(revenueCatLogout).toHaveBeenCalledOnce()
-      expect(mockClearSession).toHaveBeenCalledOnce()
+      expect(revenueCatLogout).toHaveBeenCalledTimes(1)
+      expect(mockClearSession).toHaveBeenCalledTimes(1)
       expect(mockNavigation.navigate).toHaveBeenCalledWith('Login')
     })
   })
 
   it('취소 시 revenueCatLogout 미호출, Login 이동 없음', async () => {
-    vi.mocked(showConfirmDialog).mockResolvedValue(false)
+    jest.mocked(showConfirmDialog).mockResolvedValue(false)
 
     const { getByText } = renderScreen()
     fireEvent.press(getByText('로그아웃'))
@@ -307,10 +306,10 @@ describe('AC-10 — 로그아웃', () => {
   })
 
   it('revenueCatLogout이 clearSession보다 먼저 호출됨 (순서 보장)', async () => {
-    vi.mocked(showConfirmDialog).mockResolvedValue(true)
+    jest.mocked(showConfirmDialog).mockResolvedValue(true)
 
     const callOrder: string[] = []
-    vi.mocked(revenueCatLogout).mockImplementation(async () => {
+    jest.mocked(revenueCatLogout).mockImplementation(async () => {
       callOrder.push('revenueCat')
     })
     mockClearSession.mockImplementation(() => {
@@ -349,12 +348,12 @@ describe('AC-11 — 개인정보처리방침 / 이용약관', () => {
     const { getByText } = renderScreen()
 
     fireEvent.press(getByText('개인정보처리방침'))
-    const privacyURL = vi.mocked(Linking.openURL).mock.calls[0][0]
+    const privacyURL = jest.mocked(Linking.openURL).mock.calls[0][0]
 
-    vi.mocked(Linking.openURL).mockClear()
+    jest.mocked(Linking.openURL).mockClear()
 
     fireEvent.press(getByText('이용약관'))
-    const termsURL = vi.mocked(Linking.openURL).mock.calls[0][0]
+    const termsURL = jest.mocked(Linking.openURL).mock.calls[0][0]
 
     expect(privacyURL).not.toBe(termsURL)
   })

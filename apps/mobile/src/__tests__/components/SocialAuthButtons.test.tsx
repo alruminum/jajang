@@ -12,87 +12,77 @@
  * - Google 성공 → onSuccess('google', idToken)
  */
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { Alert, Platform } from 'react-native';
 
 // ─── 네이티브 SDK Mock ───────────────────────────────────────────────────────
-const mockApplePerformRequest = vi.fn();
+const mockApplePerformRequest = jest.fn();
 const APPLE_CANCELED_CODE = 'CANCELED';
 
-vi.mock('@invertase/react-native-apple-authentication', () => ({
+jest.mock('@invertase/react-native-apple-authentication', () => ({
   default: {
     performRequest: (...args: unknown[]) => mockApplePerformRequest(...args),
     Operation: { LOGIN: 'LOGIN' },
     Scope: { EMAIL: 'EMAIL', FULL_NAME: 'FULL_NAME' },
-    Error: { CANCELED: APPLE_CANCELED_CODE },
+    Error: { CANCELED: 'CANCELED' },
   },
 }));
 
-const mockGoogleHasPlayServices = vi.fn();
-const mockGoogleSignIn = vi.fn();
+const mockGoogleHasPlayServices = jest.fn();
+const mockGoogleSignIn = jest.fn();
 
-vi.mock('@react-native-google-signin/google-signin', () => ({
+jest.mock('@react-native-google-signin/google-signin', () => ({
   GoogleSignin: {
     hasPlayServices: (...args: unknown[]) => mockGoogleHasPlayServices(...args),
     signIn: (...args: unknown[]) => mockGoogleSignIn(...args),
   },
 }));
 
-const mockAlertFn = vi.fn();
-
-// Platform은 각 테스트에서 재정의
-let currentPlatformOS = 'ios';
-
-vi.mock('react-native', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    Alert: { alert: mockAlertFn },
-    Platform: {
-      get OS() { return currentPlatformOS; },
-      select: (obj: Record<string, unknown>) => obj[currentPlatformOS] ?? obj['default'],
-    },
-  };
-});
-
 import SocialAuthButtons from '@components/SocialAuthButtons';
 
+let mockAlertSpy: jest.SpyInstance;
+
 beforeEach(() => {
-  vi.clearAllMocks();
-  currentPlatformOS = 'ios';
+  jest.clearAllMocks();
+  jest.replaceProperty(Platform, 'OS', 'ios');
+  mockAlertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
   mockGoogleHasPlayServices.mockResolvedValue(true);
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
 });
 
 // ─── 버튼 노출 조건 ──────────────────────────────────────────────────────────
 describe('REQ-SOCIAL-BUTTONS: 버튼 노출 조건', () => {
   it('iOS에서 Google 버튼이 노출된다', () => {
-    currentPlatformOS = 'ios';
+    jest.replaceProperty(Platform, 'OS', 'ios');
     const { getByLabelText } = render(
-      <SocialAuthButtons onSuccess={vi.fn()} />,
+      <SocialAuthButtons onSuccess={jest.fn()} />,
     );
     expect(getByLabelText('Google로 계속하기')).toBeTruthy();
   });
 
   it('iOS에서 Apple 버튼이 노출된다 (PRD F1: iOS 필수)', () => {
-    currentPlatformOS = 'ios';
+    jest.replaceProperty(Platform, 'OS', 'ios');
     const { getByLabelText } = render(
-      <SocialAuthButtons onSuccess={vi.fn()} />,
+      <SocialAuthButtons onSuccess={jest.fn()} />,
     );
     expect(getByLabelText('Apple로 계속하기')).toBeTruthy();
   });
 
   it('Android에서 Google 버튼이 노출된다', () => {
-    currentPlatformOS = 'android';
+    jest.replaceProperty(Platform, 'OS', 'android');
     const { getByLabelText } = render(
-      <SocialAuthButtons onSuccess={vi.fn()} />,
+      <SocialAuthButtons onSuccess={jest.fn()} />,
     );
     expect(getByLabelText('Google로 계속하기')).toBeTruthy();
   });
 
   it('Android에서 Apple 버튼이 노출되지 않는다', () => {
-    currentPlatformOS = 'android';
+    jest.replaceProperty(Platform, 'OS', 'android');
     const { queryByLabelText } = render(
-      <SocialAuthButtons onSuccess={vi.fn()} />,
+      <SocialAuthButtons onSuccess={jest.fn()} />,
     );
     expect(queryByLabelText('Apple로 계속하기')).toBeNull();
   });
@@ -102,7 +92,7 @@ describe('REQ-SOCIAL-BUTTONS: 버튼 노출 조건', () => {
 describe('REQ-SOCIAL-BUTTONS: Apple 로그인 처리', () => {
   it('Apple 로그인 성공 시 onSuccess("apple", identityToken)를 호출한다', async () => {
     mockApplePerformRequest.mockResolvedValueOnce({ identityToken: 'apple-identity-abc' });
-    const onSuccess = vi.fn();
+    const onSuccess = jest.fn();
 
     const { getByLabelText } = render(
       <SocialAuthButtons onSuccess={onSuccess} />,
@@ -118,10 +108,10 @@ describe('REQ-SOCIAL-BUTTONS: Apple 로그인 처리', () => {
   it('Apple 취소 (CANCELED 에러코드) 시 onError를 호출하지 않는다', async () => {
     const cancelError = Object.assign(new Error('Canceled'), { code: APPLE_CANCELED_CODE });
     mockApplePerformRequest.mockRejectedValueOnce(cancelError);
-    const onError = vi.fn();
+    const onError = jest.fn();
 
     const { getByLabelText } = render(
-      <SocialAuthButtons onSuccess={vi.fn()} onError={onError} />,
+      <SocialAuthButtons onSuccess={jest.fn()} onError={onError} />,
     );
 
     fireEvent.press(getByLabelText('Apple로 계속하기'));
@@ -136,22 +126,22 @@ describe('REQ-SOCIAL-BUTTONS: Apple 로그인 처리', () => {
     mockApplePerformRequest.mockRejectedValueOnce(cancelError);
 
     const { getByLabelText } = render(
-      <SocialAuthButtons onSuccess={vi.fn()} />,
+      <SocialAuthButtons onSuccess={jest.fn()} />,
     );
 
     fireEvent.press(getByLabelText('Apple로 계속하기'));
 
     await waitFor(() => {
-      expect(mockAlertFn).not.toHaveBeenCalled();
+      expect(mockAlertSpy).not.toHaveBeenCalled();
     });
   });
 
   it('Apple identityToken이 없으면 onError를 호출한다', async () => {
     mockApplePerformRequest.mockResolvedValueOnce({ identityToken: null });
-    const onError = vi.fn();
+    const onError = jest.fn();
 
     const { getByLabelText } = render(
-      <SocialAuthButtons onSuccess={vi.fn()} onError={onError} />,
+      <SocialAuthButtons onSuccess={jest.fn()} onError={onError} />,
     );
 
     fireEvent.press(getByLabelText('Apple로 계속하기'));
@@ -166,13 +156,13 @@ describe('REQ-SOCIAL-BUTTONS: Apple 로그인 처리', () => {
     mockApplePerformRequest.mockRejectedValueOnce(unexpectedError);
 
     const { getByLabelText } = render(
-      <SocialAuthButtons onSuccess={vi.fn()} />,
+      <SocialAuthButtons onSuccess={jest.fn()} />,
     );
 
     fireEvent.press(getByLabelText('Apple로 계속하기'));
 
     await waitFor(() => {
-      expect(mockAlertFn).toHaveBeenCalledWith('Apple 로그인 실패', expect.any(String));
+      expect(mockAlertSpy).toHaveBeenCalledWith('Apple 로그인 실패', expect.any(String));
     });
   });
 });
@@ -181,7 +171,7 @@ describe('REQ-SOCIAL-BUTTONS: Apple 로그인 처리', () => {
 describe('REQ-SOCIAL-BUTTONS: Google 로그인 처리', () => {
   it('Google 로그인 성공 시 onSuccess("google", idToken)를 호출한다', async () => {
     mockGoogleSignIn.mockResolvedValueOnce({ idToken: 'google-id-token-xyz' });
-    const onSuccess = vi.fn();
+    const onSuccess = jest.fn();
 
     const { getByLabelText } = render(
       <SocialAuthButtons onSuccess={onSuccess} />,
@@ -197,10 +187,10 @@ describe('REQ-SOCIAL-BUTTONS: Google 로그인 처리', () => {
   it('Google 취소 (코드 12501) 시 onError를 호출하지 않는다', async () => {
     const cancelError = Object.assign(new Error('User cancelled'), { code: 12501 });
     mockGoogleSignIn.mockRejectedValueOnce(cancelError);
-    const onError = vi.fn();
+    const onError = jest.fn();
 
     const { getByLabelText } = render(
-      <SocialAuthButtons onSuccess={vi.fn()} onError={onError} />,
+      <SocialAuthButtons onSuccess={jest.fn()} onError={onError} />,
     );
 
     fireEvent.press(getByLabelText('Google로 계속하기'));
@@ -215,22 +205,22 @@ describe('REQ-SOCIAL-BUTTONS: Google 로그인 처리', () => {
     mockGoogleSignIn.mockRejectedValueOnce(cancelError);
 
     const { getByLabelText } = render(
-      <SocialAuthButtons onSuccess={vi.fn()} />,
+      <SocialAuthButtons onSuccess={jest.fn()} />,
     );
 
     fireEvent.press(getByLabelText('Google로 계속하기'));
 
     await waitFor(() => {
-      expect(mockAlertFn).not.toHaveBeenCalled();
+      expect(mockAlertSpy).not.toHaveBeenCalled();
     });
   });
 
   it('Google idToken이 없으면 onError를 호출한다', async () => {
     mockGoogleSignIn.mockResolvedValueOnce({ idToken: null });
-    const onError = vi.fn();
+    const onError = jest.fn();
 
     const { getByLabelText } = render(
-      <SocialAuthButtons onSuccess={vi.fn()} onError={onError} />,
+      <SocialAuthButtons onSuccess={jest.fn()} onError={onError} />,
     );
 
     fireEvent.press(getByLabelText('Google로 계속하기'));
@@ -245,13 +235,13 @@ describe('REQ-SOCIAL-BUTTONS: Google 로그인 처리', () => {
     mockGoogleSignIn.mockRejectedValueOnce(unexpectedError);
 
     const { getByLabelText } = render(
-      <SocialAuthButtons onSuccess={vi.fn()} />,
+      <SocialAuthButtons onSuccess={jest.fn()} />,
     );
 
     fireEvent.press(getByLabelText('Google로 계속하기'));
 
     await waitFor(() => {
-      expect(mockAlertFn).toHaveBeenCalledWith('Google 로그인 실패', expect.any(String));
+      expect(mockAlertSpy).toHaveBeenCalledWith('Google 로그인 실패', expect.any(String));
     });
   });
 });

@@ -10,16 +10,15 @@
  * - pref='light' → OS scheme 무관하게 isDark=false, colors=lightColors
  */
 
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 // react-native — useColorScheme만 mock (renderHook 미사용 → react-test-renderer 충돌 없음)
-vi.mock('react-native', () => ({
-  useColorScheme: vi.fn(),
+jest.mock('react-native', () => ({
+  useColorScheme: jest.fn(),
 }));
 
 // useThemeStore mock — AsyncStorage 의존성 차단, pref 제어용
-vi.mock('../store/theme-store', () => ({
-  useThemeStore: vi.fn(),
+jest.mock('../store/theme-store', () => ({
+  useThemeStore: jest.fn(),
 }));
 
 import { useColorScheme } from 'react-native';
@@ -27,13 +26,13 @@ import { useThemeStore, ThemePref } from '../store/theme-store';
 import { useTheme } from '@hooks/useTheme';
 import { darkColors, lightColors } from '../theme/tokens';
 
-const mockUseColorScheme = vi.mocked(useColorScheme);
-const mockUseThemeStore = vi.mocked(useThemeStore);
+const mockUseColorScheme = jest.mocked(useColorScheme);
+const mockUseThemeStore = jest.mocked(useThemeStore);
 
 /** pref 값을 selector 패턴으로 주입 — store action의 setPref와 구분하기 위해 mockWithPref 명칭 사용 */
 function mockWithPref(pref: ThemePref) {
-  mockUseThemeStore.mockImplementation((selector: (s: { pref: ThemePref; setPref: ReturnType<typeof vi.fn> }) => unknown) =>
-    selector({ pref, setPref: vi.fn() })
+  mockUseThemeStore.mockImplementation((selector: (s: { pref: ThemePref; setPref: jest.Mock }) => unknown) =>
+    selector({ pref, setPref: jest.fn() })
   );
 }
 
@@ -46,7 +45,7 @@ describe('useTheme — scheme 분기 (pref=system)', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it("useColorScheme 'dark' → isDark === true", () => {
@@ -95,7 +94,7 @@ describe('useTheme — scheme 분기 (pref=system)', () => {
 // ────────────────────────────────────────────────
 describe('useTheme — ThemePref override', () => {
   afterEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it("pref='dark' → isDark=true (OS scheme='light'이어도)", () => {
@@ -145,7 +144,7 @@ describe('useTheme — 반환값 shape', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('{ colors, isDark } 두 키를 포함한 객체를 반환한다', () => {
@@ -181,7 +180,7 @@ describe('useTheme — light 모드 토큰 샘플', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('light 모드 colors.bgPrimary 는 lightColors.bgPrimary 와 같다', () => {

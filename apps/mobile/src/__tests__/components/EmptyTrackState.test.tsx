@@ -1,16 +1,15 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { create } from 'react-test-renderer';
 
-vi.mock('react-native', () => ({
+jest.mock('react-native', () => ({
   View: 'View',
   Text: 'Text',
   TouchableOpacity: 'TouchableOpacity',
   StyleSheet: { create: (s: any) => s },
 }));
 
-const mockNavigate = vi.fn();
-vi.mock('@react-navigation/native', () => ({
+const mockNavigate = jest.fn();
+jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: mockNavigate }),
 }));
 
@@ -18,7 +17,7 @@ import EmptyTrackState from '@components/EmptyTrackState';
 
 describe('EmptyTrackState', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it('"아직 자장가가 없어요" 제목 텍스트를 표시한다', () => {

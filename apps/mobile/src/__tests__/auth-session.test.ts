@@ -4,30 +4,29 @@
  * - saveSession: SecureStore 토큰 저장 + auth-store 상태 업데이트
  * - logout: SecureStore 토큰 삭제 + auth-store clearAuth 호출
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const mockSetAuth = vi.fn();
-const mockClearAuth = vi.fn();
+const mockSetAuth = jest.fn();
+const mockClearAuth = jest.fn();
 
-vi.mock('@store/auth-store', () => ({
-  useAuthStore: vi.fn(() => ({
+jest.mock('@store/auth-store', () => ({
+  useAuthStore: jest.fn(() => ({
     setAuth: mockSetAuth,
     clearAuth: mockClearAuth,
   })),
 }));
 
-vi.mock('expo-secure-store', () => ({
-  getItemAsync: vi.fn(),
-  setItemAsync: vi.fn(),
-  deleteItemAsync: vi.fn(),
+jest.mock('expo-secure-store', () => ({
+  getItemAsync: jest.fn(),
+  setItemAsync: jest.fn(),
+  deleteItemAsync: jest.fn(),
 }));
 
 import * as SecureStore from 'expo-secure-store';
 import { useAuth } from '@hooks/useAuth';
 import type { AuthResponse } from '@services/auth-api';
 
-const setItemAsync = SecureStore.setItemAsync as ReturnType<typeof vi.fn>;
-const deleteItemAsync = SecureStore.deleteItemAsync as ReturnType<typeof vi.fn>;
+const setItemAsync = SecureStore.setItemAsync as jest.Mock;
+const deleteItemAsync = SecureStore.deleteItemAsync as jest.Mock;
 
 const MOCK_RESPONSE: AuthResponse = {
   access_token: 'access-token-123',
@@ -38,7 +37,7 @@ const MOCK_RESPONSE: AuthResponse = {
 };
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  jest.clearAllMocks();
 });
 
 // ─── saveSession ──────────────────────────────────────────────────────────────

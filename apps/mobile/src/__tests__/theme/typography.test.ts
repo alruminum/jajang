@@ -7,7 +7,6 @@
  * - 기존 fontFamily, fontSize 등 non-color 속성은 변경되지 않는다
  */
 
-import { describe, it, expect } from 'vitest';
 import { getTypography, Typography } from '../../theme/typography';
 import { darkColors, lightColors } from '../../theme/tokens';
 

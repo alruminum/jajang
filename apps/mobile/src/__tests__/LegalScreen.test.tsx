@@ -5,14 +5,14 @@ import * as WebBrowser from 'expo-web-browser'
 // ---------------------------------------------------------------------------
 // Mocks
 // ---------------------------------------------------------------------------
-vi.mock('expo-web-browser', () => ({
-  openBrowserAsync: vi.fn().mockResolvedValue({ type: 'opened' }),
+jest.mock('expo-web-browser', () => ({
+  openBrowserAsync: jest.fn().mockResolvedValue({ type: 'opened' }),
   WebBrowserPresentationStyle: {
     PAGE_SHEET: 'PAGE_SHEET',
   },
 }))
 
-vi.mock('expo-constants', () => ({
+jest.mock('expo-constants', () => ({
   default: {
     expoConfig: {
       version: '1.2.3',
@@ -29,7 +29,7 @@ import { LEGAL_URLS } from '../config/legalUrls'
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-const mockedOpenBrowserAsync = vi.mocked(WebBrowser.openBrowserAsync)
+const mockedOpenBrowserAsync = jest.mocked(WebBrowser.openBrowserAsync)
 
 // ---------------------------------------------------------------------------
 // Test: LEGAL_URLS 상수
@@ -68,7 +68,7 @@ describe('LegalScreen — 렌더링 (REQ: 항목 표시)', () => {
   })
 
   it('expo-constants version이 null일 때 fallback "1.0.0"이 표시된다', () => {
-    vi.doMock('expo-constants', () => ({
+    jest.doMock('expo-constants', () => ({
       default: {
         expoConfig: null,
       },

@@ -6,7 +6,6 @@
 
 import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react-native'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { SongListItem } from '@components/SongListItem'
 import type { Song } from '@services/api/songs'
 
@@ -27,8 +26,8 @@ function makeProps(overrides: Partial<React.ComponentProps<typeof SongListItem>>
     isSelected: false,
     isPreviewPlaying: false,
     isPreviewLoading: false,
-    onSelect: vi.fn(),
-    onPreviewToggle: vi.fn(),
+    onSelect: jest.fn(),
+    onPreviewToggle: jest.fn(),
     ...overrides,
   }
 }
@@ -118,22 +117,22 @@ describe('SongListItem — accessibility', () => {
 // ────────────────────────────────────────────
 describe('SongListItem — 이벤트 핸들러', () => {
   it('곡 아이템 탭 시 onSelect가 1회 호출된다', () => {
-    const onSelect = vi.fn()
+    const onSelect = jest.fn()
     render(<SongListItem {...makeProps({ onSelect })} />)
     fireEvent.press(screen.getByLabelText('자장가 선택'))
     expect(onSelect).toHaveBeenCalledTimes(1)
   })
 
   it('미리듣기 버튼 탭 시 onPreviewToggle이 1회 호출된다', () => {
-    const onPreviewToggle = vi.fn()
+    const onPreviewToggle = jest.fn()
     render(<SongListItem {...makeProps({ onPreviewToggle })} />)
     fireEvent.press(screen.getByLabelText('자장가 미리듣기'))
     expect(onPreviewToggle).toHaveBeenCalledTimes(1)
   })
 
   it('미리듣기 버튼 탭 시 onSelect는 호출되지 않는다 (이벤트 전파 분리)', () => {
-    const onSelect = vi.fn()
-    const onPreviewToggle = vi.fn()
+    const onSelect = jest.fn()
+    const onPreviewToggle = jest.fn()
     render(<SongListItem {...makeProps({ onSelect, onPreviewToggle })} />)
     fireEvent.press(screen.getByLabelText('자장가 미리듣기'))
     expect(onSelect).not.toHaveBeenCalled()

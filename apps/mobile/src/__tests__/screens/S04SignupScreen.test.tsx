@@ -12,35 +12,34 @@
  * - 소셜 로그인 실패(네트워크) → Alert
  */
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import { AxiosError } from 'axios';
 
 // ─── 의존 모듈 Mock ──────────────────────────────────────────────────────────
-const mockReplace = vi.fn();
-const mockNavigate = vi.fn();
+const mockReplace = jest.fn();
+const mockNavigate = jest.fn();
 
-vi.mock('@react-navigation/native', () => ({
+jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ replace: mockReplace, navigate: mockNavigate }),
 }));
 
-const mockSaveSession = vi.fn();
+const mockSaveSession = jest.fn();
 
-vi.mock('@hooks/useAuth', () => ({
+jest.mock('@hooks/useAuth', () => ({
   useAuth: () => ({ saveSession: mockSaveSession }),
 }));
 
-const mockEmailSignup = vi.fn();
-const mockSocialAuth = vi.fn();
+const mockEmailSignup = jest.fn();
+const mockSocialAuth = jest.fn();
 
-vi.mock('@services/auth-api', () => ({
+jest.mock('@services/auth-api', () => ({
   emailSignup: (...args: unknown[]) => mockEmailSignup(...args),
   socialAuth: (...args: unknown[]) => mockSocialAuth(...args),
 }));
 
 // SocialAuthButtons는 별도로 테스트하므로 단순 mock
-vi.mock('@components/SocialAuthButtons', () => ({
+jest.mock('@components/SocialAuthButtons', () => ({
   default: ({ onSuccess, onError }: {
     onSuccess: (provider: 'apple' | 'google', token: string) => void;
     onError?: (e: unknown) => void;
@@ -71,13 +70,9 @@ vi.mock('@components/SocialAuthButtons', () => ({
   },
 }));
 
-const mockAlertFn = vi.fn();
-vi.mock('react-native', async (importOriginal) => {
-  const actual = await importOriginal();
-  return { ...actual, Alert: { alert: mockAlertFn } };
-});
-
 import S04SignupScreen from '@screens/S04SignupScreen';
+
+let mockAlertFn: jest.SpyInstance;
 
 const MOCK_AUTH_RESPONSE = {
   access_token: 'token',
@@ -88,7 +83,12 @@ const MOCK_AUTH_RESPONSE = {
 };
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  jest.clearAllMocks();
+  mockAlertFn = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
 });
 
 // ─── 이메일 유효성 검사 ──────────────────────────────────────────────────────

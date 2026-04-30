@@ -4,42 +4,40 @@
  * 수용 기준: §8 수용 기준
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ─── __DEV__ 전역 (모듈 최상단 if (__DEV__) 분기 대비) ────────────────────────
-vi.hoisted(() => {
-  Object.defineProperty(globalThis, '__DEV__', {
-    value: false,
-    writable: true,
-    configurable: true,
-  });
+Object.defineProperty(globalThis, '__DEV__', {
+  value: false,
+  writable: true,
+  configurable: true,
 });
 
 // ─── Mocks (vi.mock은 vitest가 imports 위로 hoist) ───────────────────────────
-vi.mock('react-native-purchases', () => ({
+jest.mock('react-native-purchases', () => ({
+  __esModule: true,
   default: {
-    configure: vi.fn(),
-    logIn: vi.fn(),
-    logOut: vi.fn(),
-    getCustomerInfo: vi.fn(),
-    setLogLevel: vi.fn(),
-    addCustomerInfoUpdateListener: vi.fn(),
-    removeCustomerInfoUpdateListener: vi.fn(),
+    configure: jest.fn(),
+    logIn: jest.fn(),
+    logOut: jest.fn(),
+    getCustomerInfo: jest.fn(),
+    setLogLevel: jest.fn(),
+    addCustomerInfoUpdateListener: jest.fn(),
+    removeCustomerInfoUpdateListener: jest.fn(),
   },
   LOG_LEVEL: { DEBUG: 'DEBUG' },
 }));
 
-vi.mock('react-native', () => ({
+jest.mock('react-native', () => ({
   Platform: {
-    select: vi.fn(
+    select: jest.fn(
       (options: Record<string, string | undefined>) =>
         options.ios ?? options.default ?? '',
     ),
   },
 }));
 
-vi.mock('@store/auth-store', () => ({
-  useAuthStore: vi.fn(),
+jest.mock('@store/auth-store', () => ({
+  useAuthStore: jest.fn(),
 }));
 
 // ─── Subject under test ───────────────────────────────────────────────────────
@@ -91,7 +89,7 @@ function makeCustomerInfo(options?: {
 // ─── Tests ────────────────────────────────────────────────────────────────────
 describe('REQ-revenue-cat: revenue-cat 서비스', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
     process.env.REVENUECAT_IOS_API_KEY = 'ios-test-key';
     process.env.REVENUECAT_ANDROID_API_KEY = 'android-test-key';
   });
@@ -164,13 +162,13 @@ describe('REQ-revenue-cat: revenue-cat 서비스', () => {
     it('Purchases.configure를 1회 호출한다', () => {
       configurePurchases();
 
-      expect(vi.mocked(Purchases.configure)).toHaveBeenCalledTimes(1);
+      expect(jest.mocked(Purchases.configure)).toHaveBeenCalledTimes(1);
     });
 
     it('apiKey를 포함한 객체를 configure에 전달한다', () => {
       configurePurchases();
 
-      expect(vi.mocked(Purchases.configure)).toHaveBeenCalledWith(
+      expect(jest.mocked(Purchases.configure)).toHaveBeenCalledWith(
         expect.objectContaining({ apiKey: expect.any(String) }),
       );
     });
@@ -179,26 +177,26 @@ describe('REQ-revenue-cat: revenue-cat 서비스', () => {
       delete process.env.REVENUECAT_IOS_API_KEY;
       configurePurchases();
 
-      expect(vi.mocked(Purchases.configure)).toHaveBeenCalledWith({ apiKey: '' });
+      expect(jest.mocked(Purchases.configure)).toHaveBeenCalledWith({ apiKey: '' });
     });
   });
 
   // ─── revenueCatLogin ──────────────────────────────────────────────────────
   describe('revenueCatLogin — 수용 기준: 로그인 후 Purchases.logIn 호출', () => {
     it('Purchases.logIn에 userId를 전달한다', async () => {
-      vi.mocked(Purchases.logIn).mockResolvedValue({
+      jest.mocked(Purchases.logIn).mockResolvedValue({
         customerInfo: makeCustomerInfo(),
         created: false,
       });
 
       await revenueCatLogin('user-uuid-abc');
 
-      expect(vi.mocked(Purchases.logIn)).toHaveBeenCalledWith('user-uuid-abc');
+      expect(jest.mocked(Purchases.logIn)).toHaveBeenCalledWith('user-uuid-abc');
     });
 
     it('Purchases.logIn에서 받은 customerInfo를 반환한다', async () => {
       const fakeInfo = makeCustomerInfo({ hasPremiumEntitlement: true, periodType: 'TRIAL' });
-      vi.mocked(Purchases.logIn).mockResolvedValue({
+      jest.mocked(Purchases.logIn).mockResolvedValue({
         customerInfo: fakeInfo,
         created: true,
       });
@@ -209,7 +207,7 @@ describe('REQ-revenue-cat: revenue-cat 서비스', () => {
     });
 
     it('Purchases.logIn 실패 시 에러를 그대로 throw한다', async () => {
-      vi.mocked(Purchases.logIn).mockRejectedValue(new Error('network error'));
+      jest.mocked(Purchases.logIn).mockRejectedValue(new Error('network error'));
 
       await expect(revenueCatLogin('user-uuid-abc')).rejects.toThrow('network error');
     });
@@ -219,11 +217,11 @@ describe('REQ-revenue-cat: revenue-cat 서비스', () => {
   describe('getCustomerInfo — 수용 기준: 포그라운드 복귀 시 재조회', () => {
     it('Purchases.getCustomerInfo를 호출하고 결과를 반환한다', async () => {
       const fakeInfo = makeCustomerInfo();
-      vi.mocked(Purchases.getCustomerInfo).mockResolvedValue(fakeInfo);
+      jest.mocked(Purchases.getCustomerInfo).mockResolvedValue(fakeInfo);
 
       const result = await getCustomerInfo();
 
-      expect(vi.mocked(Purchases.getCustomerInfo)).toHaveBeenCalledTimes(1);
+      expect(jest.mocked(Purchases.getCustomerInfo)).toHaveBeenCalledTimes(1);
       expect(result).toBe(fakeInfo);
     });
   });
@@ -231,29 +229,29 @@ describe('REQ-revenue-cat: revenue-cat 서비스', () => {
   // ─── revenueCatLogout ─────────────────────────────────────────────────────
   describe('revenueCatLogout — 수용 기준: 로그아웃 처리', () => {
     it('Purchases.logOut을 호출한다', async () => {
-      vi.mocked(Purchases.logOut).mockResolvedValue(makeCustomerInfo());
+      jest.mocked(Purchases.logOut).mockResolvedValue(makeCustomerInfo());
 
       await revenueCatLogout();
 
-      expect(vi.mocked(Purchases.logOut)).toHaveBeenCalledTimes(1);
+      expect(jest.mocked(Purchases.logOut)).toHaveBeenCalledTimes(1);
     });
   });
 
   // ─── addCustomerInfoListener ──────────────────────────────────────────────
   describe('addCustomerInfoListener — 수용 기준: 실시간 구독 상태 반영', () => {
     it('Purchases.addCustomerInfoUpdateListener에 callback을 등록한다', () => {
-      const cb = vi.fn();
+      const cb = jest.fn();
       addCustomerInfoListener(cb);
 
-      expect(vi.mocked(Purchases.addCustomerInfoUpdateListener)).toHaveBeenCalledWith(cb);
+      expect(jest.mocked(Purchases.addCustomerInfoUpdateListener)).toHaveBeenCalledWith(cb);
     });
 
     it('반환된 cleanup 함수를 호출하면 removeCustomerInfoUpdateListener가 실행된다', () => {
-      const cb = vi.fn();
+      const cb = jest.fn();
       const remove = addCustomerInfoListener(cb);
       remove();
 
-      expect(vi.mocked(Purchases.removeCustomerInfoUpdateListener)).toHaveBeenCalledWith(cb);
+      expect(jest.mocked(Purchases.removeCustomerInfoUpdateListener)).toHaveBeenCalledWith(cb);
     });
   });
 });

@@ -1,9 +1,8 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { create, act } from 'react-test-renderer';
 
 // --- React Native 모킹 ---
-vi.mock('react-native', () => {
+jest.mock('react-native', () => {
   const React = require('react');
   return {
     View: 'View',
@@ -32,7 +31,7 @@ vi.mock('react-native', () => {
   };
 });
 
-vi.mock('react-native-safe-area-context', () => {
+jest.mock('react-native-safe-area-context', () => {
   const React = require('react');
   return {
     SafeAreaView: ({ children }: any) =>
@@ -41,51 +40,52 @@ vi.mock('react-native-safe-area-context', () => {
 });
 
 // --- 네비게이션 ---
-const mockNavigate = vi.fn();
-vi.mock('@react-navigation/native', () => ({
+const mockNavigate = jest.fn();
+jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: mockNavigate }),
   useFocusEffect: (cb: Function) => {
     // 포커스 시 즉시 콜백 실행 (테스트에서 마운트 시 트리거)
-    React.useEffect(() => {
+    const { useEffect } = require('react');
+    useEffect(() => {
       cb();
     }, []);
   },
 }));
 
 // --- AsyncStorage ---
-const mockAsyncStorage = vi.hoisted(() => ({
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-}));
-vi.mock('@react-native-async-storage/async-storage', () => ({
+const mockAsyncStorage = {
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+};
+jest.mock('@react-native-async-storage/async-storage', () => ({
   default: mockAsyncStorage,
 }));
 
 // --- AuthStore ---
-vi.mock('@store/auth-store', () => ({
-  useAuthStore: vi.fn(() => ({ entitlement: 'trial' })),
+jest.mock('@store/auth-store', () => ({
+  useAuthStore: jest.fn(() => ({ entitlement: 'trial' })),
 }));
 
 // --- tracks-api ---
-const mockGetMyTracks = vi.fn();
-const mockGetNewlyCompletedTrack = vi.fn();
-vi.mock('@services/tracks-api', () => ({
+const mockGetMyTracks = jest.fn();
+const mockGetNewlyCompletedTrack = jest.fn();
+jest.mock('@services/tracks-api', () => ({
   getMyTracks: (...args: any[]) => mockGetMyTracks(...args),
   getNewlyCompletedTrack: (...args: any[]) => mockGetNewlyCompletedTrack(...args),
 }));
 
 // --- 자식 컴포넌트 모킹 (홈 화면 로직만 집중 테스트) ---
-vi.mock('@components/TrialBadge', () => ({ default: () => null }));
-vi.mock('@components/TrialExpiryBanner', () => ({ default: () => null }));
-vi.mock('@components/EmptyTrackState', () => ({
-  default: () => React.createElement('Text', null, 'EmptyTrackState'),
+jest.mock('@components/TrialBadge', () => ({ default: () => null }));
+jest.mock('@components/TrialExpiryBanner', () => ({ default: () => null }));
+jest.mock('@components/EmptyTrackState', () => ({
+  default: () => require('react').createElement('Text', null, 'EmptyTrackState'),
 }));
-vi.mock('@components/CompletedTrackCard', () => ({
+jest.mock('@components/CompletedTrackCard', () => ({
   default: ({ track, onDismiss }: any) =>
-    React.createElement(
+    require('react').createElement(
       'TouchableOpacity',
       { onPress: onDismiss, accessibilityLabel: 'completed-card-dismiss' },
-      React.createElement('Text', null, `CompletedTrackCard:${track.id}`),
+      require('react').createElement('Text', null, `CompletedTrackCard:${track.id}`),
     ),
 }));
 
@@ -104,7 +104,7 @@ const makeTrack = (overrides: Record<string, any> = {}) => ({
 
 describe('S06HomeScreen', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
     mockGetMyTracks.mockResolvedValue([]);
     mockGetNewlyCompletedTrack.mockResolvedValue(null);
     mockAsyncStorage.getItem.mockResolvedValue(null);

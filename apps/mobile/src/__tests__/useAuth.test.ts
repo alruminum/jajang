@@ -13,11 +13,11 @@ import { renderHook, act } from '@testing-library/react-native';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
-const mockSetAuth = vi.fn();
-const mockClearAuth = vi.fn();
-const mockSetEntitlement = vi.fn();
+const mockSetAuth = jest.fn();
+const mockClearAuth = jest.fn();
+const mockSetEntitlement = jest.fn();
 
-vi.mock('@store/auth-store', () => ({
+jest.mock('@store/auth-store', () => ({
   useAuthStore: () => ({
     setAuth: mockSetAuth,
     clearAuth: mockClearAuth,
@@ -25,23 +25,23 @@ vi.mock('@store/auth-store', () => ({
   }),
 }));
 
-vi.mock('expo-secure-store', () => ({
-  setItemAsync: vi.fn().mockResolvedValue(undefined),
-  deleteItemAsync: vi.fn().mockResolvedValue(undefined),
-  getItemAsync: vi.fn().mockResolvedValue(null),
+jest.mock('expo-secure-store', () => ({
+  setItemAsync: jest.fn().mockResolvedValue(undefined),
+  deleteItemAsync: jest.fn().mockResolvedValue(undefined),
+  getItemAsync: jest.fn().mockResolvedValue(null),
 }));
 
-vi.mock('@hooks/useConsentFlag', () => ({
-  clearConsentFlag: vi.fn().mockResolvedValue(undefined),
+jest.mock('@hooks/useConsentFlag', () => ({
+  clearConsentFlag: jest.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock('@react-navigation/native', () => ({
-  useNavigation: vi.fn(() => ({ reset: vi.fn() })),
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: jest.fn(() => ({ reset: jest.fn() })),
 }));
 
-vi.mock('@react-navigation/native-stack', () => ({}));
+jest.mock('@react-navigation/native-stack', () => ({}));
 
-vi.mock('@navigation/types', () => ({}));
+jest.mock('@navigation/types', () => ({}));
 
 // ─── 임포트 (mock 선언 이후) ──────────────────────────────────────────────────
 
@@ -61,7 +61,7 @@ const mockAuthResponse = {
 
 describe('useAuth (REQ-SESSION)', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   // ─── REQ-SESSION-01: saveSession ───────────────────────────────────────────
@@ -160,7 +160,7 @@ describe('useAuth (REQ-SESSION)', () => {
 
     it('SecureStore 삭제 완료 후 clearAuth가 호출된다 (순서 보장)', async () => {
       const callOrder: string[] = [];
-      (SecureStore.deleteItemAsync as ReturnType<typeof vi.fn>).mockImplementation(
+      (SecureStore.deleteItemAsync as jest.Mock).mockImplementation(
         async (key: string) => { callOrder.push(`delete:${key}`); },
       );
       mockClearAuth.mockImplementation(() => { callOrder.push('clearAuth'); });
