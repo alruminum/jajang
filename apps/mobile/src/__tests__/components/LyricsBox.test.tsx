@@ -52,11 +52,11 @@ describe('LyricsBox — 인터페이스 contract (impl/09 §3)', () => {
   it('6곡 모든 valid songKey 에 대해 박스가 렌더된다 (출시 시점 가사 준비됨)', () => {
     for (const key of VALID_KEYS) {
       const title = SONG_NAMES[key];
-      expect(LYRICS[key], `LYRICS[${key}] must exist`).toBeTruthy();
-      expect(title, `SONG_NAMES[${key}] must exist`).toBeTruthy();
+      expect(LYRICS[key]).toBeTruthy(); // LYRICS[${key}] must exist
+      expect(title).toBeTruthy(); // SONG_NAMES[${key}] must exist
 
-      const { getByText, unmount } = render(<LyricsBox songKey={key} mode="preview" />);
-      expect(getByText(title as string)).toBeTruthy();
+      const { getAllByText, unmount } = render(<LyricsBox songKey={key} mode="preview" />);
+      expect(getAllByText(title as string).length).toBeGreaterThan(0);
       unmount();
     }
   });

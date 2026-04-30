@@ -204,9 +204,9 @@ export function RecordScreen() {
     await stopAndNavigate();
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (isHummingMode) {
-      stopBgm();
+      await stopBgm();
     }
     Alert.alert('녹음을 취소할까요?', '', [
       { text: '계속 녹음', style: 'cancel' },

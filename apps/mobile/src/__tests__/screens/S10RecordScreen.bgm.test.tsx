@@ -87,15 +87,15 @@ function applyBgmImpl() {
     }) => ({
       isPlaying: enabled && mockBgmState.isPlaying,
       loadFailed: mockBgmState.loadFailed,
-      startBgm: async () => {
+      startBgm: jest.fn(async () => {
         await startBgmMock()
         if (mockBgmState.loadFailed) onLoadError?.()
         else mockBgmState.isPlaying = true
-      },
-      stopBgm: async () => {
+      }),
+      stopBgm: jest.fn(async () => {
         await stopBgmMock()
         mockBgmState.isPlaying = false
-      },
+      }),
     }),
   )
 }
@@ -207,7 +207,7 @@ describe('RecordScreen — 허밍 모드 BGM 통합 (impl/10 §4~§5)', () => {
     await advanceCountdown()
 
     const stopBtn = await findByTestId('stop-recording-button')
-    await act(async () => {
+    act(() => {
       stopBtn.props.onPress?.()
     })
 
@@ -231,7 +231,7 @@ describe('RecordScreen — 허밍 모드 BGM 통합 (impl/10 §4~§5)', () => {
     await advanceCountdown()
 
     const cancelBtn = await findByTestId('cancel-recording-button')
-    await act(async () => {
+    act(() => {
       cancelBtn.props.onPress?.()
     })
 
@@ -246,10 +246,10 @@ describe('RecordScreen — 허밍 모드 BGM 통합 (impl/10 §4~§5)', () => {
     expect(startBgmMock).toHaveBeenCalledTimes(1)
 
     const restartBtn = await findByTestId('restart-recording-button')
-    await act(async () => {
+    act(() => {
       restartBtn.props.onPress?.()
     })
-    expect(stopBgmMock).toHaveBeenCalled()
+    await waitFor(() => expect(stopBgmMock).toHaveBeenCalled())
 
     await advanceCountdown()
     await waitFor(() => expect(startBgmMock).toHaveBeenCalledTimes(2))
