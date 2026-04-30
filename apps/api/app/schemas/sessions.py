@@ -26,7 +26,7 @@ class RecordingRegisterResponse(BaseModel):
 
 
 class GenerateRequest(BaseModel):
-    pass   # session_id는 path param
+    pass  # reserved — session_id는 path param
 
 
 class SessionStatusResponse(BaseModel):
