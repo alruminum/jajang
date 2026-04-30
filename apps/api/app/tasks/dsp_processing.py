@@ -21,6 +21,7 @@ from app.models.generation_counter import GenerationCounter
 # 이 두 모델을 참조하므로, mapper configure 시 찾을 수 있어야 한다.
 from app.models.voice_sample import VoiceSample  # noqa: F401
 from app.models.generated_track import GeneratedTrack  # noqa: F401
+from app.services.counter_service import PAID_ENTITLEMENTS
 from app.services.dsp import get_dsp_service
 from app.services.storage_service import upload_mp3, delete_object
 
@@ -172,7 +173,7 @@ def dsp_process_task(
                 .values(schedule_delete_at=schedule_delete)
             )
             # 무료 유저만 카운터 +1 (generation.py 패턴 준용 — last_generated_at + updated_at 함께)
-            if entitlement == "free":
+            if entitlement not in PAID_ENTITLEMENTS:
                 db.execute(
                     update(GenerationCounter)
                     .where(GenerationCounter.user_id == _user_id)
