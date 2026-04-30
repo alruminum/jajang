@@ -39,8 +39,8 @@ jest.mock('@services/auth-api', () => ({
 }));
 
 // SocialAuthButtons는 별도로 테스트하므로 단순 mock
-jest.mock('@components/SocialAuthButtons', () => ({
-  default: ({ onSuccess, onError }: {
+jest.mock('@components/SocialAuthButtons', () => {
+  const mockFn = ({ onSuccess, onError }: {
     onSuccess: (provider: 'apple' | 'google', token: string) => void;
     onError?: (e: unknown) => void;
   }) => {
@@ -67,8 +67,13 @@ jest.mock('@components/SocialAuthButtons', () => ({
         React.createElement(Text, null, 'Social 실패'),
       ),
     );
-  },
-}));
+  };
+  return {
+    __esModule: true,
+    default: mockFn,
+    SocialAuthButtons: mockFn,
+  };
+});
 
 import S04SignupScreen from '@screens/S04SignupScreen';
 
@@ -255,7 +260,7 @@ describe('REQ-S04: 로딩 상태 처리', () => {
     fireEvent.press(getByLabelText('이메일로 가입하기'));
 
     const button = getByLabelText('이메일로 가입하기');
-    expect(button.props.disabled).toBe(true);
+    expect(button.props.accessibilityState?.disabled ?? button.props.disabled).toBe(true);
   });
 
   it('API 호출 중 버튼 텍스트가 "가입 중..."으로 변경된다', async () => {
