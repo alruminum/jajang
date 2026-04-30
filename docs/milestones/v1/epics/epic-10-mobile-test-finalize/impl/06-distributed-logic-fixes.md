@@ -180,11 +180,32 @@ bgmTracks 는 craft 데이터 — DSP 피벗 (v1.3.1) 후 트랙 변경 가능. 
 
 ## Verification (PR — batch 06)
 
-### 처리 결과 (전체 32 main fails → 0 main fails)
+### RETRY-1 정정 (validator CODE_VALIDATION FAIL)
 
-`npx jest` (main, 본 batch 적용 후): `Tests: 4 skipped, 594 passed, 598 total` — **0 failures**.
+**정정 내용 (2개 regression 수정)**:
 
-main baseline (564 PASS) → **594 PASS (+30)**.
+1. **Issue 1 — bugfix #142 regression 복구**: `AccountDeletionScreen.tsx` import 를 `expo-file-system/legacy` 로 복구. batch 06 초기 commit 에서 `expo-file-system` 으로 잘못 변경 → runtime `deleteAsync` throw.
+2. **Issue 2 — impl/12 폐기 feature 재도입 revert**: `RecordGuideScreen.tsx` 에서 `challengesApi` useEffect/UI 전체 제거 (PRD v1.2.1 §F2 폐기 + impl/12 410 Gone 처리). `S09RecordGuideScreen.test.tsx` REQ-08 it 삭제 (obsolete).
+
+**RETRY-1 실측** (`npx jest --no-coverage`):
+`Tests: 4 skipped, 593 passed, 597 total` — **0 failures**.
+
+REQ-08 삭제로 598 → 597 (-1).
+
+### TODO follow-up (GitHub 이슈 신설 필요)
+
+**AccountDeletion 탈퇴 성공 → Auth 스택 이동 happy-path 테스트 skip 잔존**
+- 위치: `apps/mobile/src/__tests__/screens/AccountDeletionScreen.test.tsx` (line 235 부근)
+- 내용: `it.skip('탈퇴 성공 시 ... Auth 스택으로 이동한다'...)` — TODO 주석 잔존.
+- 후속: `CommonActions.reset / navigation.dispatch` mock spy 패턴 도입 후 unskip. label `bug` + `v01`, milestone `Bugs`.
+
+---
+
+### 처리 결과 (원본 — 전체 32 main fails → 0 main fails)
+
+`npx jest` (main, batch 06 RETRY-1 적용 후): `Tests: 4 skipped, 593 passed, 597 total` — **0 failures**.
+
+main baseline (564 PASS) → **593 PASS (+29)**.
 
 ### sub-task 처리
 
@@ -194,16 +215,16 @@ main baseline (564 PASS) → **594 PASS (+30)**.
 | D-2 S08RecordModeScreen | `S08RecordModeScreen.test.tsx` | mode 폐기 정합 + .skip |
 | D-3 S10 BGM 3 | `S10RecordScreen.bgm.test.tsx` | `fireEvent.press` + `stopBgmMock` 직접 연결 + `applyBgmImpl` 단순화 |
 | D-4 S16 7 | `S16SettingsScreen.test.tsx` | mock spy 호출 + 텍스트 매칭 정정 |
-| D-5 AccountDeletion 1 | `AccountDeletionScreen.test.tsx` + src `AccountDeletionScreen.tsx` (`expo-file-system/legacy` → `expo-file-system`) | 정합 |
-| D-6 S09 logic 2 | `S09RecordGuideScreen.test.tsx` | `challengesApi` mock hoisting-safe (`jest.fn()` + `require()`) |
+| D-5 AccountDeletion 1 | `AccountDeletionScreen.test.tsx` | 비동기 chain + 1 it.skip (follow-up 이슈 필요) |
+| D-6 S09 logic 2 | `S09RecordGuideScreen.test.tsx` | challengesApi mock 제거 (impl/12 폐기 정합) |
 | D-7 bgmTracks 7 | `bgmTracks.test.ts` | expectation 갱신 |
 | D-8 SongListItem A11Y 1 | `SongListItem.test.tsx` | `getByAccessibilityState` → matcher 마이그레이션 |
 | D-9 LegalScreen 1 | `LegalScreen.test.tsx` | 동적 version |
 
-### 추가 변경 (테스트 정합 위해 product code 도)
+### 추가 변경
 
-- `src/screens/RecordGuideScreen.tsx` — `challengePhrase` (`challengesApi.getRandomPhrase`) `useState/useEffect` + UI 표시 추가. REQ-08 테스트가 spec 으로 요구한 동작 — 누락된 feature 보충.
-- `src/screens/AccountDeletionScreen.tsx` — `expo-file-system/legacy` → `expo-file-system` import 경로 정정.
+- `src/screens/AccountDeletionScreen.tsx` — `expo-file-system/legacy` import 복구 (bugfix #142).
+- `src/screens/RecordGuideScreen.tsx` — `challengesApi` useEffect/UI/import 전체 제거 (impl/12 정합).
 - `src/__tests__/screens/S09RecordGuideScreen.refactor.test.tsx` — hoisting-safe mock 패턴 + obsolete 테스트 skip (batch 07 unskip 대상 외 부분만).
 
 ### Skip 카운트 변동

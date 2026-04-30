@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -14,8 +14,6 @@ import type { MainStackParamList } from '../navigation/types';
 import { LyricsBox } from '../components/LyricsBox';
 import { getLyrics } from '../data/lyrics';
 import { SONG_NAMES } from '../services/songs';
-import { challengesApi } from '../services/api/challenges';
-
 type Mode = 'humming' | 'shush';
 type Props = NativeStackScreenProps<MainStackParamList, 'RecordGuide'>;
 
@@ -41,21 +39,11 @@ export function RecordGuideScreen({ navigation, route }: Props) {
   const songKey = rawSongKey ?? '';
 
   const [showPermissionModal, setShowPermissionModal] = useState(false);
-  const [challengePhrase, setChallengePhrase] = useState<string | null>(null);
 
   const guideItems = mode === 'humming' ? GUIDE_ITEMS_HUMMING : GUIDE_ITEMS_SHUSH;
   const showHeadphoneChip = mode === 'humming';
   const showLyricsBox = mode === 'humming';
   const lyricsAvailable = !!getLyrics(songKey) && !!SONG_NAMES[songKey];
-
-  useEffect(() => {
-    if (mode !== 'humming') return;
-    challengesApi.getRandomPhrase().then((res) => {
-      setChallengePhrase(res.phrase);
-    }).catch(() => {
-      // 로드 실패 시 무시
-    });
-  }, [mode]);
 
   const handleStartRecording = async () => {
     const current = await getRecordingPermissionsAsync();
@@ -101,10 +89,6 @@ export function RecordGuideScreen({ navigation, route }: Props) {
         lyricsAvailable
           ? <LyricsBox songKey={songKey} mode="preview" />
           : <Text style={styles.fallbackText}>허밍해 주세요</Text>
-      )}
-
-      {mode === 'humming' && challengePhrase != null && (
-        <Text style={styles.challengePhrase}>{`"${challengePhrase}"`}</Text>
       )}
 
       <Pressable
