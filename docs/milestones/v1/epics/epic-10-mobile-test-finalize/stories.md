@@ -51,11 +51,11 @@
 - [x] S04 — mock 으로 import 되는 모든 컴포넌트 식별 (`grep -E "jest\.mock\(.*components" src/__tests__/screens/S04SignupScreen.test.tsx`) 후 함수형 mock 으로 통일
   - 패턴: `jest.mock('@components/X', () => ({ __esModule: true, default: () => null, X: () => null }))`
 - [x] S05 동일 적용
-- [ ] S06 카테고리 A 6 fails — 동일 mock 패턴 적용
-- [ ] S06 카테고리 B 1 fail — text query regex 또는 `findByText` 비동기 변환
-- [ ] S06 카테고리 C 3 fails — 명시적 `unmount()` + `await waitFor` 보강
-- [ ] S06 카테고리 I 1 fail — fail 메시지 캡처 후 individual fix
-- [ ] 각 파일별 `npx jest <파일>` GREEN 확인
+- [x] S06 카테고리 A 6 fails — 동일 mock 패턴 적용
+- [x] S06 카테고리 B 1 fail — text query regex 또는 `findByText` 비동기 변환
+- [x] S06 카테고리 C 3 fails — 명시적 `unmount()` + `await waitFor` 보강
+- [x] S06 카테고리 I 1 fail — fail 메시지 캡처 후 individual fix
+- [x] 각 파일별 `npx jest <파일>` GREEN 확인
 
 ### 수용 기준
 

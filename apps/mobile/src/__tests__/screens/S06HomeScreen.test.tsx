@@ -54,12 +54,12 @@ jest.mock('@react-navigation/native', () => ({
 }));
 
 // --- AsyncStorage ---
-const mockAsyncStorage = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-};
 jest.mock('@react-native-async-storage/async-storage', () => ({
-  default: mockAsyncStorage,
+  __esModule: true,
+  default: {
+    getItem: jest.fn(),
+    setItem: jest.fn(),
+  },
 }));
 
 // --- AuthStore ---
@@ -76,13 +76,28 @@ jest.mock('@services/tracks-api', () => ({
   getNewlyCompletedTrack: (...args: any[]) => mockGetNewlyCompletedTrack(...args),
 }));
 
+// --- store/player-store ---
+jest.mock('@store/player-store', () => ({
+  __esModule: true,
+  usePlayerStore: jest.fn(() => ({ currentTrackId: null })),
+}));
+
+// --- hooks/useTrialExpiredGuard ---
+jest.mock('@hooks/useTrialExpiredGuard', () => ({
+  __esModule: true,
+  useTrialExpiredGuard: jest.fn(),
+}));
+
 // --- 자식 컴포넌트 모킹 (홈 화면 로직만 집중 테스트) ---
-jest.mock('@components/TrialBadge', () => ({ default: () => null }));
-jest.mock('@components/TrialExpiryBanner', () => ({ default: () => null }));
+jest.mock('@components/TrialBadge', () => ({ __esModule: true, default: () => null }));
+jest.mock('@components/TrialExpiryBanner', () => ({ __esModule: true, default: () => null }));
+jest.mock('@components/MiniPlayer', () => ({ __esModule: true, default: () => null }));
 jest.mock('@components/EmptyTrackState', () => ({
+  __esModule: true,
   default: () => require('react').createElement('Text', null, 'EmptyTrackState'),
 }));
 jest.mock('@components/CompletedTrackCard', () => ({
+  __esModule: true,
   default: ({ track, onDismiss }: any) =>
     require('react').createElement(
       'TouchableOpacity',
@@ -93,7 +108,41 @@ jest.mock('@components/CompletedTrackCard', () => ({
 
 import S06HomeScreen from '@screens/S06HomeScreen';
 
-const flushPromises = () => new Promise<void>(resolve => setTimeout(resolve, 0));
+// jest.requireMock — hoisting 우회 (factory 내 jest.fn 인스턴스 참조)
+const mockAsyncStorage = jest.requireMock('@react-native-async-storage/async-storage').default as {
+  getItem: jest.Mock;
+  setItem: jest.Mock;
+};
+
+const flushPromises = async () => {
+  // microtask 기반 — setTimeout(macrotask) 사용 시 act 블록 완료 전 렌더러 unmount 문제 회피
+  await Promise.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
+};
+
+// toJSON 트리에서 accessibilityLabel이 일치하는 노드를 재귀 탐색
+// tree.root는 async act 완료 후 unmounted 상태가 될 수 있으므로 toJSON 대안 사용
+function findByLabel(node: any, label: string): any {
+  if (!node) return undefined;
+  // 최상단이 배열인 경우 (toJSON 반환값)
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      const found = findByLabel(child, label);
+      if (found) return found;
+    }
+    return undefined;
+  }
+  if (node.props && node.props.accessibilityLabel === label) return node;
+  if (node.children) {
+    const children = Array.isArray(node.children) ? node.children : [node.children];
+    for (const child of children) {
+      const found = findByLabel(child, label);
+      if (found) return found;
+    }
+  }
+  return undefined;
+}
 
 const makeTrack = (overrides: Record<string, any> = {}) => ({
   id: 'track-1',
@@ -259,9 +308,9 @@ describe('S06HomeScreen', () => {
       tree = create(<S06HomeScreen />);
       await flushPromises();
     });
-    const ctaBtn = tree.root
-      .findAllByType('TouchableOpacity' as any)
-      .find((t: any) => t.props.accessibilityLabel === '새 자장가 만들기');
+    // act 밖에서 toJSON — status=completed 테스트와 동일 패턴
+    const json = tree.toJSON();
+    const ctaBtn = findByLabel(json, '새 자장가 만들기');
     expect(ctaBtn).toBeDefined();
     ctaBtn.props.onPress();
     expect(mockNavigate).toHaveBeenCalledWith('SongSelect');
@@ -278,9 +327,9 @@ describe('S06HomeScreen', () => {
       tree = create(<S06HomeScreen />);
       await flushPromises();
     });
-    const trackBtn = tree.root
-      .findAllByType('TouchableOpacity' as any)
-      .find((t: any) => t.props.accessibilityLabel === '브람스 자장가 재생');
+    // act 밖에서 toJSON — status=completed 테스트와 동일 패턴
+    const json = tree.toJSON();
+    const trackBtn = findByLabel(json, '브람스 자장가 재생');
     expect(trackBtn).toBeDefined();
   });
 
@@ -295,9 +344,9 @@ describe('S06HomeScreen', () => {
       tree = create(<S06HomeScreen />);
       await flushPromises();
     });
-    const trackBtn = tree.root
-      .findAllByType('TouchableOpacity' as any)
-      .find((t: any) => t.props.accessibilityLabel === '모차르트 자장가 재생');
+    // act 밖에서 toJSON — status=completed 테스트와 동일 패턴
+    const json = tree.toJSON();
+    const trackBtn = findByLabel(json, '모차르트 자장가 재생');
     expect(trackBtn).toBeDefined();
     trackBtn.props.onPress();
     expect(mockNavigate).toHaveBeenCalledWith('Play', { trackId: 'track-play-test' });
