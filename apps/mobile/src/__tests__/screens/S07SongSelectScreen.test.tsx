@@ -17,40 +17,40 @@
 
 import React from 'react'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react-native'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Alert } from 'react-native'
 
 // ────────────────────────────────────────────
 // 모듈 mock
 // ────────────────────────────────────────────
-vi.mock('@services/api/songs', () => ({
+jest.mock('@services/api/songs', () => ({
   songsApi: {
-    listSongs: vi.fn(),
-    getPreviewUrl: vi.fn(),
+    listSongs: jest.fn(),
+    getPreviewUrl: jest.fn(),
   },
 }))
 
-vi.mock('expo-audio', () => ({
-  createAudioPlayer: vi.fn(),
+jest.mock('expo-audio', () => ({
+  createAudioPlayer: jest.fn(),
 }))
 
-vi.mock('@store/recordingSlice', () => ({
-  useRecordingStore: vi.fn(),
+jest.mock('@store/recordingSlice', () => ({
+  useRecordingStore: jest.fn(),
 }))
 
-vi.mock('@store/authSlice', () => ({
-  useAuthStore: vi.fn(),
+jest.mock('@store/authSlice', () => ({
+  useAuthStore: jest.fn(),
 }))
 
 // useFocusEffect mock — focus 콜백을 즉시 실행하고, cleanup을 외부에서 호출 가능하게 노출.
 // unmount 시에도 cleanup이 호출되도록 React.useEffect의 cleanup return으로 위임 (AC-09 호환).
-const mockUseFocusEffect = vi.hoisted(() => ({
+const mockUseFocusEffect = {
   cleanup: null as (() => void) | null,
-}))
+}
 
-vi.mock('@react-navigation/native', () => ({
+jest.mock('@react-navigation/native', () => ({
   useFocusEffect: (cb: () => void | (() => void)) => {
-    React.useEffect(() => {
+    const { useEffect } = require('react')
+    useEffect(() => {
       const cleanup = cb()
       if (typeof cleanup === 'function') {
         mockUseFocusEffect.cleanup = cleanup
@@ -85,18 +85,18 @@ const MOCK_SONGS = [
 // mock player 객체
 function makeMockPlayer() {
   return {
-    play: vi.fn(),
-    pause: vi.fn(),
-    remove: vi.fn(),
-    addListener: vi.fn(() => ({ remove: vi.fn() })),
+    play: jest.fn(),
+    pause: jest.fn(),
+    remove: jest.fn(),
+    addListener: jest.fn(() => ({ remove: jest.fn() })),
   }
 }
 
 // mock navigation 객체
 function makeMockNavigation() {
   return {
-    navigate: vi.fn(),
-    goBack: vi.fn(),
+    navigate: jest.fn(),
+    goBack: jest.fn(),
   }
 }
 
@@ -106,10 +106,10 @@ function setupStoreMocks({
   entitlement = 'premium' as string,
   generationCount = 0,
 } = {}) {
-  const setSelectedSong = vi.fn()
-  const resetRecordingFlow = vi.fn()
+  const setSelectedSong = jest.fn()
+  const resetRecordingFlow = jest.fn()
 
-  vi.mocked(useRecordingStore).mockReturnValue({
+  jest.mocked(useRecordingStore).mockReturnValue({
     selectedSongKey,
     setSelectedSong,
     resetRecordingFlow,
@@ -117,13 +117,13 @@ function setupStoreMocks({
     localAudioUri: null,
     uploadedSampleId: null,
     qualityValidationPassed: null,
-    setRecordingMode: vi.fn(),
-    setLocalAudioUri: vi.fn(),
-    setUploadedSampleId: vi.fn(),
-    setQualityValidationPassed: vi.fn(),
+    setRecordingMode: jest.fn(),
+    setLocalAudioUri: jest.fn(),
+    setUploadedSampleId: jest.fn(),
+    setQualityValidationPassed: jest.fn(),
   })
 
-  vi.mocked(useAuthStore).mockReturnValue({
+  jest.mocked(useAuthStore).mockReturnValue({
     entitlement,
     generationCount,
   })
@@ -132,10 +132,10 @@ function setupStoreMocks({
 }
 
 beforeEach(() => {
-  vi.clearAllMocks()
+  jest.clearAllMocks()
   mockUseFocusEffect.cleanup = null
   // 기본: 곡 목록 API 성공
-  vi.mocked(songsApi.listSongs).mockResolvedValue({ songs: MOCK_SONGS })
+  jest.mocked(songsApi.listSongs).mockResolvedValue({ songs: MOCK_SONGS })
 })
 
 // ────────────────────────────────────────────
@@ -169,8 +169,8 @@ describe('S07SongSelectScreen — AC-01: 진입 시 곡 목록 표시', () => {
 
   it('API 실패 시 Alert.alert를 호출한다', async () => {
     setupStoreMocks()
-    vi.mocked(songsApi.listSongs).mockRejectedValueOnce(new Error('Network Error'))
-    const alertSpy = vi.spyOn(Alert, 'alert')
+    jest.mocked(songsApi.listSongs).mockRejectedValueOnce(new Error('Network Error'))
+    const alertSpy = jest.spyOn(Alert, 'alert')
     const navigation = makeMockNavigation()
 
     render(<SongSelectScreen navigation={navigation as any} route={{} as any} />)
@@ -314,8 +314,8 @@ describe('S07SongSelectScreen — AC-02: 미리듣기 재생 완료 자동 정�
   it('재생 완료(didJustFinish) 콜백 시 player.remove를 호출한다', async () => {
     setupStoreMocks()
     const mockPlayer = makeMockPlayer()
-    vi.mocked(createAudioPlayer).mockReturnValueOnce(mockPlayer as any)
-    vi.mocked(songsApi.getPreviewUrl).mockResolvedValueOnce({
+    jest.mocked(createAudioPlayer).mockReturnValueOnce(mockPlayer as any)
+    jest.mocked(songsApi.getPreviewUrl).mockResolvedValueOnce({
       song_key: 'brahms',
       preview_url: 'https://cdn.example.com/brahms.mp3',
       expires_in_seconds: 3600,
@@ -353,11 +353,11 @@ describe('S07SongSelectScreen — AC-03: 동시 미리듣기 방지', () => {
     const mockPlayer1 = makeMockPlayer()
     const mockPlayer2 = makeMockPlayer()
 
-    vi.mocked(createAudioPlayer)
+    jest.mocked(createAudioPlayer)
       .mockReturnValueOnce(mockPlayer1 as any)
       .mockReturnValueOnce(mockPlayer2 as any)
 
-    vi.mocked(songsApi.getPreviewUrl)
+    jest.mocked(songsApi.getPreviewUrl)
       .mockResolvedValueOnce({ song_key: 'brahms',  preview_url: 'https://cdn.example.com/brahms.mp3',  expires_in_seconds: 3600 })
       .mockResolvedValueOnce({ song_key: 'mozart',  preview_url: 'https://cdn.example.com/mozart.mp3',  expires_in_seconds: 3600 })
 
@@ -383,8 +383,8 @@ describe('S07SongSelectScreen — AC-03: 동시 미리듣기 방지', () => {
     setupStoreMocks()
 
     const mockPlayer = makeMockPlayer()
-    vi.mocked(createAudioPlayer).mockReturnValue(mockPlayer as any)
-    vi.mocked(songsApi.getPreviewUrl).mockResolvedValue({
+    jest.mocked(createAudioPlayer).mockReturnValue(mockPlayer as any)
+    jest.mocked(songsApi.getPreviewUrl).mockResolvedValue({
       song_key: 'brahms',
       preview_url: 'https://cdn.example.com/brahms.mp3',
       expires_in_seconds: 3600,
@@ -416,8 +416,8 @@ describe('S07SongSelectScreen — AC-09: 언마운트 시 사운드 정리', () 
     setupStoreMocks()
 
     const mockPlayer = makeMockPlayer()
-    vi.mocked(createAudioPlayer).mockReturnValue(mockPlayer as any)
-    vi.mocked(songsApi.getPreviewUrl).mockResolvedValue({
+    jest.mocked(createAudioPlayer).mockReturnValue(mockPlayer as any)
+    jest.mocked(songsApi.getPreviewUrl).mockResolvedValue({
       song_key: 'brahms',
       preview_url: 'https://cdn.example.com/brahms.mp3',
       expires_in_seconds: 3600,
@@ -447,8 +447,8 @@ describe('S07SongSelectScreen — #129: blur 시 미리듣기 정리', () => {
     setupStoreMocks()
 
     const mockPlayer = makeMockPlayer()
-    vi.mocked(createAudioPlayer).mockReturnValue(mockPlayer as any)
-    vi.mocked(songsApi.getPreviewUrl).mockResolvedValue({
+    jest.mocked(createAudioPlayer).mockReturnValue(mockPlayer as any)
+    jest.mocked(songsApi.getPreviewUrl).mockResolvedValue({
       song_key: 'brahms',
       preview_url: 'https://cdn.example.com/brahms.mp3',
       expires_in_seconds: 3600,
@@ -480,8 +480,8 @@ describe('S07SongSelectScreen — #129: blur 시 미리듣기 정리', () => {
 describe('S07SongSelectScreen — 미리듣기 API 실패 처리', () => {
   it('getPreviewUrl 실패 시 Alert.alert를 호출한다', async () => {
     setupStoreMocks()
-    vi.mocked(songsApi.getPreviewUrl).mockRejectedValueOnce(new Error('Forbidden'))
-    const alertSpy = vi.spyOn(Alert, 'alert')
+    jest.mocked(songsApi.getPreviewUrl).mockRejectedValueOnce(new Error('Forbidden'))
+    const alertSpy = jest.spyOn(Alert, 'alert')
 
     const navigation = makeMockNavigation()
     render(<SongSelectScreen navigation={navigation as any} route={{} as any} />)

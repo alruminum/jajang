@@ -8,7 +8,6 @@
  * - Colors 별칭이 darkColors 와 동일 참조 (하위 호환)
  */
 
-import { describe, it, expect } from 'vitest';
 import { darkColors, lightColors, Colors } from '../../theme/tokens';
 import type { ColorTokens } from '../../theme/tokens';
 

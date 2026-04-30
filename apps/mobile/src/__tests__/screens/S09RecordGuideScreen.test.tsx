@@ -10,26 +10,26 @@ import { Linking } from 'react-native'
 import { RecordGuideScreen } from '@screens/RecordGuideScreen'
 
 // ─── Mock: expo-audio (권한 API) ──────────────────────────────────────────────
-const mockGetPermissions = vi.fn()
-const mockRequestPermissions = vi.fn()
+const mockGetPermissions = jest.fn()
+const mockRequestPermissions = jest.fn()
 
-vi.mock('expo-audio', () => ({
+jest.mock('expo-audio', () => ({
   getRecordingPermissionsAsync: mockGetPermissions,
   requestRecordingPermissionsAsync: mockRequestPermissions,
-  setAudioModeAsync: vi.fn().mockResolvedValue(undefined),
+  setAudioModeAsync: jest.fn().mockResolvedValue(undefined),
 }))
 
 // ─── Mock: challengesApi ──────────────────────────────────────────────────────
-const mockGetRandomPhrase = vi.fn()
+const mockGetRandomPhrase = jest.fn()
 
-vi.mock('@services/api/challenges', () => ({
+jest.mock('@services/api/challenges', () => ({
   challengesApi: {
     getRandomPhrase: mockGetRandomPhrase,
   },
 }))
 
 // ─── Mock: navigation ─────────────────────────────────────────────────────────
-const mockNavigate = vi.fn()
+const mockNavigate = jest.fn()
 const mockNavigation = { navigate: mockNavigate } as any
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -46,7 +46,7 @@ function renderScreen() {
 
 describe('RecordGuideScreen (S09) — 권한 분기: granted', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockGetRandomPhrase.mockResolvedValue({ phrase: '자장 자장 우리 아기' })
   })
 
@@ -71,7 +71,7 @@ describe('RecordGuideScreen (S09) — 권한 분기: granted', () => {
 
 describe('RecordGuideScreen (S09) — 권한 분기: canAskAgain=true', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockGetRandomPhrase.mockResolvedValue({ phrase: '자장 자장 우리 아기' })
   })
 
@@ -101,7 +101,7 @@ describe('RecordGuideScreen (S09) — 권한 분기: canAskAgain=true', () => {
 
 describe('RecordGuideScreen (S09) — 권한 분기: canAskAgain=false', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockGetRandomPhrase.mockResolvedValue({ phrase: '자장 자장 우리 아기' })
   })
 
@@ -126,7 +126,7 @@ describe('RecordGuideScreen (S09) — 권한 분기: canAskAgain=false', () => {
 
 describe('RecordGuideScreen (S09) — 권한 모달 동작', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockGetRandomPhrase.mockResolvedValue({ phrase: '자장 자장 우리 아기' })
     mockGetPermissions.mockResolvedValue({ status: 'denied', canAskAgain: false, granted: false })
   })
@@ -152,7 +152,7 @@ describe('RecordGuideScreen (S09) — 권한 모달 동작', () => {
 
 describe('RecordGuideScreen (S09) — 가이드 렌더링', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockGetRandomPhrase.mockResolvedValue({ phrase: '자장 자장 우리 아기' })
     mockGetPermissions.mockResolvedValue({ status: 'granted', canAskAgain: true, granted: true })
   })

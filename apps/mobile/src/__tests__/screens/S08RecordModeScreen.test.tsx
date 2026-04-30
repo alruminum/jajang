@@ -8,10 +8,10 @@ import { render, fireEvent } from '@testing-library/react-native'
 import { RecordModeScreen } from '@screens/RecordModeScreen'
 
 // ─── Mock: recordingSlice ──────────────────────────────────────────────────
-const mockSetRecordingMode = vi.fn()
+const mockSetRecordingMode = jest.fn()
 
-vi.mock('@store/recordingSlice', () => ({
-  useRecordingStore: vi.fn(() => ({
+jest.mock('@store/recordingSlice', () => ({
+  useRecordingStore: jest.fn(() => ({
     setRecordingMode: mockSetRecordingMode,
     selectedSongKey: 'test-song-key',
   })),
@@ -19,14 +19,14 @@ vi.mock('@store/recordingSlice', () => ({
 
 // ─── Mock: authSlice ────────────────────────────────────────────────────────
 // useAuthStore는 Epic 01 store. entitlement: 'free' | 'premium', generationCount: number
-const mockUseAuthStore = vi.fn()
+const mockUseAuthStore = jest.fn()
 
-vi.mock('@store/authSlice', () => ({
+jest.mock('@store/authSlice', () => ({
   useAuthStore: mockUseAuthStore,
 }))
 
 // ─── Mock: navigation ───────────────────────────────────────────────────────
-const mockNavigate = vi.fn()
+const mockNavigate = jest.fn()
 const mockNavigation = { navigate: mockNavigate } as any
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -43,7 +43,7 @@ function renderScreen() {
 
 describe('RecordModeScreen (S08) — 기본 렌더링', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseAuthStore.mockReturnValue({ entitlement: 'premium', generationCount: 0 })
   })
 
@@ -77,7 +77,7 @@ describe('RecordModeScreen (S08) — 기본 렌더링', () => {
 
 describe('RecordModeScreen (S08) — 허밍 카드 탭', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseAuthStore.mockReturnValue({ entitlement: 'premium', generationCount: 0 })
   })
 
@@ -109,7 +109,7 @@ describe('RecordModeScreen (S08) — 허밍 카드 탭', () => {
 
 describe('RecordModeScreen (S08) — 쉿 카드 탭', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseAuthStore.mockReturnValue({ entitlement: 'premium', generationCount: 0 })
   })
 
@@ -137,7 +137,7 @@ describe('RecordModeScreen (S08) — 쉿 카드 탭', () => {
 
 describe('RecordModeScreen (S08) — 무료 유저 카운터 칩', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('REQ-05: 무료 유저 entitlement="free"이면 "생성 N/3" 칩이 표시된다', () => {
@@ -169,7 +169,7 @@ describe('RecordModeScreen (S08) — 무료 유저 카운터 칩', () => {
 
 describe('RecordModeScreen (S08) — 접근성', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseAuthStore.mockReturnValue({ entitlement: 'premium', generationCount: 0 })
   })
 
@@ -200,7 +200,7 @@ describe('RecordModeScreen (S08) — 접근성', () => {
 
 describe('RecordModeScreen (S08) — 엣지 케이스', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     mockUseAuthStore.mockReturnValue({ entitlement: 'premium', generationCount: 0 })
   })
 

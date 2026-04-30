@@ -1,4 +1,3 @@
-import { describe, it, expect } from 'vitest';
 
 import { LYRICS, getLyrics, type SongKey } from '../../data/lyrics';
 

@@ -2,28 +2,28 @@
  * songs-api.test.ts
  * songsApi — GET /songs, GET /songs/{key}/preview 클라이언트 검증
  * impl: docs/milestones/v1/epics/epic-02-recording/impl/04-app-song-select-screen.md §3
+ *
+ * songs.ts 는 '@services/api' (api.ts) 에서 직접 api 인스턴스를 import.
+ * @services/api/client 가 아닌 @services/api 를 mock한다.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-
-// apiClient mock — songs.ts 의 import './client' 를 가로챔
-vi.mock('@services/api/client', () => ({
-  apiClient: {
-    get: vi.fn(),
+jest.mock('@services/api', () => ({
+  api: {
+    get: jest.fn(),
   },
 }))
 
 import { songsApi } from '@services/api/songs'
-import { apiClient } from '@services/api/client'
+import { api } from '@services/api'
 
-const mockedGet = vi.mocked(apiClient.get)
+const mockedGet = api.get as jest.Mock
 
 // ────────────────────────────────────────────
 // listSongs
 // ────────────────────────────────────────────
 describe('songsApi.listSongs', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('GET /songs 엔드포인트를 호출한다', async () => {
@@ -68,7 +68,7 @@ describe('songsApi.listSongs', () => {
 // ────────────────────────────────────────────
 describe('songsApi.getPreviewUrl', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('GET /songs/{songKey}/preview 엔드포인트를 호출한다', async () => {

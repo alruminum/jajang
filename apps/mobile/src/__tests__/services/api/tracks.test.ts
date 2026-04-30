@@ -2,21 +2,22 @@
  * tracksApi 클라이언트 테스트
  * impl/07 — apps/mobile/src/services/api/tracks.ts
  */
-import { vi, describe, it, expect, beforeEach } from 'vitest'
 
 // apiClient mock — tracks.ts 내부에서 import { apiClient } from './client'
-const mockGet    = vi.fn()
-const mockDelete = vi.fn()
-
-vi.mock('@services/api/client', () => ({
+// jest.mock 팩토리 내에서 const TDZ 우회: factory 자체에서 jest.fn() 생성 후 require로 참조
+jest.mock('@services/api/client', () => ({
   apiClient: {
-    get:    mockGet,
-    delete: mockDelete,
+    get:    jest.fn(),
+    delete: jest.fn(),
   },
 }))
 
 import { tracksApi } from '@services/api/tracks'
 import type { TracksListResponse, TrackDeleteResponse } from '@services/api/tracks'
+import { apiClient } from '@services/api/client'
+
+const mockGet    = apiClient.get as jest.Mock
+const mockDelete = apiClient.delete as jest.Mock
 
 // ─────────────────────────────────────────────
 // 픽스처
@@ -30,7 +31,7 @@ const makeListResponse = (overrides: Partial<TracksListResponse> = {}): TracksLi
 })
 
 beforeEach(() => {
-  vi.clearAllMocks()
+  jest.clearAllMocks()
 })
 
 // ─────────────────────────────────────────────

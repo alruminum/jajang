@@ -3,7 +3,6 @@
  * - setAuth: 사용자 인증 상태 저장
  * - clearAuth: 인증 상태 초기화
  */
-import { describe, it, expect, beforeEach } from 'vitest';
 import { useAuthStore } from '@store/auth-store';
 
 // Zustand 스토어를 직접 불러와 상태를 테스트한다

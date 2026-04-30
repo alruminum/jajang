@@ -11,16 +11,16 @@ import TimerBottomSheet, { TIMER_OPTIONS } from '@components/TimerBottomSheet'
 import * as AudioEngine from '@audio/AudioEngine'
 
 // AudioEngine 의존성 mock — 컴포넌트는 setTimer/clearTimer 호출만 담당
-vi.mock('@audio/AudioEngine', () => ({
-  setTimer: vi.fn(),
-  clearTimer: vi.fn(),
+jest.mock('@audio/AudioEngine', () => ({
+  setTimer: jest.fn(),
+  clearTimer: jest.fn(),
 }))
 
-const mockSetTimer = AudioEngine.setTimer as ReturnType<typeof vi.fn>
-const mockClearTimer = AudioEngine.clearTimer as ReturnType<typeof vi.fn>
+const mockSetTimer = AudioEngine.setTimer as jest.Mock
+const mockClearTimer = AudioEngine.clearTimer as jest.Mock
 
 describe('TimerBottomSheet', () => {
-  const mockOnClose = vi.fn()
+  const mockOnClose = jest.fn()
 
   const defaultProps = {
     visible: true,
@@ -29,7 +29,7 @@ describe('TimerBottomSheet', () => {
   }
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   // ──────────────────────────────────────────────

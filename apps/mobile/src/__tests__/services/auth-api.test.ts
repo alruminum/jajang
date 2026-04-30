@@ -1,12 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // api 모듈 전체를 mock — axios 실제 호출 방지
-vi.mock('@services/api', () => ({
+jest.mock('@services/api', () => ({
   api: {
-    post: vi.fn(),
+    post: jest.fn(),
     interceptors: {
-      request: { use: vi.fn() },
-      response: { use: vi.fn() },
+      request: { use: jest.fn() },
+      response: { use: jest.fn() },
     },
   },
 }));
@@ -24,10 +23,10 @@ const MOCK_RESPONSE: AuthResponse = {
   user_id: 'user-001',
 };
 
-const mockPost = api.post as ReturnType<typeof vi.fn>;
+const mockPost = api.post as jest.Mock;
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  jest.clearAllMocks();
 });
 
 // ─── emailSignup ─────────────────────────────────────────────────────────────
