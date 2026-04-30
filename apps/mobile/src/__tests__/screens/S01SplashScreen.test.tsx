@@ -298,7 +298,7 @@ describe('S01SplashScreen (REQ-SPLASH)', () => {
   // ─── REQ-SPLASH-05: 토큰 없음(미로그인) → clearAuth + Auth ─────────────────
   describe('REQ-SPLASH-05: 토큰 없음(로그아웃 상태) → clearAuth + Auth 이동', () => {
     it('consent 동의 + access/refresh 모두 없음 → clearAuth 후 Auth로 이동한다', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue('true');
+      mockConsentGiven();
       (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(null);
 
       render(<S01SplashScreen />);
@@ -311,7 +311,7 @@ describe('S01SplashScreen (REQ-SPLASH)', () => {
     });
 
     it('토큰 없을 때 refresh API를 호출하지 않는다', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValue('true');
+      mockConsentGiven();
       (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(null);
 
       render(<S01SplashScreen />);
