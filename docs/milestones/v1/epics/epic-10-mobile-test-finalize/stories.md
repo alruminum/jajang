@@ -117,10 +117,10 @@
 
 ### 태스크 체크리스트
 
-- [ ] 각 it 마다 명시적 `unmount()` + `afterEach(cleanup)` 추가
-- [ ] text query 패턴 변환: literal → regex 또는 `findByText` 비동기
-- [ ] fake timer 사용 시 `jest.useRealTimers` 보강
-- [ ] 파일 GREEN 확인
+- [x] 각 it 마다 명시적 `unmount()` + `afterEach(cleanup)` 추가
+- [x] text query 패턴 변환: literal → regex 또는 `findByText` 비동기
+- [x] fake timer 사용 시 `jest.useRealTimers` 보강
+- [x] 파일 GREEN 확인
 
 ### 수용 기준
 
