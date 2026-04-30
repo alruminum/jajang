@@ -20,6 +20,7 @@ const mockApplePerformRequest = jest.fn();
 const APPLE_CANCELED_CODE = 'CANCELED';
 
 jest.mock('@invertase/react-native-apple-authentication', () => ({
+  __esModule: true,
   default: {
     performRequest: (...args: unknown[]) => mockApplePerformRequest(...args),
     Operation: { LOGIN: 'LOGIN' },
@@ -170,7 +171,7 @@ describe('REQ-SOCIAL-BUTTONS: Apple 로그인 처리', () => {
 // ─── Google 로그인 ────────────────────────────────────────────────────────────
 describe('REQ-SOCIAL-BUTTONS: Google 로그인 처리', () => {
   it('Google 로그인 성공 시 onSuccess("google", idToken)를 호출한다', async () => {
-    mockGoogleSignIn.mockResolvedValueOnce({ idToken: 'google-id-token-xyz' });
+    mockGoogleSignIn.mockResolvedValueOnce({ type: 'success', data: { idToken: 'google-id-token-xyz' } });
     const onSuccess = jest.fn();
 
     const { getByLabelText } = render(
@@ -216,7 +217,7 @@ describe('REQ-SOCIAL-BUTTONS: Google 로그인 처리', () => {
   });
 
   it('Google idToken이 없으면 onError를 호출한다', async () => {
-    mockGoogleSignIn.mockResolvedValueOnce({ idToken: null });
+    mockGoogleSignIn.mockResolvedValueOnce({ type: 'success', data: { idToken: null } });
     const onError = jest.fn();
 
     const { getByLabelText } = render(
