@@ -8,6 +8,7 @@ import { renderHook, act } from '@testing-library/react-native';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 jest.mock('@store/auth-store', () => ({
+  __esModule: true,
   useAuthStore: jest.fn(() => ({
     setEntitlement: jest.fn(),
     isAuthenticated: true,

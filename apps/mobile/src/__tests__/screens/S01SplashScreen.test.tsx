@@ -38,6 +38,7 @@ jest.mock('expo-secure-store', () => ({
 
 const mockClearAuth = jest.fn();
 jest.mock('@store/auth-store', () => ({
+  __esModule: true,
   useAuthStore: () => ({
     isAuthenticated: false,
     clearAuth: mockClearAuth,

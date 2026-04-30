@@ -63,6 +63,7 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 
 // --- AuthStore ---
 jest.mock('@store/auth-store', () => ({
+  __esModule: true,
   useAuthStore: jest.fn(() => ({ entitlement: 'trial' })),
 }));
 

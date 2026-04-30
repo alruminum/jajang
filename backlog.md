@@ -38,6 +38,7 @@
 | 06 | 개인정보 & 데이터 관리 | F13(설정 UI) | ✅ 완료 (5 impl) | [epic-06-privacy](docs/milestones/v1/epics/epic-06-privacy/stories.md) |
 | 07 | 디자인 시스템 | 디자인 토큰 + 폰트 로딩 + 화면 비주얼 폴리시 | 🔲 진행 중 (1 impl 계획) | [epic-07-design-system](docs/milestones/v1/epics/epic-07-design-system/impl/01-theme-tokens.md) |
 | 08 | Mobile Test Infra | Vitest → Jest (jest-expo) 마이그레이션, RN Flow strip | 🔲 impl 계획 완료 | [epic-08-mobile-test-infra](docs/milestones/v1/epics/epic-08-mobile-test-infra/stories.md) · impl: [01](docs/milestones/v1/epics/epic-08-mobile-test-infra/impl/01-jest-infra.md) [02](docs/milestones/v1/epics/epic-08-mobile-test-infra/impl/02-setup-mock-jest-migration.md) [03](docs/milestones/v1/epics/epic-08-mobile-test-infra/impl/03-test-suite-green.md) |
+| 09 | Mobile Test Triage | Jest 잔여 156 fails 카테고리별 정리, PR #149 merge 가능 상태 | 🔲 impl 계획 완료 | [epic-09-mobile-test-triage](docs/milestones/v1/epics/epic-09-mobile-test-triage/stories.md) · impl: [01](docs/milestones/v1/epics/epic-09-mobile-test-triage/impl/01-category-a-store-mock-esmodule.md) [02](docs/milestones/v1/epics/epic-09-mobile-test-triage/impl/02-category-b-pressable-event-mock.md) [03](docs/milestones/v1/epics/epic-09-mobile-test-triage/impl/03-category-c-async-teardown.md) [04](docs/milestones/v1/epics/epic-09-mobile-test-triage/impl/04-category-d-logic-fix-pr149.md) |
 
 ## 구현 순서
 
@@ -62,5 +63,6 @@
 - [x] Epic 06 — 개인정보 & 데이터 관리
 - [ ] Epic 07 — 디자인 시스템 (Issue #87)
 - [ ] Epic 08 — Mobile Test Infra (Issue #150)
+- [ ] Epic 09 — Mobile Test Triage (Issue #157)
 - [ ] 내부 베타 (TestFlight / Internal Test Track)
 - [ ] 앱스토어 심사 통과 + 공개 출시

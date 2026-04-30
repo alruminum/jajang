@@ -18,6 +18,7 @@ import { render, fireEvent, waitFor, act } from '@testing-library/react-native'
 // ──────────────────────────────────────────────────────────────────────────────
 
 jest.mock('@store', () => ({
+  __esModule: true,
   useAuthStore: jest.fn(),
   useThemeStore: jest.fn(),
 }))

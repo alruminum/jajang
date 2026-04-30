@@ -9,6 +9,7 @@ const mockSetAuth = jest.fn();
 const mockClearAuth = jest.fn();
 
 jest.mock('@store/auth-store', () => ({
+  __esModule: true,
   useAuthStore: jest.fn(() => ({
     setAuth: mockSetAuth,
     clearAuth: mockClearAuth,

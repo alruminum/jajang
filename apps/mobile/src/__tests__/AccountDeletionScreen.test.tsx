@@ -56,6 +56,7 @@ jest.mock('@services/accountApi', () => ({
 }))
 
 jest.mock('@store', () => ({
+  __esModule: true,
   useAuthStore: jest.fn(),
 }))
 

@@ -34,10 +34,12 @@ jest.mock('expo-audio', () => ({
 }))
 
 jest.mock('@store/recordingSlice', () => ({
+  __esModule: true,
   useRecordingStore: jest.fn(),
 }))
 
 jest.mock('@store/authSlice', () => ({
+  __esModule: true,
   useAuthStore: jest.fn(),
 }))
 
