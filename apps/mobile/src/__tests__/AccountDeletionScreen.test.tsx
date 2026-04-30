@@ -12,7 +12,7 @@
  */
 
 import React from 'react'
-import { render, fireEvent, waitFor, act } from '@testing-library/react-native'
+import { render, fireEvent, waitFor, act, cleanup } from '@testing-library/react-native'
 import { Alert } from 'react-native'
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -105,6 +105,12 @@ function setupMocks({
 // ──────────────────────────────────────────────────────────────────────────────
 // 테스트
 // ──────────────────────────────────────────────────────────────────────────────
+
+afterEach(async () => {
+  cleanup()
+  await Promise.resolve()
+  await Promise.resolve()
+})
 
 describe('AccountDeletionScreen — Step 1 화면', () => {
   beforeEach(() => {

@@ -56,15 +56,25 @@ afterEach(() => {
 
 ## 수정 파일 목록
 
-grep 결과로 최종 확정. 현재 알려진 잠재 대상:
+grep 실측 결과 확정 (2026-04-30):
 
-| 파일 | 예상 유형 | 변경 내용 |
-|---|---|---|
-| `apps/mobile/src/__tests__/screens/S09RecordGuideScreen.test.tsx` | 유형 1+2 | `waitFor` 대기 후 `unmount()` 명시 + `afterEach` 추가 |
-| `apps/mobile/src/__tests__/screens/S09RecordGuideScreen.refactor.test.tsx` | 유형 1+2 | 동일 |
-| `apps/mobile/src/__tests__/screens/S10RecordScreen.bgm.test.tsx` | 유형 2+4 | `afterEach` 에 `jest.runAllTimers()` 추가 확인 (이미 `useRealTimers` 있음 — 충분한지 확인) |
-| `apps/mobile/src/__tests__/screens/S01SplashScreen.test.tsx` | 유형 4 | `afterEach useRealTimers` 이미 있음 — torn down 잔여 시 `unmount()` 추가 |
-| 그 외 grep 결과 파일 | 유형별 분류 | 동일 패턴 적용 |
+| 파일 | 유형 | 변경 내용 | 상태 |
+|---|---|---|---|
+| `apps/mobile/src/__tests__/screens/S09RecordGuideScreen.test.tsx` | 유형 1+3 | `cleanup` import + 전역 `afterEach(async)` 추가 | **완료** |
+| `apps/mobile/src/__tests__/screens/S09RecordGuideScreen.refactor.test.tsx` | 유형 1+3 | 동일 | **완료** |
+| `apps/mobile/src/__tests__/screens/S06HomeScreen.test.tsx` | 유형 3 | `afterEach(async)` 추가 | **완료** |
+| `apps/mobile/src/__tests__/screens/S07SongSelectScreen.test.tsx` | 유형 3 | `afterEach(async)` 추가 | **완료** |
+| `apps/mobile/src/__tests__/screens/S16SettingsScreen.test.tsx` | 유형 3 | `afterEach(async)` 추가 | **완료** |
+| `apps/mobile/src/__tests__/AccountDeletionScreen.test.tsx` | 유형 3 | `afterEach(async)` 추가 | **완료** |
+| `apps/mobile/src/__tests__/screens/S10RecordScreen.bgm.test.tsx` | 유형 2+4 | `afterEach useRealTimers` 이미 있음 — **수정 불필요** | 기존 처리 |
+| `apps/mobile/src/__tests__/screens/S01SplashScreen.test.tsx` | 유형 4 | `afterEach useRealTimers` 이미 있음 — **수정 불필요** | 기존 처리 |
+| `apps/mobile/src/__tests__/audio/AudioEngine-timer.test.ts` | 유형 4 | `afterEach useRealTimers` 이미 있음 | 기존 처리 |
+| `apps/mobile/src/__tests__/useBgmPlayer.test.ts` | 유형 4 | `afterEach useRealTimers` 이미 있음 | 기존 처리 |
+| `apps/mobile/src/__tests__/useEntitlement.test.ts` | 유형 4 | `afterEach useRealTimers` 내부 describe 에 있음 | 기존 처리 |
+
+**유형 재분류 (실측 기반):**
+- S09 두 파일: `getRandomPhrase` async mock이 Promise 생성. fake timer 없음. unmount 없이 async resolve 잔류 → 유형 1+3.
+- S06/S07/S16/AccountDeletion: async waitFor + API mock promise 잔류. afterEach 없음 → 유형 3.
 
 ---
 
@@ -138,4 +148,4 @@ grep 결과로 최종 확정. 현재 알려진 잠재 대상:
 - (TEST) `npm test 2>&1 | grep "torn down"` 결과 0건
 - (TEST) 카테고리 C 영향 파일 각각 `npm test <파일>` GREEN
 - (MANUAL) `npm test` 실행 후 총 fails 수 이전 대비 ~23 감소
-- **회귀 보호:** `npm test 2>&1 | grep -E 'Tests:.*passed'` 수치 >= 442
+- **회귀 보호:** `npm test 2>&1 | grep -E 'Tests:.*passed'` 수치 >= 486 (batch 1+2 완료 후 기준)

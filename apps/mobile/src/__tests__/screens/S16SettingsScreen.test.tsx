@@ -11,7 +11,7 @@
  */
 
 import React from 'react'
-import { render, fireEvent, waitFor } from '@testing-library/react-native'
+import { render, fireEvent, waitFor, cleanup } from '@testing-library/react-native'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // 모듈 Mocks (vi.mock은 호이스팅 — import 전 선언)
@@ -123,6 +123,12 @@ beforeEach(() => {
   jest.mocked(useGenerationStore).mockImplementation((selector: any) =>
     selector({ tracks: [] }),
   )
+})
+
+afterEach(async () => {
+  cleanup()
+  await Promise.resolve()
+  await Promise.resolve()
 })
 
 // ──────────────────────────────────────────────────────────────────────────────

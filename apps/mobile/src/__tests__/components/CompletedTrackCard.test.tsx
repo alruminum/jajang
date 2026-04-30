@@ -1,5 +1,6 @@
 import React from 'react';
 import { create } from 'react-test-renderer';
+import { cleanup } from '@testing-library/react-native';
 import type { GeneratedTrack } from '@services/tracks-api';
 
 // react-native는 jest-expo preset mock 사용 (수동 mock 제거)
@@ -34,6 +35,12 @@ const makeTrack = (overrides: Partial<GeneratedTrack> = {}): GeneratedTrack => (
   s3_key: 's3/audio/key',
   completed_at: '2024-01-01T00:00:00.000Z',
   ...overrides,
+});
+
+afterEach(async () => {
+  cleanup();
+  await Promise.resolve();
+  await Promise.resolve();
 });
 
 describe('CompletedTrackCard', () => {

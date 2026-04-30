@@ -1,5 +1,6 @@
 import React from 'react';
 import { create, act } from 'react-test-renderer';
+import { cleanup } from '@testing-library/react-native';
 
 // --- React Native 모킹 ---
 jest.mock('react-native', () => {
@@ -110,6 +111,12 @@ describe('S06HomeScreen', () => {
     mockGetNewlyCompletedTrack.mockResolvedValue(null);
     mockAsyncStorage.getItem.mockResolvedValue(null);
     mockAsyncStorage.setItem.mockResolvedValue(undefined);
+  });
+
+  afterEach(async () => {
+    cleanup();
+    await Promise.resolve();
+    await Promise.resolve();
   });
 
   // --- useFocusEffect: 포커스 시 API 호출 ---
