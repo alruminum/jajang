@@ -22,6 +22,7 @@ export default defineConfig({
           exclude: [/react-native/],
         },
       },
+      interopDefault: true,
     },
     alias: {
       '@screens': path.resolve(__dirname, './src/screens'),

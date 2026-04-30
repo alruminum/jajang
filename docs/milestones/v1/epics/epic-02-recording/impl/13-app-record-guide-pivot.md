@@ -53,11 +53,13 @@ Record: { songKey: string }
 
 ### 이어폰 미착용 감지 — 1회만 노출
 
-PRD §F2: "이어폰 미착용 감지 시 1회 경고 팝업 노출. 단, '그래도 진행' 선택 시 경고 없이 진행".
+PRD §F2 + §위험/완화 표: "자동 감지/강제 모달 없음 (risk 수용)". 이어폰 자동 감지 구현 X.
 
-구현 방식: `AsyncStorage` 키 `'earphones_warning_dismissed'` = `'true'` 저장. 앱 재실행 시에도 1회 정책 유지 (PRD는 session 단위 재노출 여부 미명시 → 영구 1회로 안전하게 처리. 과도하면 세션 단위로 완화 가능).
+**자동 감지 API 부재 확인**: `expo-audio`(v55.0.14)에는 이어폰 포트 감지 API 없음. `expo-av`도 프로젝트 미설치. PRD 자체도 "자동 감지는 V2 후보"로 명시 — 자동 감지 코드 작성 금지.
 
-이어폰 감지 API: `expo-av`의 `Audio.getOutputAudioPortType()` 또는 `expo-audio` 등가 API. 실기기에서 이어폰 포트 타입 확인 가능. 미지원 시 항상 "이어폰 없음"으로 처리 (안전측).
+구현 방식 (단순 1회 모달): 첫 번째 녹음 시작 시 *항상* 이어폰 모달 표시. "그래도 진행" 탭 → `AsyncStorage.setItem('@jajang:earphone_warning_dismissed', 'true')` 저장 → 이후 앱 재실행해도 모달 미노출.
+
+AsyncStorage 키 컨벤션: 기존 코드베이스 키 패턴 (`notif_permission_asked`, `LAST_CHECKED_KEY` 등) 이 prefix 미사용. 단, `@jajang:` prefix는 충돌 방지상 권장. 이번 impl에서는 `'@jajang:earphone_warning_dismissed'` 사용.
 
 ### 단일 흐름 RecordGuideScreen
 
@@ -104,7 +106,7 @@ navigation.navigate('RecordGuide', { songKey: selectedSongKey })
 ```typescript
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
-const EARPHONE_WARNING_KEY = 'earphones_warning_dismissed'
+const EARPHONE_WARNING_KEY = '@jajang:earphone_warning_dismissed'
 
 // 녹음 시작 CTA 탭 핸들러
 const handleStartRecording = async () => {
@@ -112,31 +114,18 @@ const handleStartRecording = async () => {
   const micGranted = await checkMicPermission()
   if (!micGranted) { showPermissionModal(); return }
 
-  // 이어폰 미착용 경고 체크
+  // 이어폰 경고 1회 노출 체크 (자동 감지 없음 — PRD §위험/완화)
   const warningDismissed = await AsyncStorage.getItem(EARPHONE_WARNING_KEY)
   if (!warningDismissed) {
-    const hasEarphones = await detectEarphones()
-    if (!hasEarphones) {
-      setShowEarphoneModal(true)
-      return
-    }
+    setShowEarphoneModal(true)
+    return
   }
 
   // 모두 통과 → S10 이동
   navigation.navigate('Record', { songKey })
 }
 
-// 이어폰 감지 (expo-audio 또는 expo-av)
-const detectEarphones = async (): Promise<boolean> => {
-  try {
-    // expo-av Audio.getOutputAudioPortType() — 실기기 동작 확인 필요
-    // 미지원 환경: false 반환 (경고 표시 방향으로 안전측 처리)
-    const status = await Audio.getStatusAsync()
-    return status.outputAudioPortType === 'headphones'
-  } catch {
-    return false  // 감지 실패 시 경고 노출 방향
-  }
-}
+// 이어폰 자동 감지 없음 — PRD §위험/완화: "자동 감지는 V2 후보". 1회 모달 정책만 구현.
 
 // "그래도 진행" 탭
 const handleProceedWithoutEarphones = async () => {
@@ -231,7 +220,7 @@ engineer는 design-handoff.md + Pencil frame 참조. S09 frame ID 확인 필요.
 - [ ] (TEST) `navigation/types.ts`에 `RecordMode` route 없음 (`grep RecordMode src/navigation/types.ts` → 0)
 - [ ] (TEST) RecordGuideScreen route.params에 `mode` 필드 없음 (TypeScript 컴파일 오류 없음)
 - [ ] (BROWSER:DOM) S09 진입 시 이어폰 chip + 가사 박스 항상 노출 (모드 조건 없음)
-- [ ] (MANUAL) 이어폰 미착용 기기에서 녹음 시작 탭 → 경고 팝업 노출
+- [ ] (MANUAL) 첫 녹음 시작 탭 → 이어폰 경고 팝업 노출 (이어폰 착용 여부 무관 — 1회 정책)
 - [ ] (MANUAL) "그래도 진행" 탭 후 앱 재실행 → S09에서 녹음 시작 탭 시 경고 팝업 미노출
 - [ ] (TEST) AsyncStorage `earphones_warning_dismissed = 'true'` 저장 확인
 - [ ] (TEST) 가사 미준비 songKey → 가사 박스 숨김 + "자유롭게 따라불러 주세요" 텍스트 노출
@@ -239,9 +228,28 @@ engineer는 design-handoff.md + Pencil frame 참조. S09 frame ID 확인 필요.
 
 ---
 
-## 9. 주의사항
+## 9. 주의사항 및 코드베이스 영향 범위
 
-- `expo-av Audio.getOutputAudioPortType()` 실기기 동작 여부를 engineer가 실측 확인 필수. iOS 시뮬레이터에서 항상 `false` 반환될 수 있음 — 실기기 우선 테스트.
-- RecordModeScreen.tsx 파일 자체는 이번 impl에서 삭제하지 않는다. navigation stack에서 route 제거만 수행. 파일 삭제는 별도 클린업 impl.
-- RecordScreen(impl/14)에서 mode 파라미터를 읽던 코드 함께 제거 필요 — impl/14와 순서 조율.
-- 기존 `S09RecordGuideScreen.test.tsx`에 mode='humming'/'shush' 분기 테스트가 있으면 단일 흐름으로 수정 필요 (depth=std, DOM assertion 변경으로 simple 불가).
+### 이어폰 감지 API 없음 (확인 완료)
+`expo-audio` v55.0.14 에는 이어폰 포트 감지 API 없음. `expo-av` 미설치. 자동 감지 코드 작성 금지. 1회 모달 = AsyncStorage 플래그만으로 구현.
+
+### mode 제거 시 깨지는 테스트 파일 목록 (engineer 수정 필수)
+
+| 파일 | 영향 내용 | 수정 방향 |
+|---|---|---|
+| `__tests__/screens/S09RecordGuideScreen.test.tsx` | `params: { mode: 'humming' }` + `navigate('Record', { mode: 'humming', songKey: '' })` 단언 | `mode` 제거, `songKey` 추가, navigate 단언 수정 |
+| `__tests__/screens/S09RecordGuideScreen.refactor.test.tsx` | `renderWith({ mode: 'humming'|'shush', songKey })` 호출 14개 + 쉬모드/허밍모드 분기 케이스 | mode 파라미터 제거 + 단일 흐름 케이스로 통합 |
+| `__tests__/screens/S07SongSelectScreen.test.tsx` | `navigate('RecordMode')` 단언 3곳 (`AC-08`, `free 2/3`, `free 3/3`) | `navigate('RecordGuide', { songKey })` 로 변경 |
+
+### 추가 수정 대상 (navigation 관련)
+
+- `RecordScreen.tsx` (기존 폐기 예정 파일) `handleCancel` → `navigation.navigate('RecordMode')` 참조. 이번 impl 범위 아님 — 별도 클린업.
+- `S10RecordScreen.tsx` `handleCancel` → 동일하게 `RecordMode` 참조. 별도 클린업.
+- `S11PreviewScreen.tsx` line 100~103: `mode: recordingMode ?? 'humming'` 를 Record params에 전달 → impl/14(RecordScreen mode 제거)와 함께 수정.
+- `MainNavigator.tsx` — `RecordMode` Screen 등록 제거 + `RecordModeScreen` import 제거.
+
+### 파일 삭제 정책
+RecordModeScreen.tsx 파일 자체는 이번 impl에서 삭제하지 않는다. navigation stack에서 route + import 제거만. 파일 삭제는 별도 클린업 impl.
+
+### AsyncStorage 키 컨벤션
+기존 코드베이스 키(`notif_permission_asked`, `jajang:offline_deletions` 등)는 prefix가 혼재. 이번 impl은 `@jajang:` prefix 사용. 기존 키와 충돌 없음.

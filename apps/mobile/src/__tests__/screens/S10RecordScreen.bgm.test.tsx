@@ -173,7 +173,7 @@ describe('RecordScreen — 허밍 모드 BGM 통합 (impl/10 §4~§5)', () => {
     })
   })
 
-  it('shush 모드에서는 startBgm 호출하지 않고 가사 박스도 미렌더', async () => {
+  it.skip('shush 모드에서는 startBgm 호출하지 않고 가사 박스도 미렌더 — mode 폐기 (impl/13 / PR #149) 로 obsolete', async () => {
     setRoute({ songKey: 'twinkle', mode: 'shush' })
 
     const { queryByTestId } = render(<RecordScreen />)
