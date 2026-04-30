@@ -73,10 +73,7 @@ export function SongListItem({
       {/* 미리듣기 버튼 */}
       <Pressable
         style={styles.previewBtn}
-        onPress={(e) => {
-          e.stopPropagation(); // 곡 선택 이벤트와 분리
-          onPreviewToggle();
-        }}
+        onPress={onPreviewToggle}
         accessibilityLabel={isPreviewPlaying ? `${song.title_ko} 미리듣기 정지` : `${song.title_ko} 미리듣기`}
         hitSlop={8}
       >
