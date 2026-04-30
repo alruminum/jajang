@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     # RevenueCat
     REVENUECAT_WEBHOOK_SECRET: str = ""
 
+    # DSP 분기 (v1.3.1)
+    MOCK_DSP: bool = True   # True 시 ffmpeg 호출 없이 MockDspService 사용 (개발/테스트 환경)
+    # MOCK_LATENCY_MS는 이미 존재 (3000 기본값) — 재선언 불필요
+
     # Storage — mock (개발환경 S3 우회)
     MOCK_S3: bool = False   # true 시 boto3 skip → 로컬 /static/previews/ URL 반환
 

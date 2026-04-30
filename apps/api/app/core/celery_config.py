@@ -18,4 +18,8 @@ beat_schedule = {
         "task": "tasks.hard_delete_expired_users",
         "schedule": crontab(hour=18, minute=0),  # 18:00 UTC = 03:00 KST
     },
+    "clip-cleanup-hourly": {              # Recording S3 클립 24h TTL 삭제
+        "task": "tasks.clip_cleanup",
+        "schedule": 3600.0,              # 1시간 고정 주기
+    },
 }
