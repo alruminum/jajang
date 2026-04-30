@@ -35,8 +35,8 @@ jest.mock('@services/auth-api', () => ({
   socialAuth: (...args: unknown[]) => mockSocialAuth(...args),
 }));
 
-jest.mock('@components/SocialAuthButtons', () => ({
-  default: ({ onSuccess, onError }: {
+jest.mock('@components/SocialAuthButtons', () => {
+  const mockFn = ({ onSuccess, onError }: {
     onSuccess: (provider: 'apple' | 'google', token: string) => void;
     onError?: (e: unknown) => void;
   }) => {
@@ -62,8 +62,13 @@ jest.mock('@components/SocialAuthButtons', () => ({
         React.createElement(Text, null, 'Social 실패 트리거'),
       ),
     );
-  },
-}));
+  };
+  return {
+    __esModule: true,
+    default: mockFn,
+    SocialAuthButtons: mockFn,
+  };
+});
 
 import { Alert } from 'react-native';
 import S05LoginScreen from '@screens/S05LoginScreen';
@@ -219,7 +224,7 @@ describe('REQ-S05: 로딩 상태 처리', () => {
     fireEvent.press(getByLabelText('로그인하기'));
 
     const button = getByLabelText('로그인하기');
-    expect(button.props.disabled).toBe(true);
+    expect(button.props.accessibilityState?.disabled ?? button.props.disabled).toBe(true);
   });
 
   it('API 호출 중 버튼 텍스트가 "로그인 중..."으로 변경된다', async () => {
