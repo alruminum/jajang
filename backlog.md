@@ -1,7 +1,7 @@
 # Backlog — 자장(Jajang) v1
 
 마일스톤: `v1`
-업데이트: 2026-04-26 (v1.3 — Epic 07 디자인 시스템 추가, Issue #87)
+업데이트: 2026-04-30 (v1.3.1 — DSP 피벗 반영: Epic 02/03/04 stories·impl 갱신, Epic 03 명칭 변경)
 
 ## 마일스톤 0 — 선행 리서치 (1주)
 
@@ -12,19 +12,13 @@
 - [ ] "부모 목소리 개인화 AI 자장가" 카테고리 실제 공백 검증
 - [ ] 경쟁사 리뷰 빈번 pain point 3가지 추출 → V1 포지셔닝 reconfirm
 
-### 보이스 모델 벤치마크 (M0 병행)
-- [ ] 후보 모델 4종 (OpenVoice V2 / F5-TTS / RVC·so-vits-svc / CosyVoice) 각 샘플 5개 생성
-- [ ] 품질 / 추론 시간 / 비용 비교 리포트
-- [ ] end-to-end latency 벤치마크 (cold start 포함 90초 NFR 달성 여부)
-- [ ] 부모 블라인드 테스트 — "내 목소리 인식" ≥ 60% 합격 기준
-- [ ] 실패 contingency 결정 — warm pool / NFR 완화(2분) / 허밍 → "단어 반복" 녹음 모드 전환
+### DSP self-test (M0 병행, v1.3.1 대체)
+- [ ] ffmpeg DSP 파이프라인 프로토타입 실행 (afftdn/equalizer/aecho/acrossfade)
+- [ ] 합격 기준 3항목: 단조로움(셔플 효과) / 이음새(crossfade 무음 없음) / 노이즈(SNR 15dB 이상)
+- [ ] cold start 포함 end-to-end latency 30초 이내 실측
+- [ ] 실패 contingency: 단조로움→셔플 재설계 / 이음새→crossfade 길이 조정 / 노이즈→필터 파라미터 재조정
 
-### 모델 상업 라이선스 확인 (M0 병행)
-- [ ] OpenVoice V2 — MIT License 원문 확인
-- [ ] F5-TTS — CC-BY 4.0 + 상업 이용 조건 원문 확인
-- [ ] RVC / so-vits-svc — fork별 커뮤니티 라이선스 / 상업 배포 조건 각 fork 명시
-- [ ] CosyVoice — Apache 2.0 원문 확인
-- [ ] 라이선스 불명확 / 상업 배포 금지 모델 → 후보 제외
+> ~~보이스 모델 벤치마크~~ / ~~AI 모델 라이선스 확인~~ — v1.3.0 피벗으로 삭제 (GPU/AI 모델 불필요)
 
 ### M0 게이트
 - [ ] 모든 체크리스트 통과 → 개발 단계 진입
@@ -37,9 +31,9 @@
 | # | 에픽 | 포함 기능 | 상태 | 경로 |
 |---|---|---|---|---|
 | 01 | 인증 & 온보딩 | F1, F13(게이트), F14 | ✅ 완료 (9 impl) | [epic-01-auth](docs/milestones/v1/epics/epic-01-auth/stories.md) |
-| 02 | 목소리 녹음 & 품질 검증 | F2, F3, F5 | ✅ 완료 (8 impl) | [epic-02-recording](docs/milestones/v1/epics/epic-02-recording/stories.md) |
-| 03 | AI 음원 생성 | F4 | ✅ 완료 (7 impl) | [epic-03-ai-generation](docs/milestones/v1/epics/epic-03-ai-generation/stories.md) |
-| 04 | 재생 & 백그라운드 | F6, F7, F8, F9 | ✅ 완료 (7 impl) | [epic-04-playback](docs/milestones/v1/epics/epic-04-playback/stories.md) |
+| 02 | 목소리 녹음 & 품질 검증 | F2, F3, F5 | 🔄 v1.3.1 갱신 (impl/13·14 신규, impl/05 폐기) | [epic-02-recording](docs/milestones/v1/epics/epic-02-recording/stories.md) |
+| 03 | DSP 음원 후처리 생성 | F4 | 🔄 v1.3.1 전면 재정의 (AI→DSP, impl/01~03 신규) | [epic-03-ai-generation](docs/milestones/v1/epics/epic-03-ai-generation/stories.md) |
+| 04 | 재생 & 백그라운드 | F6, F7, F8, F9 | 🔄 v1.3.1 갱신 (Story 2 RepeatMode.Queue 단순 loop) | [epic-04-playback](docs/milestones/v1/epics/epic-04-playback/stories.md) |
 | 05 | 수익화 (광고 + IAP) | F10, F11, F12 | ✅ 완료 (5 impl) | [epic-05-monetization](docs/milestones/v1/epics/epic-05-monetization/stories.md) |
 | 06 | 개인정보 & 데이터 관리 | F13(설정 UI) | ✅ 완료 (5 impl) | [epic-06-privacy](docs/milestones/v1/epics/epic-06-privacy/stories.md) |
 | 07 | 디자인 시스템 | 디자인 토큰 + 폰트 로딩 + 화면 비주얼 폴리시 | 🔲 진행 중 (1 impl 계획) | [epic-07-design-system](docs/milestones/v1/epics/epic-07-design-system/impl/01-theme-tokens.md) |
@@ -60,9 +54,9 @@
 
 - [ ] 마일스톤 0 — 선행 리서치 (벤치마크 미실행, MockInferenceClient로 우선 진행)
 - [x] Epic 01 — 인증 & 온보딩
-- [x] Epic 02 — 목소리 녹음 & 품질 검증
-- [x] Epic 03 — AI 음원 생성 (실제 GPU 추론은 M0 후 교체)
-- [x] Epic 04 — 재생 & 백그라운드
+- [x] Epic 02 — 목소리 녹음 & 품질 검증 (v1.3.1 갱신: impl/13·14 신규 미구현)
+- [x] Epic 03 — DSP 음원 후처리 생성 (v1.3.1 전면 재정의: impl/01~03 신규 미구현)
+- [x] Epic 04 — 재생 & 백그라운드 (v1.3.1 갱신: Story 2 RepeatMode.Queue 전환 확인 필요)
 - [x] Epic 05 — 수익화
 - [x] Epic 06 — 개인정보 & 데이터 관리
 - [ ] Epic 07 — 디자인 시스템 (Issue #87)
