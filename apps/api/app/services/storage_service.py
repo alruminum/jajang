@@ -10,6 +10,7 @@ logger = structlog.get_logger()
 
 TRACK_S3_PREFIX = "tracks"      # mp3 결과물 저장 위치
 TRACK_PRESIGN_EXPIRY = 3600     # presigned URL 만료: 1시간 (trd.md §1 보안)
+UPLOAD_PRESIGN_EXPIRY = 900     # presigned PUT URL 만료: 15분 (클립 업로드 시간 여유)
 
 _MOCK_BASE_URL = "http://localhost:8000"
 
@@ -78,6 +79,33 @@ def generate_presigned_url(s3_key: str) -> str:
         return url
     except ClientError as e:
         logger.error("storage.presign.failed", s3_key=s3_key, error=str(e))
+        raise
+
+
+def generate_presigned_put_url(s3_key: str) -> str:
+    """
+    클립 업로드용 presigned PUT URL 반환 (15분 만료).
+    클라이언트가 직접 S3에 m4a 파일을 PUT 업로드할 때 사용.
+    """
+    if settings.MOCK_S3:
+        # MOCK_S3=true → mock_s3 라우터가 PUT 요청 수신 (apps/api/app/api/v1/mock_s3.py)
+        # mock_s3 router prefix = "/_mock_s3" → 최종 경로: /api/v1/_mock_s3/{s3_key}
+        return f"{_MOCK_BASE_URL}/api/v1/_mock_s3/{s3_key}"
+
+    s3 = _s3_client()
+    try:
+        url = s3.generate_presigned_url(
+            "put_object",
+            Params={
+                "Bucket": settings.S3_BUCKET_NAME,
+                "Key": s3_key,
+                "ContentType": "audio/x-m4a",
+            },
+            ExpiresIn=UPLOAD_PRESIGN_EXPIRY,
+        )
+        return url
+    except ClientError as e:
+        logger.error("storage.presign_put.failed", s3_key=s3_key, error=str(e))
         raise
 
 

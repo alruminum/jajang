@@ -37,8 +37,10 @@ def create_app() -> FastAPI:
     from app.api.v1.auth import router as auth_router
     from app.api.v1.challenges import router as challenges_router
     from app.api.v1.generations import router as generations_router
+    from app.api.v1.masters import router as masters_router
     from app.api.v1.recordings import router as recordings_router
     from app.api.v1.rewarded import router as rewarded_router
+    from app.api.v1.sessions import router as sessions_router
     from app.api.v1.songs import router as songs_router
     from app.api.v1.tracks import router as tracks_router
     from app.api.v1.users import router as users_router
@@ -52,6 +54,8 @@ def create_app() -> FastAPI:
     app.include_router(tracks_router, prefix="/api/v1")
     app.include_router(users_router, prefix="/api/v1")
     app.include_router(webhooks_router, prefix="/api/v1")
+    app.include_router(sessions_router, prefix="/api/v1")
+    app.include_router(masters_router, prefix="/api/v1")
     # MOCK_S3=true 시만 mock S3 PUT 수신 라우트 등록 (#127). 프로덕션 노출 차단을 위한 조건부 import.
     if settings.MOCK_S3:
         from app.api.v1.mock_s3 import router as mock_s3_router
