@@ -148,11 +148,11 @@
 
 ### 태스크 체크리스트
 
-- [ ] D-1 google-signin mock 정정 (`__mocks__/@react-native-google-signin/google-signin.ts`)
+- [x] D-1 google-signin mock 정정 — SocialAuthButtons 7 → 0 fails (batch 05: `__esModule`, Apple mock, Google signIn 형식 + A11Y extend-expect) ✅
 - [ ] D-2 S08 처리 결정 (skip/삭제) — PR #149 와 정렬
 - [ ] D-3~D-6 개별 triage + fix
 - [ ] D-7 bgmTracks expectation 갱신 (DSP 피벗 후 데이터 확인)
-- [ ] D-8 A11Y matcher 도입 또는 v12 prop 검증으로 변환
+- [x] D-8 A11Y matcher 도입 — `@testing-library/jest-native/extend-expect` + S07 A11Y 2 → 0 fails (batch 05) ✅ (SongListItem 1 잔류 → batch 06)
 - [ ] D-9 LegalScreen 버전 동적화 (또는 expect.stringMatching)
 - [ ] 모든 D fail suites GREEN
 

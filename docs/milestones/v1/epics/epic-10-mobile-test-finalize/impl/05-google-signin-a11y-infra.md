@@ -142,3 +142,24 @@ v12 (testing-library/react-native) 에서 일부 matcher 가 deprecated. fallbac
 ---
 
 ## MODULE_PLAN_READY
+
+---
+
+## ✅ 완료 (batch 05)
+
+## Verification
+
+```
+npx jest SocialAuthButtons:  14 passed, 14 total (7 → 0 fails)
+npx jest S07SongSelectScreen: PASS (2 A11Y fails → 0)
+npx jest SongListItem:        1 failed, 14 passed (multiple selected:false — batch 06 연계)
+npx jest 전체:                32 failed, 2 skipped, 564 passed (555 → +9 PASS)
+```
+
+**수정 파일:**
+- `apps/mobile/src/__tests__/components/SocialAuthButtons.test.tsx`: Apple mock `__esModule: true` 추가, Google signIn 반환 형식 `{ type: 'success', data: { idToken } }` 로 정정
+- `apps/mobile/src/__tests__/_setup.ts`: `import '@testing-library/jest-native/extend-expect'` 추가
+- `apps/mobile/package.json`: `@testing-library/jest-native ^5.4.3` devDependency 추가
+
+**잔류 (batch 06):**
+- SongListItem `isSelected=false` 1 fail — deprecated `getByAccessibilityState` + `computeAriaSelected` 기본값 false로 multiple elements 매치. 테스트 파일 내 deprecated API 대체 필요.
