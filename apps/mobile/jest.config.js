@@ -28,6 +28,11 @@ module.exports = {
   // ─── tsconfig paths → jest moduleNameMapper 동기화 ────────────────────────
   // babel.config.js module-resolver alias와 1:1 대응.
   moduleNameMapper: {
+    // React 단일 인스턴스 보장 (monorepo dual-instance 방지)
+    '^react$': '<rootDir>/node_modules/react',
+    '^react/(.*)$': '<rootDir>/node_modules/react/$1',
+    '^react-test-renderer$': '<rootDir>/../../node_modules/react-test-renderer',
+    '^react-test-renderer/(.*)$': '<rootDir>/../../node_modules/react-test-renderer/$1',
     '^@screens/(.*)$': '<rootDir>/src/screens/$1',
     '^@components/(.*)$': '<rootDir>/src/components/$1',
     '^@store/index$': '<rootDir>/src/store/index.ts',
@@ -47,10 +52,7 @@ module.exports = {
   },
 
   // ─── 전역 setup ────────────────────────────────────────────────────────────
-  // NOTE(batch-01): setup.ts 는 아직 vitest(vi) API를 사용하므로 batch-02
-  // 마이그레이션 완료 후 아래 경로를 복원한다.
-  // setupFilesAfterEnv: ['./src/__tests__/setup.ts'],
-  setupFilesAfterEnv: [],
+  setupFilesAfterEnv: ['./src/__tests__/_setup.ts'],
 
   // ─── 테스트 환경 ───────────────────────────────────────────────────────────
   // jest-expo 기본값은 'node'. @testing-library/react-native는 node 환경에서 동작.
@@ -65,11 +67,9 @@ module.exports = {
   ],
 
   // ─── setup 파일 자체는 테스트 대상 제외 ────────────────────────────────────
-  // NOTE(batch-01): 기존 테스트 파일들은 아직 vitest(vi) API를 사용하므로
-  // jest 환경에서 실패한다. batch-02~03 마이그레이션 완료 후 이 패턴들을 제거한다.
   testPathIgnorePatterns: [
     '/node_modules/',
-    '/src/__tests__/setup\\.ts$',
-    '/src/__tests__/(?!_smoke\\.test\\.ts)',
+    '/src/__tests__/_setup\\.ts$',
+    '/src/__tests__/(?!(_smoke|audio/AudioEngine-timer|useBgmPlayer|screens/S01SplashScreen|screens/S10RecordScreen\\.bgm)\\.test\\.(ts|tsx))',
   ],
 };

@@ -4,115 +4,157 @@
 
 import React from 'react'
 import { act, render, waitFor } from '@testing-library/react-native'
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from 'vitest'
 
-const startBgmMock = vi.fn(async () => {})
-const stopBgmMock = vi.fn(async () => {})
-let mockBgmState = {
-  isPlaying: false,
-  loadFailed: false,
-}
+// ─── jest.mock factory 내 외부 변수 참조 금지 규칙 우회 ───────────────────────
+// 모든 mock factory 를 jest.fn() 으로 선언하고
+// 각 테스트 beforeEach 에서 mockImplementation 으로 동작을 주입한다.
 
-vi.mock('../../hooks/useBgmPlayer', () => ({
-  useBgmPlayer: ({
-    enabled,
-    onLoadError,
-  }: {
-    enabled: boolean
-    onLoadError?: () => void
-  }) => ({
-    isPlaying: enabled && mockBgmState.isPlaying,
-    loadFailed: mockBgmState.loadFailed,
-    startBgm: async () => {
-      await startBgmMock()
-      if (mockBgmState.loadFailed) onLoadError?.()
-      else mockBgmState.isPlaying = true
-    },
-    stopBgm: async () => {
-      await stopBgmMock()
-      mockBgmState.isPlaying = false
-    },
-  }),
+jest.mock('../../hooks/useBgmPlayer', () => ({
+  useBgmPlayer: jest.fn(),
 }))
 
-const lyricsBoxMock = vi.fn(
-  ({ songKey, mode }: { songKey: string; mode: string }) => {
-    const { Text } = require('react-native')
-    return (
-      <Text testID={`lyrics-box-${mode}`}>{`LyricsBox:${songKey}`}</Text>
-    )
-  },
-)
-vi.mock('../../components/LyricsBox', () => ({
-  LyricsBox: (props: { songKey: string; mode: string }) =>
-    lyricsBoxMock(props),
+jest.mock('../../components/LyricsBox', () => ({
+  LyricsBox: jest.fn(),
 }))
 
-vi.mock('../../data/bgmTracks', () => ({
+jest.mock('../../data/bgmTracks', () => ({
   BGM_TRACKS: {
     twinkle: { titleKo: '반짝반짝 작은 별', previewKey: 'twinkle' },
   },
 }))
 
-const recordMock = vi.fn()
-const stopRecordingMock = vi.fn(async () => 'file:///recording.m4a')
-vi.mock('expo-audio', () => ({
-  useAudioRecorder: () => ({
-    record: recordMock,
-    stop: stopRecordingMock,
-    uri: 'file:///recording.m4a',
-  }),
-  setAudioModeAsync: vi.fn(async () => {}),
+jest.mock('expo-audio', () => ({
+  useAudioRecorder: jest.fn(),
+  setAudioModeAsync: jest.fn(async () => {}),
   AudioModule: {
-    requestRecordingPermissionsAsync: vi.fn(async () => ({
+    requestRecordingPermissionsAsync: jest.fn(async () => ({
       granted: true,
     })),
   },
+  IOSOutputFormat: { LINEARPCM: 'lpcm' },
+  AudioQuality: { MAX: 127, HIGH: 96, MEDIUM: 64, LOW: 32, MIN: 0 },
 }))
 
-const navigateMock = vi.fn()
-const useRouteMock = vi.fn()
-vi.mock('@react-navigation/native', async () => {
-  const actual = await vi.importActual<object>('@react-navigation/native')
+jest.mock('@react-navigation/native', () => {
+  const actual = jest.requireActual('@react-navigation/native')
   return {
     ...actual,
-    useNavigation: () => ({ navigate: navigateMock, goBack: vi.fn() }),
-    useRoute: () => useRouteMock(),
+    useNavigation: jest.fn(),
+    useRoute: jest.fn(),
   }
 })
+
+// ─── mock 변수 (factory 밖에서 선언 가능) ─────────────────────────────────────
+const startBgmMock = jest.fn(async () => {})
+const stopBgmMock = jest.fn(async () => {})
+let mockBgmState = {
+  isPlaying: false,
+  loadFailed: false,
+}
+
+const recordMock = jest.fn()
+const stopRecordingMock = jest.fn(async () => 'file:///recording.m4a')
+const navigateMock = jest.fn()
+const useRouteMock = jest.fn()
+
+// ─── mock 구현 획득 ────────────────────────────────────────────────────────────
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { useBgmPlayer } = require('../../hooks/useBgmPlayer') as {
+  useBgmPlayer: jest.Mock
+}
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { LyricsBox } = require('../../components/LyricsBox') as {
+  LyricsBox: jest.Mock
+}
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { useAudioRecorder } = require('expo-audio') as {
+  useAudioRecorder: jest.Mock
+}
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { useNavigation, useRoute } = require('@react-navigation/native') as {
+  useNavigation: jest.Mock
+  useRoute: jest.Mock
+}
+
+function applyBgmImpl() {
+  useBgmPlayer.mockImplementation(
+    ({
+      enabled,
+      onLoadError,
+    }: {
+      enabled: boolean
+      onLoadError?: () => void
+    }) => ({
+      isPlaying: enabled && mockBgmState.isPlaying,
+      loadFailed: mockBgmState.loadFailed,
+      startBgm: async () => {
+        await startBgmMock()
+        if (mockBgmState.loadFailed) onLoadError?.()
+        else mockBgmState.isPlaying = true
+      },
+      stopBgm: async () => {
+        await stopBgmMock()
+        mockBgmState.isPlaying = false
+      },
+    }),
+  )
+}
 
 import { RecordScreen } from '../../screens/RecordScreen'
 
 beforeEach(() => {
   startBgmMock.mockClear()
   stopBgmMock.mockClear()
-  lyricsBoxMock.mockClear()
   navigateMock.mockClear()
   recordMock.mockClear()
   stopRecordingMock.mockClear()
+  LyricsBox.mockClear()
+
   mockBgmState = { isPlaying: false, loadFailed: false }
-  vi.useFakeTimers()
+  applyBgmImpl()
+
+  LyricsBox.mockImplementation(
+    ({ songKey, mode }: { songKey: string; mode: string }) => {
+      const { Text } = require('react-native') as {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        Text: React.ComponentType<{
+          testID?: string
+          children?: React.ReactNode
+        }>
+      }
+      return React.createElement(
+        Text,
+        { testID: `lyrics-box-${mode}` },
+        `LyricsBox:${songKey}`,
+      )
+    },
+  )
+
+  useAudioRecorder.mockReturnValue({
+    record: recordMock,
+    stop: stopRecordingMock,
+    uri: 'file:///recording.m4a',
+  })
+
+  useNavigation.mockReturnValue({ navigate: navigateMock, goBack: jest.fn() })
+
+  jest.useFakeTimers()
 })
 
 afterEach(() => {
-  vi.useRealTimers()
+  jest.useRealTimers()
 })
 
 const setRoute = (params: { songKey: string; mode: 'humming' | 'shush' }) => {
   useRouteMock.mockReturnValue({ params })
+  useRoute.mockReturnValue({ params })
 }
 
 const advanceCountdown = async () => {
   // 카운트다운 3초 → 0
   await act(async () => {
-    await vi.advanceTimersByTimeAsync(3500)
+    jest.advanceTimersByTime(3500)
+    await Promise.resolve()
   })
 }
 
@@ -215,6 +257,7 @@ describe('RecordScreen — 허밍 모드 BGM 통합 (impl/10 §4~§5)', () => {
 
   it('BGM 로드 실패 → 토스트 "음악 없이 녹음할게요" 노출 + BGM chip 미노출, 가사 박스는 유지', async () => {
     mockBgmState.loadFailed = true
+    applyBgmImpl()
     setRoute({ songKey: 'twinkle', mode: 'humming' })
 
     const { findByText, findByTestId, queryByText } = render(<RecordScreen />)
@@ -227,6 +270,7 @@ describe('RecordScreen — 허밍 모드 BGM 통합 (impl/10 §4~§5)', () => {
 
   it('BGM 실패 토스트는 3초 후 자동 숨김 (impl/10 §9)', async () => {
     mockBgmState.loadFailed = true
+    applyBgmImpl()
     setRoute({ songKey: 'twinkle', mode: 'humming' })
 
     const { findByText, queryByText } = render(<RecordScreen />)
@@ -234,7 +278,8 @@ describe('RecordScreen — 허밍 모드 BGM 통합 (impl/10 §4~§5)', () => {
     await findByText(/음악 없이 녹음할게요/)
 
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(3100)
+      jest.advanceTimersByTime(3100)
+      await Promise.resolve()
     })
     expect(queryByText(/음악 없이 녹음할게요/)).toBeNull()
   })

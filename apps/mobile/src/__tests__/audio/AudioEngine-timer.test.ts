@@ -23,7 +23,7 @@ const mockStore: {
   isPlaying: false,
 }
 
-vi.mock('@store/player-store', () => ({
+jest.mock('@store/player-store', () => ({
   usePlayerStore: {
     getState: () => mockStore,
     setState: (partial: Partial<typeof mockStore>) => {
@@ -32,28 +32,13 @@ vi.mock('@store/player-store', () => ({
   },
 }))
 
-// expo-notifications mock
-const mockScheduleNotificationAsync = vi.fn().mockResolvedValue('mock-notification-id')
-vi.mock('expo-notifications', () => ({
+// expo-notifications mock (virtual: true — 패키지 미설치, jest 해상도 우회)
+const mockScheduleNotificationAsync = jest.fn().mockResolvedValue('mock-notification-id')
+jest.mock('expo-notifications', () => ({
   scheduleNotificationAsync: mockScheduleNotificationAsync,
-}))
+}), { virtual: true })
 
-// react-native-track-player mock (setupAudioEngine 내 오디오 초기화 우회)
-vi.mock('react-native-track-player', () => ({
-  default: {
-    setupPlayer: vi.fn().mockResolvedValue(undefined),
-    add: vi.fn().mockResolvedValue(undefined),
-    play: vi.fn().mockResolvedValue(undefined),
-    stop: vi.fn().mockResolvedValue(undefined),
-    reset: vi.fn().mockResolvedValue(undefined),
-    getState: vi.fn().mockResolvedValue('none'),
-    setVolume: vi.fn().mockResolvedValue(undefined),
-    updateOptions: vi.fn().mockResolvedValue(undefined),
-  },
-  State: { Playing: 'playing', Paused: 'paused', None: 'none' },
-  Capability: { Play: 'play', Pause: 'pause', Stop: 'stop' },
-  Event: { PlaybackState: 'playback-state', PlaybackError: 'playback-error' },
-}))
+// react-native-track-player: moduleNameMapper → __mocks__/react-native-track-player.js (CJS)
 
 // ──────────────────────────────────────────────
 // 공통 헬퍼
@@ -67,17 +52,17 @@ function resetMockStore() {
 
 describe('AudioEngine — 타이머 (impl/03)', () => {
   beforeEach(async () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2025-01-01T00:00:00.000Z'))
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2025-01-01T00:00:00.000Z'))
     resetMockStore()
-    vi.clearAllMocks()
+    jest.clearAllMocks()
     // 모듈 내부 timer ref 초기화 — clearTimer 호출로 재설정
     clearTimer()
     resetMockStore() // clearTimer가 store를 건드리므로 다시 초기화
   })
 
   afterEach(() => {
-    vi.useRealTimers()
+    jest.useRealTimers()
   })
 
   // ──────────────────────────────────────────────
@@ -112,7 +97,8 @@ describe('AudioEngine — 타이머 (impl/03)', () => {
       mockStore.notificationPermission = 'granted'
       setTimer(65_000)
 
-      await vi.advanceTimersByTimeAsync(5_000) // 65_000 - 60_000 = 5_000ms
+      jest.advanceTimersByTime(5_000) // 65_000 - 60_000 = 5_000ms
+      await Promise.resolve()
 
       expect(mockScheduleNotificationAsync).toHaveBeenCalledTimes(1)
     })
@@ -121,7 +107,8 @@ describe('AudioEngine — 타이머 (impl/03)', () => {
       mockStore.notificationPermission = 'granted'
       setTimer(65_000)
 
-      await vi.advanceTimersByTimeAsync(5_000)
+      jest.advanceTimersByTime(5_000)
+      await Promise.resolve()
 
       expect(mockScheduleNotificationAsync).toHaveBeenCalledWith({
         content: {
@@ -137,7 +124,8 @@ describe('AudioEngine — 타이머 (impl/03)', () => {
       mockStore.notificationPermission = 'granted'
       setTimer(60_000)
 
-      await vi.advanceTimersByTimeAsync(60_000)
+      jest.advanceTimersByTime(60_000)
+      await Promise.resolve()
 
       expect(mockScheduleNotificationAsync).not.toHaveBeenCalled()
     })
@@ -151,7 +139,8 @@ describe('AudioEngine — 타이머 (impl/03)', () => {
       mockStore.notificationPermission = 'denied'
       setTimer(65_000)
 
-      await vi.advanceTimersByTimeAsync(5_000)
+      jest.advanceTimersByTime(5_000)
+      await Promise.resolve()
 
       expect(mockStore.showTimerWarningBanner).toBe(true)
     })
@@ -160,7 +149,8 @@ describe('AudioEngine — 타이머 (impl/03)', () => {
       mockStore.notificationPermission = 'undetermined'
       setTimer(65_000)
 
-      await vi.advanceTimersByTimeAsync(5_000)
+      jest.advanceTimersByTime(5_000)
+      await Promise.resolve()
 
       expect(mockStore.showTimerWarningBanner).toBe(true)
     })
@@ -169,7 +159,8 @@ describe('AudioEngine — 타이머 (impl/03)', () => {
       mockStore.notificationPermission = 'denied'
       setTimer(65_000)
 
-      await vi.advanceTimersByTimeAsync(5_000)
+      jest.advanceTimersByTime(5_000)
+      await Promise.resolve()
 
       expect(mockScheduleNotificationAsync).not.toHaveBeenCalled()
     })
@@ -190,7 +181,8 @@ describe('AudioEngine — 타이머 (impl/03)', () => {
       setTimer(65_000)
       clearTimer()
 
-      await vi.advanceTimersByTimeAsync(65_000)
+      jest.advanceTimersByTime(65_000)
+      await Promise.resolve()
 
       expect(mockScheduleNotificationAsync).not.toHaveBeenCalled()
     })
@@ -205,12 +197,12 @@ describe('AudioEngine — 타이머 (impl/03)', () => {
   // AC-09: 앱 재실행 — 30분 이상 남은 타이머 복원
   // ──────────────────────────────────────────────
   describe('AC-09: setupAudioEngine — 타이머 복원 (remaining > 60_000)', () => {
-    it('timerEndsAt=now+1_800_000인 상태로 setupAudioEngine() 호출 시 timerEndsAt이 초기화되지 않는다', () => {
+    it('timerEndsAt=now+1_800_000인 상태로 setupAudioEngine() 호출 시 timerEndsAt이 초기화되지 않는다', async () => {
       const remaining = 1_800_000
       mockStore.timerEndsAt = Date.now() + remaining
       mockStore.isPlaying = true
 
-      setupAudioEngine()
+      await setupAudioEngine()
 
       // 복원 후 timerEndsAt이 그대로 유지되어야 함
       expect(mockStore.timerEndsAt).not.toBeNull()
@@ -222,10 +214,14 @@ describe('AudioEngine — 타이머 (impl/03)', () => {
       mockStore.notificationPermission = 'granted'
       mockStore.isPlaying = true
 
-      setupAudioEngine()
+      await setupAudioEngine()
 
       // (remaining - 60_000) = 1_740_000ms 경과 → 1분 경보
-      await vi.advanceTimersByTimeAsync(1_740_000)
+      jest.advanceTimersByTime(1_740_000)
+      // async callback 내부의 promise chain flush (여러 microtask tick 필요)
+      await Promise.resolve()
+      await Promise.resolve()
+      await Promise.resolve()
 
       expect(mockScheduleNotificationAsync).toHaveBeenCalledTimes(1)
     })
@@ -235,11 +231,11 @@ describe('AudioEngine — 타이머 (impl/03)', () => {
   // AC-10: 앱 재실행 — 타이머 이미 만료 → timerEndsAt=null 초기화
   // ──────────────────────────────────────────────
   describe('AC-10: setupAudioEngine — 만료된 타이머 초기화', () => {
-    it('timerEndsAt < now인 상태로 setupAudioEngine() 호출 시 timerEndsAt=null로 초기화된다', () => {
+    it('timerEndsAt < now인 상태로 setupAudioEngine() 호출 시 timerEndsAt=null로 초기화된다', async () => {
       mockStore.timerEndsAt = Date.now() - 5_000 // 5초 전 만료
       mockStore.isPlaying = true
 
-      setupAudioEngine()
+      await setupAudioEngine()
 
       expect(mockStore.timerEndsAt).toBeNull()
     })
@@ -249,9 +245,10 @@ describe('AudioEngine — 타이머 (impl/03)', () => {
       mockStore.notificationPermission = 'granted'
       mockStore.isPlaying = true
 
-      setupAudioEngine()
+      await setupAudioEngine()
 
-      await vi.advanceTimersByTimeAsync(60_000)
+      jest.advanceTimersByTime(60_000)
+      await Promise.resolve()
 
       expect(mockScheduleNotificationAsync).not.toHaveBeenCalled()
     })
@@ -266,19 +263,21 @@ describe('AudioEngine — 타이머 (impl/03)', () => {
       mockStore.notificationPermission = 'denied'
       mockStore.isPlaying = true
 
-      setupAudioEngine()
+      await setupAudioEngine()
 
-      // 즉시 실행 (trigger: null) — advanceTimersByTimeAsync(0) 으로 flush
-      await vi.advanceTimersByTimeAsync(0)
+      // 즉시 실행 (trigger: null) — advanceTimersByTime(0) 으로 flush
+      jest.advanceTimersByTime(0)
+      await Promise.resolve()
+      await Promise.resolve()
 
       expect(mockStore.showTimerWarningBanner).toBe(true)
     })
 
-    it('remaining=1ms (경계값) 복원 시 timerEndsAt이 null로 초기화되지 않는다 (아직 만료 전)', () => {
+    it('remaining=1ms (경계값) 복원 시 timerEndsAt이 null로 초기화되지 않는다 (아직 만료 전)', async () => {
       mockStore.timerEndsAt = Date.now() + 1
       mockStore.isPlaying = true
 
-      setupAudioEngine()
+      await setupAudioEngine()
 
       // remaining > 0 → 만료 전이므로 timerEndsAt 유지
       expect(mockStore.timerEndsAt).not.toBeNull()
