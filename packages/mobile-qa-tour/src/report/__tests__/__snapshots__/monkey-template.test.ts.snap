@@ -1,0 +1,24 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`REQ-004~005 renderMonkeyReport > 전체 markdown 형식 snapshot 회귀 가드 (REQ-005) 1`] = `
+"# Monkey Report — com.snapshot.test
+
+- Generated: 2026-01-01T00:00:00.000Z
+- Events: 100
+- Duration: 5000 ms
+- Seed: 99
+- Crashes: 1
+
+## Crashes
+
+### CRASH (line 3)
+
+\`\`\`
+CRASH: NullPointerException
+\`\`\`
+
+
+## Last Screenshot
+
+_screenshot capture failed_"
+`;

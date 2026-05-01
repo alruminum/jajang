@@ -79,16 +79,16 @@ plan §Track A 는 이미 `adb shell monkey` 단일 명령 + logcat grep 으로 
 
 ### 태스크 체크리스트
 
-- [ ] `packages/mobile-qa-tour/` 디렉토리 + 기본 npm package 골격 생성
-- [ ] 루트 monorepo workspaces 설정 확인 / 갱신 (jajang 가 npm workspaces 인지 pnpm 인지 확인 후 정합)
-- [ ] commander 기반 CLI bootstrap (`mobile-qa-tour --help` 동작)
-- [ ] `monkey` 서브커맨드: `--package` / `--events` / `--throttle` / `--output` / `--pct-touch` 등 인자 파싱
-- [ ] adb wrapper 구현 (device 연결 확인 + 패키지 설치 확인)
-- [ ] monkey 실행 + stdout / stderr 캡처
-- [ ] logcat grep 으로 crash/ANR 추출
-- [ ] 마지막 화면 screencap → output 디렉토리 저장
-- [ ] markdown 리포트 생성 (crash 0 / N events / 마지막 screenshot 경로)
-- [ ] `npx mobile-qa-tour monkey --package com.jajang.app --events 100` 로 smoke 검증
+- [x] `packages/mobile-qa-tour/` 디렉토리 + 기본 npm package 골격 생성
+- [x] 루트 monorepo workspaces 설정 확인 / 갱신 (jajang 가 npm workspaces 인지 pnpm 인지 확인 후 정합)
+- [x] commander 기반 CLI bootstrap (`mobile-qa-tour --help` 동작)
+- [x] `monkey` 서브커맨드: `--package` / `--events` / `--throttle` / `--output` / `--pct-touch` 등 인자 파싱
+- [x] adb wrapper 구현 (device 연결 확인 + 패키지 설치 확인)
+- [x] monkey 실행 + stdout / stderr 캡처
+- [x] logcat grep 으로 crash/ANR 추출
+- [x] 마지막 화면 screencap → output 디렉토리 저장
+- [x] markdown 리포트 생성 (crash 0 / N events / 마지막 screenshot 경로)
+- [ ] `npx mobile-qa-tour monkey --package com.jajang.app --events 100` 로 smoke 검증 (emulator 필요 — batch 04 에서 검증)
 
 ### 수용 기준
 
