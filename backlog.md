@@ -40,6 +40,7 @@
 | 08 | Mobile Test Infra | Vitest → Jest (jest-expo) 마이그레이션, RN Flow strip | 🔲 impl 계획 완료 | [epic-08-mobile-test-infra](docs/milestones/v1/epics/epic-08-mobile-test-infra/stories.md) · impl: [01](docs/milestones/v1/epics/epic-08-mobile-test-infra/impl/01-jest-infra.md) [02](docs/milestones/v1/epics/epic-08-mobile-test-infra/impl/02-setup-mock-jest-migration.md) [03](docs/milestones/v1/epics/epic-08-mobile-test-infra/impl/03-test-suite-green.md) |
 | 09 | Mobile Test Triage | Jest 잔여 156 fails 카테고리별 정리, PR #149 merge 가능 상태 | 🔲 impl 계획 완료 | [epic-09-mobile-test-triage](docs/milestones/v1/epics/epic-09-mobile-test-triage/stories.md) · impl: [01](docs/milestones/v1/epics/epic-09-mobile-test-triage/impl/01-category-a-store-mock-esmodule.md) [02](docs/milestones/v1/epics/epic-09-mobile-test-triage/impl/02-category-b-pressable-event-mock.md) [03](docs/milestones/v1/epics/epic-09-mobile-test-triage/impl/03-category-c-async-teardown.md) [04](docs/milestones/v1/epics/epic-09-mobile-test-triage/impl/04-category-d-logic-fix-pr149.md) |
 | 10 | Mobile Test Finalize + PR #149 Merge | 잔여 94 fails / 14 suites 카테고리별 정리 + PR #149 GREEN merge | 🔲 batch 분해 완료 (8 batches: 01~08) | [epic-10-mobile-test-finalize](docs/milestones/v1/epics/epic-10-mobile-test-finalize/stories.md) · [batch-list](docs/milestones/v1/epics/epic-10-mobile-test-finalize/batch-list.md) |
+| 11 | Mobile QA Tour Package (`mobile-qa-tour`) | Android monkey + driven screenshot tour LLM 디자인 검수를 재사용 가능 npm 패키지로 캡슐화 + jajang 최초 consumer 통합 | 🔲 design 완료 (5 stories) | [epic-11-monkey-design-review](docs/milestones/v1/epics/epic-11-monkey-design-review/stories.md) · [system-design](docs/milestones/v1/epics/epic-11-monkey-design-review/system-design.md) |
 
 ## 구현 순서
 
@@ -66,5 +67,6 @@
 - [ ] Epic 08 — Mobile Test Infra (Issue #150)
 - [ ] Epic 09 — Mobile Test Triage (Issue #157)
 - [ ] Epic 10 — Mobile Test Finalize + PR #149 Merge (Issue #166)
+- [ ] Epic 11 — Mobile QA Tour Package + Jajang Integration (TBD)
 - [ ] 내부 베타 (TestFlight / Internal Test Track)
 - [ ] 앱스토어 심사 통과 + 공개 출시
