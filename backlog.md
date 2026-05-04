@@ -67,6 +67,6 @@
 - [ ] Epic 08 — Mobile Test Infra (Issue #150)
 - [ ] Epic 09 — Mobile Test Triage (Issue #157)
 - [ ] Epic 10 — Mobile Test Finalize + PR #149 Merge (Issue #166)
-- [ ] Epic 11 — Mobile QA Tour Package + Jajang Integration (TBD)
+- [ ] Epic 11 — Mobile QA Tour Package + Jajang Integration (#181)
 - [ ] 내부 베타 (TestFlight / Internal Test Track)
 - [ ] 앱스토어 심사 통과 + 공개 출시

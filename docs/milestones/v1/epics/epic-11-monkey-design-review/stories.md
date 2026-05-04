@@ -291,9 +291,9 @@ Story 4 (Pencil adapter, optional) ──────┘
 
 | 스토리 | GitHub Issue |
 |---|---|
-| Epic | TBD |
-| Story 1 | TBD |
-| Story 2 | TBD |
+| Epic | #181 |
+| Story 1 | (PR #180 — issue 미등록, 회고용 직접 등록 X) |
+| Story 2 | #182 |
 | Story 3 | TBD |
 | Story 4 | TBD |
 | Story 5 | TBD |
