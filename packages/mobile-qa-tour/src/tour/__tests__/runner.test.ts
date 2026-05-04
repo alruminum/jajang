@@ -3,7 +3,7 @@ import { runTour } from '../runner';
 import type { TourOptions } from '../runner';
 import type { QaConfig } from '../../config/schema';
 
-vi.mock('./entry-steps', () => ({
+vi.mock('../entry-steps', () => ({
   executeSteps: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock('../../adb', () => ({
@@ -14,7 +14,7 @@ vi.mock('node:fs/promises', () => ({
   writeFile: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { executeSteps } from './entry-steps';
+import { executeSteps } from '../entry-steps';
 import { adbExecOut } from '../../adb';
 import * as fsp from 'node:fs/promises';
 

@@ -25,23 +25,26 @@ describe('REQ-003 loadConfig — 4 분기', () => {
     const err = Object.assign(new Error('no such file'), { code: 'ENOENT' });
     mockReadFile.mockRejectedValueOnce(err);
 
-    await expect(loadConfig('/no/path/config.json')).rejects.toThrow(ConfigLoadError);
-    await expect(loadConfig('/no/path/config.json')).rejects.toThrow(/config not found/);
+    const promise = loadConfig('/no/path/config.json');
+    await expect(promise).rejects.toThrow(ConfigLoadError);
+    await expect(promise).rejects.toThrow(/config not found/);
   });
 
   it('invalid JSON 시 ConfigLoadError — /invalid JSON/ 메시지', async () => {
     mockReadFile.mockResolvedValueOnce('{');
 
-    await expect(loadConfig('/cfg.json')).rejects.toThrow(ConfigLoadError);
-    await expect(loadConfig('/cfg.json')).rejects.toThrow(/invalid JSON/);
+    const promise = loadConfig('/cfg.json');
+    await expect(promise).rejects.toThrow(ConfigLoadError);
+    await expect(promise).rejects.toThrow(/invalid JSON/);
   });
 
   it('zod validation fail 시 ConfigLoadError — /config validation failed/ 메시지', async () => {
     // appPackage 누락 + screens 없음 → zod fail
     mockReadFile.mockResolvedValueOnce(JSON.stringify({}));
 
-    await expect(loadConfig('/cfg.json')).rejects.toThrow(ConfigLoadError);
-    await expect(loadConfig('/cfg.json')).rejects.toThrow(/config validation failed/);
+    const promise = loadConfig('/cfg.json');
+    await expect(promise).rejects.toThrow(ConfigLoadError);
+    await expect(promise).rejects.toThrow(/config validation failed/);
   });
 
   it('valid config 파일 시 QaConfig 반환', async () => {
@@ -86,8 +89,9 @@ describe('REQ-004 loadConfig — screenRegistryPath 머지', () => {
       .mockResolvedValueOnce(configWithRegistry)
       .mockRejectedValueOnce(err);
 
-    await expect(loadConfig('/dir/cfg.json')).rejects.toThrow(ConfigLoadError);
-    await expect(loadConfig('/dir/cfg.json')).rejects.toThrow(/screenRegistry not found/);
+    const promise = loadConfig('/dir/cfg.json');
+    await expect(promise).rejects.toThrow(ConfigLoadError);
+    await expect(promise).rejects.toThrow(/screenRegistry not found/);
   });
 
   it('screenRegistryPath 파일이 유효하지 않은 JSON 시 ConfigLoadError — /invalid JSON/ 메시지', async () => {
@@ -100,7 +104,8 @@ describe('REQ-004 loadConfig — screenRegistryPath 머지', () => {
       .mockResolvedValueOnce(configWithRegistry)
       .mockResolvedValueOnce('{bad json');
 
-    await expect(loadConfig('/dir/cfg.json')).rejects.toThrow(ConfigLoadError);
-    await expect(loadConfig('/dir/cfg.json')).rejects.toThrow(/invalid JSON/);
+    const promise = loadConfig('/dir/cfg.json');
+    await expect(promise).rejects.toThrow(ConfigLoadError);
+    await expect(promise).rejects.toThrow(/invalid JSON/);
   });
 });

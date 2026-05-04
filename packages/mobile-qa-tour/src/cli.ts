@@ -61,18 +61,36 @@ program
 
 program
   .command('tour')
-  .description('Driven screenshot tour (batch 02)')
-  .action(() => {
-    console.error('tour: not yet implemented (batch 02)');
-    process.exit(2);
+  .description('Driven screenshot tour')
+  .requiredOption('--config <path>', 'qa.config.json path')
+  .option('--output <dir>', 'override config.outputDir')
+  .option('--only <screenId>', 'run a single screen by id')
+  .option('--skip-uiautomator', 'skip uiautomator dump (batch 03)')
+  .option('--skip-heuristics', 'skip heuristic checks (batch 03)')
+  .action(async (opts) => {
+    const { loadConfig } = await import('./config/load');
+    const { runTour } = await import('./tour/runner');
+    const config = await loadConfig(path.resolve(opts.config));
+    const result = await runTour({
+      config,
+      output: opts.output ? path.resolve(opts.output) : undefined,
+      only: opts.only,
+      skipUiautomator: !!opts.skipUiautomator,
+      skipHeuristics: !!opts.skipHeuristics,
+    });
+    console.log(`tour finished. screens=${result.screens.length} outputDir=${result.outputDir}`);
   });
 
 program
   .command('init')
-  .description('Generate qa.config.example.json (batch 02)')
-  .action(() => {
-    console.error('init: not yet implemented (batch 02)');
-    process.exit(2);
+  .description('Generate qa.config.example.json + screen-registry.example.json in target dir')
+  .option('--out <dir>', 'output directory', '.')
+  .action(async (opts) => {
+    const { runInit } = await import('./cli/init');
+    const result = await runInit({ outDir: path.resolve(opts.out) });
+    for (const f of result.copied) console.log(`created: ${f}`);
+    for (const f of result.skipped) console.warn(`skipped (already exists): ${f}`);
+    if (result.copied.length === 0) process.exit(1);
   });
 
 if (require.main === module) {

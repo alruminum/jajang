@@ -3,6 +3,15 @@ export { extractCrashes } from './monkey/crash-detect';
 export { renderMonkeyReport } from './report/monkey-template';
 export { writeReport } from './report/writer';
 export { adbShell, adbExecOut, adbLogcat, listDevices } from './adb';
+export { loadConfig, ConfigLoadError } from './config/load';
+export {
+  QaConfigSchema,
+  ScreenSchema,
+  EntryStepSchema,
+} from './config/schema';
+export { runTour } from './tour/runner';
+export { executeStep, executeSteps } from './tour/entry-steps';
+export { runInit } from './cli/init';
 export type {
   MonkeyOptions,
   MonkeyResult,
@@ -11,3 +20,11 @@ export type {
 export type { Crash, CrashType } from './monkey/crash-detect';
 export type { MonkeyReportData } from './report/monkey-template';
 export type { AdbExecOptions } from './adb';
+export type { QaConfig, Screen, EntryStep } from './config/schema';
+export type { EntryStepCtx } from './tour/entry-steps';
+export type {
+  TourOptions,
+  TourScreenResult,
+  TourResult,
+} from './tour/runner';
+export type { InitOptions, InitResult } from './cli/init';
