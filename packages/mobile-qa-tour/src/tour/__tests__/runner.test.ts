@@ -13,15 +13,35 @@ vi.mock('node:fs/promises', () => ({
   mkdir: vi.fn().mockResolvedValue(undefined),
   writeFile: vi.fn().mockResolvedValue(undefined),
 }));
+// batch 03 신규 mock
+vi.mock('../uiautomator', () => ({
+  dumpUi: vi.fn().mockResolvedValue('<hierarchy><node/></hierarchy>'),
+  parseUi: vi.fn().mockResolvedValue({ bounds: { x1: 0, y1: 0, x2: 1080, y2: 1920 }, clickable: false, children: [] }),
+  flattenUi: vi.fn().mockReturnValue([]),
+}));
+vi.mock('../../heuristics', () => ({
+  runHeuristics: vi.fn().mockReturnValue({ textTruncations: [], smallTouchTargets: [] }),
+}));
+vi.mock('../../report/tour-template', () => ({
+  renderTourScreenReport: vi.fn().mockReturnValue('# QA Tour mock'),
+}));
 
 import { executeSteps } from '../entry-steps';
 import { adbExecOut } from '../../adb';
 import * as fsp from 'node:fs/promises';
+import { dumpUi, parseUi, flattenUi } from '../uiautomator';
+import { runHeuristics } from '../../heuristics';
+import { renderTourScreenReport } from '../../report/tour-template';
 
 const mockExecuteSteps = vi.mocked(executeSteps);
 const mockAdbExecOut = vi.mocked(adbExecOut);
 const mockMkdir = vi.mocked(fsp.mkdir);
 const mockWriteFile = vi.mocked(fsp.writeFile);
+const mockDumpUi = vi.mocked(dumpUi);
+const mockParseUi = vi.mocked(parseUi);
+const mockFlattenUi = vi.mocked(flattenUi);
+const mockRunHeuristics = vi.mocked(runHeuristics);
+const mockRenderTourScreenReport = vi.mocked(renderTourScreenReport);
 
 function makeConfig(screens: QaConfig['screens']): QaConfig {
   return {
@@ -37,7 +57,14 @@ beforeEach(() => {
   mockAdbExecOut.mockResolvedValue(Buffer.from('PNG_DATA'));
   mockMkdir.mockResolvedValue(undefined);
   mockWriteFile.mockResolvedValue(undefined);
+  mockDumpUi.mockResolvedValue('<hierarchy><node/></hierarchy>');
+  mockParseUi.mockResolvedValue({ bounds: { x1: 0, y1: 0, x2: 1080, y2: 1920 }, clickable: false, children: [] });
+  mockFlattenUi.mockReturnValue([]);
+  mockRunHeuristics.mockReturnValue({ textTruncations: [], smallTouchTargets: [] });
+  mockRenderTourScreenReport.mockReturnValue('# QA Tour mock');
 });
+
+// ─── 기존 9 테스트 (유지) ────────────────────────────────────────────────
 
 describe('REQ-007 runTour — N 화면 순회', () => {
   it('2개 화면 config — executeSteps 2회 호출', async () => {
@@ -59,13 +86,14 @@ describe('REQ-007 runTour — N 화면 순회', () => {
     expect(mockAdbExecOut).toHaveBeenCalledWith('screencap -p');
   });
 
-  it('2개 화면 config — fs.writeFile 2회 호출 (screenshot 저장)', async () => {
+  it('2개 화면 config — fs.writeFile 최소 2회 호출 (screenshot 저장)', async () => {
     const config = makeConfig([
       { id: 'Home', entrySteps: [], settleMs: 0 },
       { id: 'Detail', entrySteps: [], settleMs: 0 },
     ]);
     await runTour({ config });
-    expect(mockWriteFile).toHaveBeenCalledTimes(2);
+    // batch 03: screenshot + xml + md → 화면당 최대 3 writeFile. 최소 2회 보장.
+    expect(mockWriteFile.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
 });
 
@@ -119,5 +147,117 @@ describe('runTour — 빈 screens 가드', () => {
   it('config.screens 가 빈 배열이면 throw /screens is empty/', async () => {
     const config = makeConfig([]);
     await expect(runTour({ config })).rejects.toThrow(/screens is empty/);
+  });
+});
+
+// ─── REQ-002: batch 03 신규 — uiautomator 통합 ─────────────────────────
+
+describe('REQ-002 runTour — skipUiautomator=false 시 dumpUi 통합', () => {
+  it('skipUiautomator 미설정(default) → dumpUi 화면 수만큼 호출', async () => {
+    const config = makeConfig([
+      { id: 'Home', entrySteps: [], settleMs: 0 },
+      { id: 'Settings', entrySteps: [], settleMs: 0 },
+    ]);
+    await runTour({ config });
+    expect(mockDumpUi).toHaveBeenCalledTimes(2);
+  });
+
+  it('skipUiautomator=false → dumpUi 1회 호출 (1 화면)', async () => {
+    const config = makeConfig([{ id: 'Home', entrySteps: [], settleMs: 0 }]);
+    await runTour({ config, skipUiautomator: false });
+    expect(mockDumpUi).toHaveBeenCalledTimes(1);
+  });
+
+  it('skipUiautomator=false → xml writeFile 호출 — 경로가 <id>.xml 형식', async () => {
+    const config = makeConfig([{ id: 'Home', entrySteps: [], settleMs: 0 }]);
+    await runTour({ config, skipUiautomator: false });
+    const xmlCall = mockWriteFile.mock.calls.find(([p]) => String(p).endsWith('Home.xml'));
+    expect(xmlCall).toBeDefined();
+  });
+
+  it('skipUiautomator=false → parseUi 호출됨', async () => {
+    const config = makeConfig([{ id: 'Home', entrySteps: [], settleMs: 0 }]);
+    await runTour({ config, skipUiautomator: false });
+    expect(mockParseUi).toHaveBeenCalledTimes(1);
+  });
+
+  it('skipUiautomator=false → runHeuristics 호출됨', async () => {
+    const config = makeConfig([{ id: 'Home', entrySteps: [], settleMs: 0 }]);
+    await runTour({ config, skipUiautomator: false });
+    expect(mockRunHeuristics).toHaveBeenCalledTimes(1);
+  });
+
+  it('skipUiautomator=false → TourScreenResult.uiDumpPath 가 설정됨', async () => {
+    const config = makeConfig([{ id: 'Home', entrySteps: [], settleMs: 0 }]);
+    const result = await runTour({ config, skipUiautomator: false });
+    expect(result.screens[0].uiDumpPath).toBeDefined();
+    expect(result.screens[0].uiDumpPath).toMatch(/Home\.xml$/);
+  });
+});
+
+describe('REQ-002 runTour — skipUiautomator=true 시 dump 호출 없음', () => {
+  it('skipUiautomator=true → dumpUi 호출 0회', async () => {
+    const config = makeConfig([{ id: 'Home', entrySteps: [], settleMs: 0 }]);
+    await runTour({ config, skipUiautomator: true });
+    expect(mockDumpUi).not.toHaveBeenCalled();
+  });
+
+  it('skipUiautomator=true → parseUi 호출 0회', async () => {
+    const config = makeConfig([{ id: 'Home', entrySteps: [], settleMs: 0 }]);
+    await runTour({ config, skipUiautomator: true });
+    expect(mockParseUi).not.toHaveBeenCalled();
+  });
+
+  it('skipUiautomator=true → TourScreenResult.uiDumpPath === undefined', async () => {
+    const config = makeConfig([{ id: 'Home', entrySteps: [], settleMs: 0 }]);
+    const result = await runTour({ config, skipUiautomator: true });
+    expect(result.screens[0].uiDumpPath).toBeUndefined();
+  });
+});
+
+describe('REQ-002 runTour — skipHeuristics=true 시 heuristics 미산출', () => {
+  it('skipHeuristics=true (skipUiautomator=false) → dumpUi 호출되지만 runHeuristics 미호출', async () => {
+    const config = makeConfig([{ id: 'Home', entrySteps: [], settleMs: 0 }]);
+    await runTour({ config, skipUiautomator: false, skipHeuristics: true });
+    expect(mockDumpUi).toHaveBeenCalledTimes(1);
+    expect(mockRunHeuristics).not.toHaveBeenCalled();
+  });
+
+  it('skipHeuristics=true → TourScreenResult.heuristics === undefined', async () => {
+    const config = makeConfig([{ id: 'Home', entrySteps: [], settleMs: 0 }]);
+    const result = await runTour({ config, skipUiautomator: false, skipHeuristics: true });
+    expect(result.screens[0].heuristics).toBeUndefined();
+  });
+});
+
+describe('REQ-002 runTour — per-screen .md 파일 writeFile 호출', () => {
+  it('1 화면 → renderTourScreenReport 1회 호출', async () => {
+    const config = makeConfig([{ id: 'Home', entrySteps: [], settleMs: 0 }]);
+    await runTour({ config });
+    expect(mockRenderTourScreenReport).toHaveBeenCalledTimes(1);
+  });
+
+  it('1 화면 → <id>.md 경로로 writeFile 호출', async () => {
+    const config = makeConfig([{ id: 'Home', entrySteps: [], settleMs: 0 }]);
+    await runTour({ config });
+    const mdCall = mockWriteFile.mock.calls.find(([p]) => String(p).endsWith('Home.md'));
+    expect(mdCall).toBeDefined();
+  });
+
+  it('.md 파일 내용이 renderTourScreenReport 반환값과 일치', async () => {
+    mockRenderTourScreenReport.mockReturnValue('# QA Tour — Home');
+    const config = makeConfig([{ id: 'Home', entrySteps: [], settleMs: 0 }]);
+    await runTour({ config });
+    const mdCall = mockWriteFile.mock.calls.find(([p]) => String(p).endsWith('Home.md'));
+    expect(mdCall?.[1]).toBe('# QA Tour — Home');
+  });
+
+  it('2 화면 → renderTourScreenReport 2회 호출', async () => {
+    const config = makeConfig([
+      { id: 'Home', entrySteps: [], settleMs: 0 },
+      { id: 'Detail', entrySteps: [], settleMs: 0 },
+    ]);
+    await runTour({ config });
+    expect(mockRenderTourScreenReport).toHaveBeenCalledTimes(2);
   });
 });
