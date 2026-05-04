@@ -130,16 +130,16 @@ plan §Track B 는 7 화면 × (navigate + screencap + LLM analysis) 흐름. nav
 
 ### 태스크 체크리스트
 
-- [ ] zod 스키마 정의 + unit test (config validation pass / fail 케이스)
-- [ ] `tour` 서브커맨드 추가: `--config <path>` / `--output <dir>` / `--only <screenId>` / `--skip-uiautomator`
-- [ ] 진입 스텝 실행기 (tap / tapTestId / inputText / keyevent / permissionGrant / deepLink / wait)
-- [ ] testID 기반 tap: `uiautomator dump` 에서 `resource-id` 매칭 후 bounds 중앙 좌표 추출
-- [ ] uiautomator XML 파서 (xml2js 또는 정규식)
-- [ ] 휴리스틱 — 텍스트 잘림 / 터치 타겟 < 44dp / (옵션) 화면 색상 분석은 P3 (LLM 위임)
-- [ ] per-screen markdown 슬롯: screenshot 경로 / 휴리스틱 표 / `ux-flow ref` 슬롯 / `pencil ref` 슬롯 (있으면) / `LLM 검수 결과` 슬롯 (메인 Claude 가 채움)
-- [ ] `init` 서브커맨드 — 템플릿 복사 + 안내 메시지
-- [ ] programmatic API export (Node script 에서 import 가능)
-- [ ] consumer 무관 검증 — 가짜 `qa.config.json` (다른 앱 패키지명) 으로 dry-run
+- [x] zod 스키마 정의 + unit test (config validation pass / fail 케이스) — batch 02
+- [x] `tour` 서브커맨드 추가: `--config <path>` / `--output <dir>` / `--only <screenId>` / `--skip-uiautomator` — batch 02
+- [x] 진입 스텝 실행기 (tap / tapTestId / inputText / keyevent / permissionGrant / deepLink / wait) — batch 02 (tapTestId 는 batch 03 의존 명시 throw)
+- [ ] testID 기반 tap: `uiautomator dump` 에서 `resource-id` 매칭 후 bounds 중앙 좌표 추출 — batch 03
+- [ ] uiautomator XML 파서 (xml2js 또는 정규식) — batch 03
+- [ ] 휴리스틱 — 텍스트 잘림 / 터치 타겟 < 44dp / (옵션) 화면 색상 분석은 P3 (LLM 위임) — batch 03
+- [ ] per-screen markdown 슬롯: screenshot 경로 / 휴리스틱 표 / `ux-flow ref` 슬롯 / `pencil ref` 슬롯 (있으면) / `LLM 검수 결과` 슬롯 (메인 Claude 가 채움) — batch 03
+- [x] `init` 서브커맨드 — 템플릿 복사 + 안내 메시지 — batch 02
+- [x] programmatic API export (Node script 에서 import 가능) — batch 02 (loadConfig / runTour / runInit / 7 타입)
+- [ ] consumer 무관 검증 — 가짜 `qa.config.json` (다른 앱 패키지명) 으로 dry-run — batch 03 (현 batch grep 0 통과)
 
 ### 수용 기준
 
@@ -291,9 +291,9 @@ Story 4 (Pencil adapter, optional) ──────┘
 
 | 스토리 | GitHub Issue |
 |---|---|
-| Epic | TBD |
-| Story 1 | TBD |
-| Story 2 | TBD |
+| Epic | #181 |
+| Story 1 | (PR #180 — issue 미등록, 회고용 직접 등록 X) |
+| Story 2 | #182 |
 | Story 3 | TBD |
 | Story 4 | TBD |
 | Story 5 | TBD |

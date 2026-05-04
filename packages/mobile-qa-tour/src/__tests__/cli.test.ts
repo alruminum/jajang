@@ -70,39 +70,43 @@ describe('REQ-012 / REQ-015 CLI smoke', () => {
     expect(helpText).toContain('--events');
   });
 
-  it('tour 서브커맨드 → exit(2) + stderr "not yet implemented" (REQ-015)', async () => {
+  it('tour --help → --config, --output, --only 등 option 목록 노출 (REQ-011)', async () => {
     const { program } = await import('../cli');
 
-    const stderrLines: string[] = [];
-    vi.spyOn(console, 'error').mockImplementation((...args) => {
-      stderrLines.push(args.join(' '));
+    let helpText = '';
+    program.configureOutput({
+      writeOut: (str) => { helpText += str; },
+      writeErr: (str) => { helpText += str; },
     });
 
     try {
-      await program.parseAsync(['node', 'mobile-qa-tour', 'tour']);
+      await program.parseAsync(['node', 'mobile-qa-tour', 'tour', '--help']);
     } catch (e: unknown) {
       const msg = (e as Error).message;
-      expect(msg).toMatch(/process\.exit\(2\)/);
+      expect(msg).toMatch(/process\.exit\(0\)/);
     }
 
-    expect(stderrLines.some((l) => l.includes('not yet implemented'))).toBe(true);
+    expect(helpText).toContain('--config');
+    expect(helpText).toContain('--output');
+    expect(helpText).toContain('--only');
   });
 
-  it('init 서브커맨드 → exit(2) + stderr "not yet implemented" (REQ-015)', async () => {
+  it('init --help → --out option 노출 (REQ-011)', async () => {
     const { program } = await import('../cli');
 
-    const stderrLines: string[] = [];
-    vi.spyOn(console, 'error').mockImplementation((...args) => {
-      stderrLines.push(args.join(' '));
+    let helpText = '';
+    program.configureOutput({
+      writeOut: (str) => { helpText += str; },
+      writeErr: (str) => { helpText += str; },
     });
 
     try {
-      await program.parseAsync(['node', 'mobile-qa-tour', 'init']);
+      await program.parseAsync(['node', 'mobile-qa-tour', 'init', '--help']);
     } catch (e: unknown) {
       const msg = (e as Error).message;
-      expect(msg).toMatch(/process\.exit\(2\)/);
+      expect(msg).toMatch(/process\.exit\(0\)/);
     }
 
-    expect(stderrLines.some((l) => l.includes('not yet implemented'))).toBe(true);
+    expect(helpText).toContain('--out');
   });
 });

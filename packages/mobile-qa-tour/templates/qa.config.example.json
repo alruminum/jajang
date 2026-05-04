@@ -1,0 +1,6 @@
+{
+  "appPackage": "com.example.app",
+  "outputDir": "./qa-output",
+  "uxFlowAnchor": "docs/ux-flow.md",
+  "screenRegistryPath": "./screen-registry.example.json"
+}
