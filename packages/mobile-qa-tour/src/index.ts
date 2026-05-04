@@ -12,6 +12,11 @@ export {
 export { runTour } from './tour/runner';
 export { executeStep, executeSteps } from './tour/entry-steps';
 export { runInit } from './cli/init';
+export { dumpUi, parseUi, flattenUi, findByResourceId, bbCenter } from './tour/uiautomator';
+export { runHeuristics, renderHeuristicsTable } from './heuristics';
+export { detectTextTruncation } from './heuristics/text-truncation';
+export { detectSmallTouchTargets } from './heuristics/touch-target';
+export { renderTourScreenReport } from './report/tour-template';
 export type {
   MonkeyOptions,
   MonkeyResult,
@@ -28,3 +33,8 @@ export type {
   TourResult,
 } from './tour/runner';
 export type { InitOptions, InitResult } from './cli/init';
+export type { UiNode } from './tour/uiautomator';
+export type { TextTruncation } from './heuristics/text-truncation';
+export type { SmallTouchTarget } from './heuristics/touch-target';
+export type { HeuristicResult } from './heuristics';
+export type { TourScreenReport } from './report/tour-template';
