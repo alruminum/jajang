@@ -1,4 +1,5 @@
 import { adbShell } from '../adb';
+import { dumpUi, parseUi, findByResourceId, bbCenter } from './uiautomator';
 import type { EntryStep } from '../config/schema';
 
 export type { EntryStep };
@@ -20,10 +21,17 @@ export async function executeStep(step: EntryStep, ctx: EntryStepCtx): Promise<v
     case 'tap':
       await adbShell(`input tap ${step.x} ${step.y}`);
       return;
-    case 'tapTestId':
-      throw new Error(
-        `tapTestId requires uiautomator dump (batch 03 미완료). testId=${step.testId} — 좌표 tap 사용 권장 또는 batch 03 완료 후 재실행.`,
-      );
+    case 'tapTestId': {
+      const xml = await dumpUi();
+      const root = await parseUi(xml);
+      const node = findByResourceId(root, step.testId);
+      if (!node) {
+        throw new Error(`tapTestId: resource-id="${step.testId}" not found in current dump`);
+      }
+      const { x, y } = bbCenter(node);
+      await adbShell(`input tap ${x} ${y}`);
+      return;
+    }
     case 'inputText':
       await adbShell(`input text ${shellEscapeText(step.text)}`);
       return;
