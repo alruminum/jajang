@@ -59,7 +59,7 @@
 - [ ] 마일스톤 0 — 선행 리서치 (벤치마크 미실행, MockInferenceClient로 우선 진행)
 - [x] Epic 01 — 인증 & 온보딩
 - [x] Epic 02 — 목소리 녹음 & 품질 검증 (v1.3.1 갱신: impl/13·14 신규 미구현)
-- [x] Epic 03 — DSP 음원 후처리 생성 (v1.3.1 전면 재정의: impl/01~03 신규 미구현)
+- [x] Epic 03 — DSP 음원 후처리 생성 (v1.3.1 전면 재정의: Story 1~7 모두 완료, impl/01~07 merged)
 - [x] Epic 04 — 재생 & 백그라운드 (v1.3.1 갱신: Story 2 RepeatMode.Queue 전환 확인 필요)
 - [x] Epic 05 — 수익화
 - [x] Epic 06 — 개인정보 & 데이터 관리

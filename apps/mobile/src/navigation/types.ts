@@ -26,9 +26,7 @@ export type MainStackParamList = {
   Record: { songKey: string };            // S10 — mode 제거 (impl/13)
   Preview: { recordingUri: string; songKey: string };          // S11
   Generating: {
-    sampleId: string;   // voice_sample_id (서버 검증 완료)
-    songKey:  string;
-    jobId?:   string;   // 클라이언트 생성 UUID (멱등성 키, 없으면 S12에서 생성)
+    sessionId: string;  // sessions API session_id (impl/07)
   };                                                           // S12
   Play: { trackId: string; trackUrl?: string; presignUrl?: string; songKey?: string }; // S13
   Upgrade: {                             // S14 (legacy)

@@ -208,7 +208,7 @@
 
 ---
 
-## Story 7 — 생성 중 대기 화면 & 실패 처리 (S12, 클라이언트)
+## Story 7 — 생성 중 대기 화면 & 실패 처리 (S12, 클라이언트) [x]
 
 **GitHub Issue:** [#197](https://github.com/alruminum/jajang/issues/197)
 
@@ -220,14 +220,14 @@
 
 ### 태스크 체크리스트
 
-- [ ] S12 생성 중 애니메이션 UI + "30초 이내" 예상 시간 안내
-- [ ] `GET /sessions/{id}/status` 5초 간격 폴링 (서버 status 가 completed/failed 도달 시까지 계속)
-- [ ] 생성 완료 (`status=completed`) 수신 → S13 재생 화면 자동 이동
-- [ ] 클라이언트 30초 경과 시: "처리 중 (재시도 대기)" 메시지 + 재시도 버튼 *비활성* + "홈으로 이동" 버튼 활성 노출 (Celery retry 진행 중 중복 task 방지)
-- [ ] 클라이언트 30초 이후에도 폴링 계속 유지 — 서버 `status=completed` 도달 시 S13 자동 이동
-- [ ] 서버 `status=failed` (Celery 재시도 모두 소진) 도달 시: 재시도 버튼 활성 + 실패 메시지 노출
-- [ ] 재시도 (`status=failed` 후): 동일 session_id POST 재요청 (횟수 차감 없음)
-- [ ] "홈으로 이동": 항상 활성 → S06 홈 이동 → 완료 시 "생성 완료 음원 있음" 카드 자동 노출
+- [x] S12 생성 중 애니메이션 UI + "30초 이내" 예상 시간 안내
+- [x] `GET /sessions/{id}/status` 5초 간격 폴링 (서버 status 가 completed/failed 도달 시까지 계속)
+- [x] 생성 완료 (`status=completed`) 수신 → S13 재생 화면 자동 이동
+- [x] 클라이언트 30초 경과 시: "처리 중 (재시도 대기)" 메시지 + 재시도 버튼 *비활성* + "홈으로 이동" 버튼 활성 노출 (Celery retry 진행 중 중복 task 방지)
+- [x] 클라이언트 30초 이후에도 폴링 계속 유지 — 서버 `status=completed` 도달 시 S13 자동 이동
+- [x] 서버 `status=failed` (Celery 재시도 모두 소진) 도달 시: 재시도 버튼 활성 + 실패 메시지 노출
+- [x] 재시도 (`status=failed` 후): 동일 session_id POST 재요청 (횟수 차감 없음)
+- [x] "홈으로 이동": 항상 활성 → S06 홈 이동 → 완료 시 "생성 완료 음원 있음" 카드 자동 노출
 
 ### 수용 기준
 
