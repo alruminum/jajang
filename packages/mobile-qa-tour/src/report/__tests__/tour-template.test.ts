@@ -119,6 +119,34 @@ describe('renderTourScreenReport — pencilSlot 처리', () => {
   });
 });
 
+// ─── REQ-PENCIL-07: impl/05 pencilSlot 렌더 — 슬롯 직접 주입 ───────────────
+// tour-template 이 preparePencilSlot 반환값을 그대로 Pencil Reference 섹션에 출력.
+// pencilSlot=undefined 이면 "매핑 없음" comment 출력.
+//
+// TDD 상태: 기존 구현은 슬롯 값을 <!-- pencil ref slot: nodeIds=[${pencilSlot}] --> 로
+// 래핑. impl/05 이후 preparePencilSlot 이 이미 완성된 comment 를 반환하므로
+// renderTourScreenReport 는 값을 그대로 출력해야 함.
+
+describe('REQ-PENCIL-07 renderTourScreenReport — impl/05 pencilSlot 직접 주입 (렌더 정합)', () => {
+  it('pencilSlot 이 완성된 markdown comment 일 때 그대로 본문에 포함', () => {
+    const slot =
+      '<!-- pencil ref slot\n  document: ../../design/jajang.pen\n  screen: S10\n  nodeIds: [llTp1, r97aM]\n  action: 메인 Claude mcp__pencil__get_screenshot 호출 후 첨부\n-->';
+    const md = renderTourScreenReport(makeInput({ pencilSlot: slot }));
+    // 슬롯 안의 documentPath 가 md 본문에 그대로 나타나야 함
+    expect(md).toContain('../../design/jajang.pen');
+    // nodeIds 값도 그대로
+    expect(md).toContain('llTp1');
+    expect(md).toContain('r97aM');
+  });
+
+  it('pencilSlot=undefined 이면 Pencil Reference 섹션에 "매핑 없음" 주석 포함', () => {
+    const md = renderTourScreenReport(makeInput({ pencilSlot: undefined, screen: { id: 'S06' } }));
+    const pencilSection = md.split('## Pencil Reference')[1]?.split('## LLM Review')[0] ?? '';
+    // impl/05 인터페이스: {pencilSlot ?? '<!-- pencil ref: 매핑 없음 -->'}
+    expect(pencilSection).toMatch(/매핑 없음|pencil ref|<!--/);
+  });
+});
+
 // ─── uiDumpPath ──────────────────────────────────────────────────────────
 
 describe('renderTourScreenReport — uiDumpPath 처리', () => {

@@ -25,6 +25,10 @@ vi.mock('../../heuristics', () => ({
 vi.mock('../../report/tour-template', () => ({
   renderTourScreenReport: vi.fn().mockReturnValue('# QA Tour mock'),
 }));
+// impl/05 — pencil adapter mock
+vi.mock('../../pencil/adapter', () => ({
+  preparePencilSlot: vi.fn().mockReturnValue('<!-- pencil ref slot mock -->'),
+}));
 
 import { executeSteps } from '../entry-steps';
 import { adbExecOut } from '../../adb';
@@ -32,6 +36,7 @@ import * as fsp from 'node:fs/promises';
 import { dumpUi, parseUi, flattenUi } from '../uiautomator';
 import { runHeuristics } from '../../heuristics';
 import { renderTourScreenReport } from '../../report/tour-template';
+import { preparePencilSlot } from '../../pencil/adapter';
 
 const mockExecuteSteps = vi.mocked(executeSteps);
 const mockAdbExecOut = vi.mocked(adbExecOut);
@@ -42,12 +47,14 @@ const mockParseUi = vi.mocked(parseUi);
 const mockFlattenUi = vi.mocked(flattenUi);
 const mockRunHeuristics = vi.mocked(runHeuristics);
 const mockRenderTourScreenReport = vi.mocked(renderTourScreenReport);
+const mockPreparePencilSlot = vi.mocked(preparePencilSlot);
 
-function makeConfig(screens: QaConfig['screens']): QaConfig {
+function makeConfig(screens: QaConfig['screens'], pencil?: QaConfig['pencil']): QaConfig {
   return {
     appPackage: 'com.test.app',
     outputDir: '/qa-output',
     screens,
+    ...(pencil !== undefined ? { pencil } : {}),
   };
 }
 
@@ -62,6 +69,7 @@ beforeEach(() => {
   mockFlattenUi.mockReturnValue([]);
   mockRunHeuristics.mockReturnValue({ textTruncations: [], smallTouchTargets: [] });
   mockRenderTourScreenReport.mockReturnValue('# QA Tour mock');
+  mockPreparePencilSlot.mockReturnValue('<!-- pencil ref slot mock -->');
 });
 
 // ─── 기존 9 테스트 (유지) ────────────────────────────────────────────────
@@ -259,5 +267,59 @@ describe('REQ-002 runTour — per-screen .md 파일 writeFile 호출', () => {
     ]);
     await runTour({ config });
     expect(mockRenderTourScreenReport).toHaveBeenCalledTimes(2);
+  });
+});
+
+// ─── REQ-PENCIL-08: impl/05 runner — pencil.enabled 분기 ────────────────────
+//
+// TDD 상태: RED. runner.ts 에 pencil.enabled 분기 미구현 상태.
+// engineer 가 impl/05 산출 후 GREEN 전환.
+
+describe('REQ-PENCIL-08 runTour — pencil.enabled=true 분기', () => {
+  it('config.pencil.enabled=true 이면 preparePencilSlot 화면 수만큼 호출', async () => {
+    const config = makeConfig(
+      [
+        { id: 'S10', entrySteps: [], settleMs: 0 },
+        { id: 'S06', entrySteps: [], settleMs: 0 },
+      ],
+      { enabled: true, documentPath: '../../design/jajang.pen', nodeIds: { S10: ['llTp1'] } },
+    );
+    await runTour({ config });
+    expect(mockPreparePencilSlot).toHaveBeenCalledTimes(2);
+  });
+
+  it('config.pencil.enabled=true 이면 renderTourScreenReport 에 pencilSlot 이 주입됨', async () => {
+    mockPreparePencilSlot.mockReturnValue('<!-- pencil ref slot stub -->');
+    const config = makeConfig(
+      [{ id: 'S10', entrySteps: [], settleMs: 0 }],
+      { enabled: true, documentPath: '../../design/jajang.pen', nodeIds: { S10: ['llTp1'] } },
+    );
+    await runTour({ config });
+    const callArg = mockRenderTourScreenReport.mock.calls[0]?.[0];
+    expect(callArg?.pencilSlot).toBe('<!-- pencil ref slot stub -->');
+  });
+});
+
+describe('REQ-PENCIL-09 runTour — pencil.enabled=false 또는 pencil 블록 없음', () => {
+  it('config.pencil.enabled=false 이면 preparePencilSlot 미호출', async () => {
+    const config = makeConfig(
+      [{ id: 'Home', entrySteps: [], settleMs: 0 }],
+      { enabled: false },
+    );
+    await runTour({ config });
+    expect(mockPreparePencilSlot).not.toHaveBeenCalled();
+  });
+
+  it('config.pencil 블록 자체 없으면 preparePencilSlot 미호출', async () => {
+    const config = makeConfig([{ id: 'Home', entrySteps: [], settleMs: 0 }]);
+    await runTour({ config });
+    expect(mockPreparePencilSlot).not.toHaveBeenCalled();
+  });
+
+  it('pencil 미설정 시 renderTourScreenReport 의 pencilSlot 이 undefined', async () => {
+    const config = makeConfig([{ id: 'Home', entrySteps: [], settleMs: 0 }]);
+    await runTour({ config });
+    const callArg = mockRenderTourScreenReport.mock.calls[0]?.[0];
+    expect(callArg?.pencilSlot).toBeUndefined();
   });
 });
