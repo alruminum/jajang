@@ -1,0 +1,3 @@
+FREE_GENERATION_LIMIT = 3
+TRIAL_DAYS = 7
+PREMIUM_ENTITLEMENTS = frozenset({"premium", "trial"})

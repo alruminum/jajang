@@ -1,16 +1,14 @@
 import uuid
 
 import structlog
-from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.generation_counter import GenerationCounter
 from app.models.master_audio import MasterAudio
 from app.models.recording_session import RecordingSession
 from app.schemas.sessions import SessionInitRequest, SessionInitResponse
 from app.services import storage_service
-from app.services.counter_service import FREE_TIER_LIMIT, PAID_ENTITLEMENTS
+from app.services.counter_repo import assert_below_limit_or_raise
 
 logger = structlog.get_logger()
 
@@ -29,18 +27,7 @@ async def init_session(
     4. presigned PUT URL 발급
     """
     # ── 1. 카운터 체크 (무료 유저) ─────────────────────────────────
-    if entitlement not in PAID_ENTITLEMENTS:
-        result = await db.execute(
-            select(GenerationCounter)
-            .where(GenerationCounter.user_id == user_id)
-            .with_for_update()
-        )
-        counter = result.scalar_one_or_none()
-        if counter and counter.count >= FREE_TIER_LIMIT:
-            raise HTTPException(
-                status_code=status.HTTP_402_PAYMENT_REQUIRED,
-                detail={"code": "GENERATION_LIMIT_EXCEEDED", "count": counter.count},
-            )
+    await assert_below_limit_or_raise(db, user_id, entitlement)
 
     # ── 2. 멱등성 체크 ────────────────────────────────────────────
     result = await db.execute(

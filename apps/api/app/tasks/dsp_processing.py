@@ -15,8 +15,7 @@ from app.core.db import SyncSessionLocal
 from app.core.config import settings
 from app.models.recording import Recording
 from app.models.master_audio import MasterAudio
-from app.models.generation_counter import GenerationCounter
-from app.services.counter_service import PAID_ENTITLEMENTS
+from app.services.counter_repo import increment_if_free_sync
 from app.services.dsp import get_dsp_service
 from app.services.storage_service import upload_mp3
 
@@ -167,18 +166,7 @@ def dsp_process_task(
                 .where(Recording.session_id == _session_id)
                 .values(schedule_delete_at=schedule_delete)
             )
-            # 무료 유저만 카운터 +1 (generation.py 패턴 준용 — last_generated_at + updated_at 함께)
-            if entitlement not in PAID_ENTITLEMENTS:
-                db.execute(
-                    update(GenerationCounter)
-                    .where(GenerationCounter.user_id == _user_id)
-                    .values(
-                        count=GenerationCounter.count + 1,
-                        last_generated_at=datetime.now(timezone.utc),
-                        updated_at=datetime.now(timezone.utc),
-                    )
-                    .execution_options(synchronize_session=False)
-                )
+            increment_if_free_sync(db, _user_id, entitlement, datetime.now(timezone.utc))
             db.commit()
 
         logger.info(

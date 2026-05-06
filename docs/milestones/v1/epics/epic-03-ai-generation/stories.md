@@ -180,7 +180,7 @@
 
 ---
 
-## Story 6 — DSP 생성 횟수 카운터 서버사이드 enforcement
+## Story 6 — DSP 생성 횟수 카운터 서버사이드 enforcement [x]
 
 **GitHub Issue:** [#196](https://github.com/alruminum/jajang/issues/196)
 
@@ -192,11 +192,11 @@
 
 ### 태스크 체크리스트
 
-- [ ] `generation_counters` 테이블 재사용 (Epic 01 구현)
-- [ ] `POST /sessions/init` 에서 SELECT FOR UPDATE 카운터 체크
-- [ ] DSP 성공 시에만 카운터 +1 (재시도 차감 없음)
-- [ ] 무료 유저 count >= 3 → 402 즉시 반환
-- [ ] 트라이얼 만료 후 무료 다운그레이드: 카운터 리셋 없음 (기존 소진 횟수 유지)
+- [x] `generation_counters` 테이블 재사용 (Epic 01 구현)
+- [x] `POST /sessions/init` 에서 SELECT FOR UPDATE 카운터 체크
+- [x] DSP 성공 시에만 카운터 +1 (재시도 차감 없음)
+- [x] 무료 유저 count >= 3 → 402 즉시 반환
+- [x] 트라이얼 만료 후 무료 다운그레이드: 카운터 리셋 없음 (기존 소진 횟수 유지)
 
 ### 수용 기준
 
