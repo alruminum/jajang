@@ -1,32 +1,29 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { MainStackParamList } from '@navigation/types';
 import { useAuthStore } from '@store/auth-store';
 import { usePlayerStore } from '@store/player-store';
 import TrialBadge from '@components/TrialBadge';
 import TrialExpiryBanner from '@components/TrialExpiryBanner';
-import EmptyTrackState from '@components/EmptyTrackState';
-import CompletedTrackCard from '@components/CompletedTrackCard';
 import MiniPlayer from '@components/MiniPlayer';
-import { getMyTracks, getNewlyCompletedTrack, GeneratedTrack } from '@services/tracks-api';
-import { SONG_NAMES } from '@services/songs';
+import MasterAudioCard from '@components/MasterAudioCard';
+import EmptyMastersState from '@components/EmptyMastersState';
+import { useMastersStore } from '@store/mastersSlice';
 import { useTrialExpiredGuard } from '@hooks/useTrialExpiredGuard';
+import type { MasterItem } from '@services/api/masters';
 
 type NavProp = NativeStackNavigationProp<MainStackParamList>;
-
-const LAST_CHECKED_KEY = 'home_last_checked_at';
 
 export default function S06HomeScreen() {
   const navigation = useNavigation<NavProp>();
@@ -39,49 +36,67 @@ export default function S06HomeScreen() {
   // Premium/Trial 유저이고 trackId가 있을 때만 미니 플레이어 노출
   const showMiniPlayer = (entitlement === 'premium' || entitlement === 'trial') && !!currentTrackId;
 
-  const [tracks, setTracks]                      = useState<GeneratedTrack[]>([]);
-  const [completedTrack, setCompletedTrack]       = useState<GeneratedTrack | null>(null);
-  const [showCompletedCard, setShowCompletedCard] = useState(false);
-  const [refreshing, setRefreshing]              = useState(false);
-
   const isFreeUser = entitlement === 'free';
 
-  const loadTracks = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-
-    try {
-      // 트랙 목록 조회 — completed만 표시
-      const allTracks = await getMyTracks();
-      const completedTracks = allTracks.filter(t => t.status === 'completed');
-      setTracks(completedTracks);
-
-      // 백그라운드 생성 완료 카드 — lastChecked 있을 때만
-      const lastChecked = await AsyncStorage.getItem(LAST_CHECKED_KEY);
-      if (lastChecked) {
-        const newTrack = await getNewlyCompletedTrack(lastChecked);
-        if (newTrack) {
-          setCompletedTrack(newTrack);
-          setShowCompletedCard(true);
-        }
-      }
-    } catch (_e) {
-      // 에러 시 기존 상태 유지 (throw 금지)
-    } finally {
-      setRefreshing(false);
-      await AsyncStorage.setItem(LAST_CHECKED_KEY, new Date().toISOString());
-    }
-  }, []);
+  const { items, hasPending, nextCursor, isLoading, loadMasters, loadMore } = useMastersStore();
 
   useFocusEffect(
     useCallback(() => {
-      loadTracks();
-    }, [loadTracks]),
+      loadMasters();
+    }, [loadMasters]),
   );
 
-  const handleDismissCompletedCard = () => {
-    setShowCompletedCard(false);
-    setCompletedTrack(null);
-  };
+  const renderItem = useCallback(
+    ({ item }: { item: MasterItem }) => (
+      <MasterAudioCard
+        songKey={item.song_key}
+        completedAt={item.completed_at}
+        onPlay={() =>
+          navigation.navigate('Play', {
+            trackId: item.session_id,
+            presignUrl: item.presigned_url,
+          })
+        }
+      />
+    ),
+    [navigation],
+  );
+
+  const ListHeaderComponent = (
+    <View>
+      {/* 헤더 */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.greeting}>안녕하세요</Text>
+          <Text style={styles.headerTitle}>내 자장가</Text>
+        </View>
+        <TrialBadge />
+      </View>
+
+      {/* 무료 유저 생성 횟수 배지 */}
+      {isFreeUser && (
+        <View style={styles.counterBadge}>
+          <Text style={styles.counterText}>생성 횟수 확인</Text>
+        </View>
+      )}
+
+      {/* 처리 중 세션 존재 카드 */}
+      {hasPending && (
+        <View style={styles.pendingCard}>
+          <Text style={styles.pendingText}>자장가를 만들고 있어요…</Text>
+        </View>
+      )}
+    </View>
+  );
+
+  const ListEmptyComponent =
+    isLoading && items.length === 0 ? (
+      <View style={styles.loadingWrap}>
+        <ActivityIndicator color="#5A7AA8" />
+      </View>
+    ) : (
+      <EmptyMastersState onCta={() => navigation.navigate('SongSelect')} />
+    );
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -89,67 +104,17 @@ export default function S06HomeScreen() {
       <TrialExpiryBanner />
 
       <FlatList
-        data={tracks}
-        keyExtractor={item => item.id}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => loadTracks(true)}
-            tintColor="#5A7AA8"
-          />
-        }
-        ListHeaderComponent={
-          <View>
-            {/* 헤더 */}
-            <View style={styles.header}>
-              <View>
-                <Text style={styles.greeting}>안녕하세요</Text>
-                <Text style={styles.headerTitle}>내 자장가</Text>
-              </View>
-              <TrialBadge />
-            </View>
-
-            {/* 무료 유저 생성 횟수 배지 */}
-            {isFreeUser && (
-              <View style={styles.counterBadge}>
-                <Text style={styles.counterText}>생성 횟수 확인</Text>
-              </View>
-            )}
-
-            {/* 백그라운드 생성 완료 카드 */}
-            {showCompletedCard && completedTrack && (
-              <CompletedTrackCard
-                track={completedTrack}
-                onDismiss={handleDismissCompletedCard}
-              />
-            )}
-          </View>
-        }
-        ListEmptyComponent={<EmptyTrackState />}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.trackItem}
-            testID={item.id}
-            onPress={() => navigation.navigate('Play', { trackId: item.id })}
-            accessibilityLabel={`${SONG_NAMES[item.song_key] ?? item.song_key} 재생`}
-          >
-            <View style={styles.trackIcon}>
-              <Text style={styles.trackIconText}>♫</Text>
-            </View>
-            <View style={styles.trackText}>
-              <Text style={styles.trackName}>
-                {SONG_NAMES[item.song_key] ?? item.song_key}
-              </Text>
-              {item.completed_at && (
-                <Text style={styles.trackDate}>
-                  {formatDate(item.completed_at)}
-                </Text>
-              )}
-            </View>
-            <Text style={styles.playIcon}>▶</Text>
-          </TouchableOpacity>
-        )}
-        contentContainerStyle={[styles.listContent, showMiniPlayer && styles.listContentWithMiniPlayer]}
+        data={items}
+        keyExtractor={item => item.session_id}
+        renderItem={renderItem}
+        ListHeaderComponent={ListHeaderComponent}
+        ListEmptyComponent={ListEmptyComponent}
+        onEndReached={() => { if (nextCursor) loadMore(); }}
+        onEndReachedThreshold={0.5}
+        contentContainerStyle={[
+          styles.listContent,
+          showMiniPlayer && styles.listContentWithMiniPlayer,
+        ]}
         showsVerticalScrollIndicator={false}
       />
 
@@ -170,11 +135,6 @@ export default function S06HomeScreen() {
       )}
     </SafeAreaView>
   );
-}
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return `${d.getMonth() + 1}월 ${d.getDate()}일`;
 }
 
 const styles = StyleSheet.create({
@@ -202,6 +162,25 @@ const styles = StyleSheet.create({
   },
   counterText: { color: '#7B80A0', fontSize: 13 },
 
+  pendingCard: {
+    marginHorizontal: 20,
+    marginBottom: 12,
+    backgroundColor: '#1A1D30',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#2A2E50',
+  },
+  pendingText: { color: '#7B80A0', fontSize: 14 },
+
+  loadingWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+
   listContent: { flexGrow: 1, paddingBottom: 100 },
   listContentWithMiniPlayer: { paddingBottom: 172 },
 
@@ -212,30 +191,17 @@ const styles = StyleSheet.create({
     right: 0,
   },
 
-  trackItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1A1D30',
-    borderRadius: 16,
-    padding: 16,
-    marginHorizontal: 20,
-    marginBottom: 10,
-  },
-  trackIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: '#21253E',
+  fab: {
+    position: 'absolute',
+    bottom: 32,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#5A7AA8',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 14,
+    elevation: 4,
   },
-  trackIconText: { color: '#C49A8A', fontSize: 20 },
-  trackText:     { flex: 1 },
-  trackName:     { color: '#EEF0F8', fontSize: 16, marginBottom: 4 },
-  trackDate:     { color: '#7B80A0', fontSize: 13 },
-  playIcon:      { color: '#5A7AA8', fontSize: 18 },
-
-  fab:     { position: 'absolute', bottom: 32, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: '#5A7AA8', justifyContent: 'center', alignItems: 'center', elevation: 4 },
   fabIcon: { color: '#0D0F1A', fontSize: 28, lineHeight: 32 },
 });

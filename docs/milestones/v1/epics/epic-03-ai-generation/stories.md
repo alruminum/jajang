@@ -152,7 +152,7 @@
 
 ---
 
-## Story 5 — 홈 화면 음원 목록 (MasterAudio 기반)
+## Story 5 — 홈 화면 음원 목록 (MasterAudio 기반) [x]
 
 **GitHub Issue:** [#195](https://github.com/alruminum/jajang/issues/195)
 
@@ -164,12 +164,12 @@
 
 ### 태스크 체크리스트
 
-- [ ] `GET /masters/me` API: 완료된 MasterAudio 목록 반환 (곡명, 생성일, presigned URL)
-- [ ] 홈 화면: 생성된 음원 카드 목록 (곡명 + 생성일 + 재생 버튼)
-- [ ] 생성된 음원 없을 시: 빈 상태 UI + "자장가 만들기" CTA
-- [ ] 음원 카드 탭 → 재생 화면(S13) 이동
-- [ ] 생성 완료 후 홈 재진입 시: "생성 완료 음원 있음" 카드 자동 노출 (배지 + 탭 시 S13)
-- [ ] 현재 재생 중인 음원 상태 갱신 (MasterAudio의 세션 식별자 기반)
+- [x] `GET /masters/me` API: 완료된 MasterAudio 목록 반환 (곡명, 생성일, presigned URL)
+- [x] 홈 화면: 생성된 음원 카드 목록 (곡명 + 생성일 + 재생 버튼)
+- [x] 생성된 음원 없을 시: 빈 상태 UI + "자장가 만들기" CTA
+- [x] 음원 카드 탭 → 재생 화면(S13) 이동
+- [x] 생성 완료 후 홈 재진입 시: "생성 완료 음원 있음" 카드 자동 노출 (배지 + 탭 시 S13)
+- [x] 현재 재생 중인 음원 상태 갱신 (MasterAudio의 세션 식별자 기반)
 
 ### 수용 기준
 
