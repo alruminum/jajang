@@ -12,11 +12,12 @@
 ## 1. RevenueCat
 
 ### 목적
-- 구독 구매 (월간 / 연간)
-- 7일 트라이얼 자동 시작
-- entitlement 조회 (`free` / `trial` / `premium`)
+- 구독 구매 (월간 / 연간 — `purchasePackage` 플로우)
+- entitlement 조회 (Premium 구독 활성 여부 — `getCustomerInfo`)
 - 구독 복원 (기기 변경)
 - 서버 webhook 수신 → DB 동기화
+
+> **Trial 관리 제외**: 7일 Trial 은 server-side custom trial (`subscriptions.trial_expires_at`) 로 처리. RevenueCat trial 기능 미사용.
 
 ### 설정
 
@@ -36,11 +37,28 @@ Purchases.configure({
 await Purchases.logIn(userId);
 ```
 
-### 트라이얼 자동 시작
+### 트라이얼 — server-side custom trial
 
-RevenueCat 대시보드에서 상품 설정 시 trial period를 7일로 지정.
-신규 가입 완료 후 `Purchases.logIn(userId)` 호출만으로 트라이얼 자동 시작.
-별도 서버 로직 필요 없음.
+> RevenueCat store-managed trial 미사용. Trial 은 서버 DB 로만 관리.
+
+신규 가입 완료 후 서버가 `subscriptions.trial_expires_at = NOW() + INTERVAL '7 days'` 설정.
+클라이언트는 `Purchases.logIn(userId)` 를 계속 호출하지만 trial 부여 목적이 아닌 *구독 연결* 목적.
+
+Entitlement 체크 로직 (클라이언트):
+
+```typescript
+// Trial OR RevenueCat 유효 구독 = Premium 동등
+function getEntitlement(
+  customerInfo: CustomerInfo,
+  trialExpiresAt: Date | null
+): 'free' | 'trial' | 'premium' {
+  // 1. RevenueCat 유효 구독 우선
+  if (customerInfo.entitlements.active['premium']) return 'premium';
+  // 2. Server-side trial (서버 API 응답에서 trial_expires_at)
+  if (trialExpiresAt !== null && trialExpiresAt > new Date()) return 'trial';
+  return 'free';
+}
+```
 
 ### Entitlement 조회
 
@@ -88,7 +106,8 @@ async def revenuecat_webhook(payload: dict, db: AsyncSession = Depends(get_db)):
 
 ### 주의사항
 - Cancellation 시 `current_period_ends_at`까지 Premium 유지
-- 트라이얼 D-1: `customerInfo.entitlements.active['premium'].expirationDate`로 만료일 확인
+- Trial D-1 만료 확인: `subscriptions.trial_expires_at` (서버 DB) 기준. RevenueCat `expirationDate` 미사용
+- Trial 전환율 측정: RevenueCat 분석 미사용 → 자체 DB (`trial_expires_at` vs `subscriptions.created_at`) 기준
 
 ---
 

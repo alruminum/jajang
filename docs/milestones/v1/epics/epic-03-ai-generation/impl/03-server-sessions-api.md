@@ -2,10 +2,10 @@
 depth: std
 ---
 
-# impl/03 — 서버: 세션 API (POST /sessions + /recordings + /generate + GET /status + /masters)
+# impl/03 — [Story 3 / #193] 서버: 세션 API (POST /sessions + /recordings + /generate + GET /status + /masters)
 
 **Epic**: 03 — DSP 음원 후처리 생성  
-**커버 스토리**: Story 3 (세션/녹음/마스터 API), Story 5 (홈 음원 목록), Story 6 (카운터 서버사이드 enforcement)  
+**커버 스토리**: Story 3 (세션/녹음/마스터 API). *주의*: 구 버전에 포함되어 있던 Story 5 (`GET /masters/me`) 와 Story 6 (카운터 enforcement) 는 본 impl 에서 분리되어 impl/05 / impl/06 단독 책임. 본 impl 의 §4 `init_session` 의 카운터 SELECT FOR UPDATE 인라인 코드는 impl/06 의 `assert_below_limit_or_raise()` 1줄로 *교체* 됨 (engineer 단계 정합). 본 impl 의 §6 `masters.py` 핸들러는 impl/05 의 cursor 기반 페이지네이션 + service 분리로 *리팩터* 됨.  
 **선행 조건**: impl/01 완료 (ORM), impl/02 완료 (DspService + Celery task)  
 **예상 소요**: 5~6시간
 
@@ -581,3 +581,7 @@ app.include_router(masters_router, prefix="/api/v1")
 - `require_auth` 의존성은 기존 Epic 01 구현 재사용. `api/deps.py`에 존재 확인 필수.
 - presigned PUT URL 발급 함수 `storage_service.generate_presigned_put_url()`이 기존 `storage_service`에 없으면 추가 필요. 현재 구현은 presigned GET만 있을 수 있음.
 - `GET /sessions/{session_id}/status`와 `GET /sessions/init` 경로 충돌 주의: FastAPI 라우터에서 `/init` 등록을 `/{session_id}` 이전에 위치.
+
+---
+
+MODULE_PLAN_READY

@@ -30,7 +30,8 @@ FREE_GENERATION_LIMIT = 3  # 무료 계정 총 생성 횟수
 | DSP 실패 / 타임아웃 | count 변경 없음 |
 | 재시도 (동일 session_id) | count 변경 없음 |
 | 클립 추가 ("다시 녹음" 후 "사용하기") | 동일 session — count 변경 없음. 클립만 추가 |
-| Premium/Trial 유저 | count 체크 스킵 (조회 없음) |
+| Premium 유저 또는 Trial 유저 (`trial_expires_at > NOW()`) | count 체크 스킵 (조회 없음) + DSP 완료 후 count +1 없음 |
+| Trial 만료 후 무료 다운그레이드 | Trial 중 생성분 소급 가산 없음 — Trial 진입 전 소진 횟수 그대로 유지 |
 
 ### Race condition 대응
 
@@ -43,6 +44,30 @@ COMMIT
 -- DSP 완료 후 별도 트랜잭션:
 UPDATE generation_counters SET count = count + 1 WHERE user_id = ?;
 ```
+
+### Entitlement 체크 (server-side custom trial 반영)
+
+```python
+def is_premium(user_id: str, revenuecat_active: bool, trial_expires_at: datetime | None) -> bool:
+    """
+    Trial OR RevenueCat 유효 구독 = Premium 동등
+    - revenuecat_active: subscriptions.is_active (RevenueCat webhook 동기화)
+    - trial_expires_at: subscriptions.trial_expires_at (가입 시 서버 설정)
+    """
+    if revenuecat_active:
+        return True
+    if trial_expires_at is not None and trial_expires_at > datetime.utcnow():
+        return True
+    return False
+```
+
+체크 우선순위:
+
+1. RevenueCat 유효 구독 (`is_active=True`) → premium
+2. `trial_expires_at > NOW()` → trial (Premium 동등)
+3. 그 외 → free
+
+> Trial 전환율 측정: `subscriptions.trial_expires_at IS NOT NULL` 유저 중 추후 `is_active=True` 전환한 유저 비율 — 자체 DB 쿼리로 산출.
 
 ---
 
