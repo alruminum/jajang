@@ -1,0 +1,111 @@
+[
+  {
+    "id": "S06",
+    "label": "Home",
+    "entrySteps": [],
+    "settleMs": 2000
+  },
+  {
+    "id": "S07",
+    "label": "SongSelect",
+    "entrySteps": [
+      {
+        "type": "tap",
+        "x": 540,
+        "y": 1700,
+        "_comment": "1080x1920 기준 S06 하단 '새 자장가 시작' CTA 버튼 위치. testID 미존재 — epic-18 (testID 신설) 후속 후보."
+      }
+    ],
+    "settleMs": 2000
+  },
+  {
+    "id": "S09",
+    "label": "RecordGuide",
+    "entrySteps": [
+      {
+        "type": "tap",
+        "x": 540,
+        "y": 1700,
+        "_comment": "1080x1920 기준 S06 하단 CTA — testID 미존재"
+      },
+      { "type": "wait", "ms": 1500 },
+      {
+        "type": "tap",
+        "x": 540,
+        "y": 600,
+        "_comment": "1080x1920 기준 S07 첫 번째 곡 항목 위치 — testID 미존재"
+      }
+    ],
+    "settleMs": 2000
+  },
+  {
+    "id": "S10",
+    "label": "Record",
+    "entrySteps": [
+      {
+        "type": "tap",
+        "x": 540,
+        "y": 1700,
+        "_comment": "1080x1920 기준 S06 하단 CTA — testID 미존재"
+      },
+      { "type": "wait", "ms": 1500 },
+      {
+        "type": "tap",
+        "x": 540,
+        "y": 600,
+        "_comment": "1080x1920 기준 S07 첫 번째 곡 항목 — testID 미존재"
+      },
+      { "type": "wait", "ms": 1500 },
+      {
+        "type": "tapTestId",
+        "testId": "record-guide-cta",
+        "_comment": "RecordGuideScreen.tsx: testID='record-guide-cta' 실측 확인"
+      },
+      {
+        "type": "permissionGrant",
+        "permission": "android.permission.RECORD_AUDIO"
+      }
+    ],
+    "settleMs": 2000,
+    "pencilNodeIds": ["llTp1", "r97aM"]
+  },
+  {
+    "id": "S11_SKIP",
+    "label": "Preview (skip — 30s recording required)",
+    "entrySteps": [],
+    "settleMs": 0
+  },
+  {
+    "id": "S16",
+    "label": "Settings",
+    "entrySteps": [
+      {
+        "type": "tap",
+        "x": 810,
+        "y": 1870,
+        "_comment": "1080x1920 기준 하단 탭바 '설정' 탭 위치 (탭 2개, 우측). tab testID 미존재 — epic-18 후속 후보."
+      }
+    ],
+    "settleMs": 2000
+  },
+  {
+    "id": "AccountDeletion",
+    "label": "Account Deletion (smoke only — 실제 삭제 차단)",
+    "entrySteps": [
+      {
+        "type": "tap",
+        "x": 810,
+        "y": 1870,
+        "_comment": "1080x1920 기준 하단 탭바 '설정' 탭 위치"
+      },
+      { "type": "wait", "ms": 1500 },
+      {
+        "type": "tap",
+        "x": 540,
+        "y": 1400,
+        "_comment": "1080x1920 기준 S16 '계정 삭제' 항목 위치 — testID 미존재. epic-18 후속 후보."
+      }
+    ],
+    "settleMs": 2000
+  }
+]

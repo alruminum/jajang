@@ -26,3 +26,7 @@ music/*.ogg
 
 # mock S3 결과물 (MOCK_S3=true 시만 생성)
 apps/api/static/tracks/
+
+# qa output (date-prefixed) — README + .gitkeep 은 추적
+docs/qa/*-monkey.md
+docs/qa/*-tour/
