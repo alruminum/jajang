@@ -67,6 +67,13 @@
 - [ ] Epic 08 — Mobile Test Infra (Issue #150)
 - [ ] Epic 09 — Mobile Test Triage (Issue #157)
 - [ ] Epic 10 — Mobile Test Finalize + PR #149 Merge (Issue #166)
-- [ ] Epic 11 — Mobile QA Tour Package + Jajang Integration (#181)
+- [x] Epic 11 — Mobile QA Tour Package + Jajang Integration (#181)
+- [ ] Epic 12 — Theme drift fix (직접 hex → theme token 마이그레이션) — Epic 11 종료 후 등록
+- [ ] Epic 13 — `mobile-qa-tour` 별도 레포 분리 + npm publish — semver 1.0.0 안정화 후
+- [ ] Epic 14 — QA tour CI 자동화 (GitHub Actions) — PR merge 전 자동 실행
+- [ ] Epic 15 — iOS 시뮬레이터 지원 — iOS QA 필요 시점
+- [ ] Epic 16 — Pencil 노드 매핑 확장 (S10 외 6 화면) — 디자인 폴리시 마무리 단계
+- [ ] Epic 17 — Deep-link 인프라 + Preview/Generating/Play 화면 tour — 30초 녹음 우회 mock 후
+- [ ] Epic 18 — testID 확대 (82 → 19 screens × 5+ avg) — tour 좌표 fallback 의존 제거
 - [ ] 내부 베타 (TestFlight / Internal Test Track)
 - [ ] 앱스토어 심사 통과 + 공개 출시

@@ -23,6 +23,18 @@ npm run qa:tour                   # 6 화면 (S11 제외) screenshot + heuristic
 3. (S10) `mcp__pencil__get_screenshot(<nodeIds>)` reference 캡처 첨부
 4. P0/P1 issue 발견 시 `mcp__github__create_issue` (label: `bug`, `design` + 현재 버전)
 
+### S10 Pencil reference 채우기
+
+1. `docs/qa/<date>-tour/S10.md` 의 `<!-- pencil ref slot ... -->` 슬롯 위치 확인
+2. 메인 Claude 에서:
+   ```
+   mcp__pencil__batch_get({ filePath: '../../design/jajang.pen', nodeIds: ['llTp1', 'r97aM'] })
+   mcp__pencil__get_screenshot({ filePath: '../../design/jajang.pen', nodeId: 'llTp1' })
+   ```
+3. 반환 png 를 `docs/qa/<date>-tour/S10-pencil-ref.png` 로 저장
+4. S10.md 슬롯 아래에 `![pencil ref](S10-pencil-ref.png)` 추가
+5. LLM 검수 단계에서 screenshot vs pencil ref 1:1 비교
+
 ## 운영 시점
 
 - PR merge 전 (consumer 측 화면 변경 시)

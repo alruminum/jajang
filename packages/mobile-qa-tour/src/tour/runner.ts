@@ -6,6 +6,7 @@ import { dumpUi, parseUi, flattenUi } from './uiautomator';
 import { runHeuristics } from '../heuristics';
 import type { HeuristicResult } from '../heuristics';
 import { renderTourScreenReport } from '../report/tour-template';
+import { preparePencilSlot } from '../pencil/adapter';
 import type { QaConfig } from '../config/schema';
 
 export interface TourOptions {
@@ -80,12 +81,18 @@ export async function runTour(opts: TourOptions): Promise<TourResult> {
       }
     }
 
+    let pencilSlot: string | undefined;
+    if (config.pencil?.enabled) {
+      pencilSlot = preparePencilSlot(screen, config.pencil);
+    }
+
     const md = renderTourScreenReport({
       screen: { id: screen.id, label: screen.label },
       screenshotPath: path.relative(tourSubdir, screenshotPath),
       uiDumpPath: uiDumpPath ? path.relative(tourSubdir, uiDumpPath) : undefined,
       heuristics,
       uxFlowAnchor: (config as any).uxFlowAnchor,
+      pencilSlot,
       generatedAt: new Date().toISOString(),
     });
     await fs.writeFile(path.join(tourSubdir, `${screen.id}.md`), md);

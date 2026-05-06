@@ -2,5 +2,12 @@
   "appPackage": "com.jajang.app",
   "outputDir": "../../docs/qa",
   "uxFlowAnchor": "../../docs/ux-flow.md",
-  "screenRegistryPath": "./screen-registry.json"
+  "screenRegistryPath": "./screen-registry.json",
+  "pencil": {
+    "enabled": true,
+    "documentPath": "../../design/jajang.pen",
+    "nodeIds": {
+      "S10": ["llTp1", "r97aM"]
+    }
+  }
 }
