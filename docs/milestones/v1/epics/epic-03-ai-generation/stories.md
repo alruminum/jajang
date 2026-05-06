@@ -92,7 +92,7 @@
 
 ---
 
-## Story 3 — 세션/녹음/마스터 API (POST /sessions + recordings + generate)
+## Story 3 — 세션/녹음/마스터 API (POST /sessions + recordings + generate) [x]
 
 **GitHub Issue:** [#193](https://github.com/alruminum/jajang/issues/193)
 
@@ -102,16 +102,16 @@
 
 ### 태스크 체크리스트
 
-- [ ] `api/v1/sessions.py` 라우터 신규 작성
-  - [ ] `POST /sessions/init` — 세션 생성 (idempotency_key 기반 멱등)
-  - [ ] `POST /sessions/{id}/recordings` — 클립 등록 (presigned upload URL 발급)
-  - [ ] `POST /sessions/{id}/generate` — DSP Celery task dispatch
-  - [ ] `GET /sessions/{id}/status` — 생성 상태 폴링 (5초 간격)
-  - [ ] `GET /masters/me` — 완료된 음원 목록 (S06 홈)
-- [ ] `api/v1/generations.py` → 410 Gone 처리 (구 클라이언트 호환)
-- [ ] 카운터 초과 시 `POST /sessions/init`에서 402 반환 → 클라이언트 S14 팝업
-- [ ] 생성 완료 후 홈 "생성 완료 음원 있음" 카드 데이터 포함 (GET /masters/me 응답)
-- [ ] `main.py`: sessions router include, generations router 410 전환 확인
+- [x] `api/v1/sessions.py` 라우터 신규 작성
+  - [x] `POST /sessions/init` — 세션 생성 (idempotency_key 기반 멱등)
+  - [x] `POST /sessions/{id}/recordings` — 클립 등록 (presigned upload URL 발급)
+  - [x] `POST /sessions/{id}/generate` — DSP Celery task dispatch
+  - [x] `GET /sessions/{id}/status` — 생성 상태 폴링 (5초 간격)
+  - [x] `GET /masters/me` — 완료된 음원 목록 (S06 홈)
+- [x] `api/v1/generations.py` → 410 Gone 처리 (구 클라이언트 호환)
+- [x] 카운터 초과 시 `POST /sessions/init`에서 402 반환 → 클라이언트 S14 팝업
+- [x] 생성 완료 후 홈 "생성 완료 음원 있음" 카드 데이터 포함 (GET /masters/me 응답)
+- [x] `main.py`: sessions router include, generations router 410 전환 확인
 
 ### 수용 기준
 
