@@ -198,7 +198,8 @@ class TestAC_N1_SingleClipDoubled:
 
         # _apply_individual_dsp 호출 후 DSP wav 생성 → _concat_acrossfade 호출
         # acrossfade cmd에서 -i 파라미터를 확인
-        acrossfade_cmds = [c for c in calls if "acrossfade" in " ".join(c)]
+        # "acrossfade=" 기호 포함 arg 매칭 — 경로명 포함 false positive 방지
+        acrossfade_cmds = [c for c in calls if any("acrossfade=" in arg for arg in c)]
         assert len(acrossfade_cmds) >= 1, "acrossfade cmd가 최소 1회 호출되어야 한다"
 
         # acrossfade cmd의 -i 입력 파일 목록 추출

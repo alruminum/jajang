@@ -53,7 +53,7 @@
 
 ---
 
-## Story 2 — DSP 서버 파이프라인 (ffmpeg + Celery)
+## Story 2 — DSP 서버 파이프라인 (ffmpeg + Celery) [x]
 
 **GitHub Issue:** [#192](https://github.com/alruminum/jajang/issues/192)
 
@@ -63,20 +63,20 @@
 
 ### 태스크 체크리스트
 
-- [ ] `services/dsp/ffmpeg_service.py`: DspService 클래스 구현
-  - [ ] `afftdn` 노이즈 제거 단계
-  - [ ] `equalizer` EQ 필터 단계
-  - [ ] `aecho` reverb 단계
-  - [ ] `acrossfade` concat 단계 (d=0.3, c1=c2=tri)
-  - [ ] N=1 처리: `ffmpeg -i A -i A acrossfade` (단순 반복 준비)
-  - [ ] N≥2 처리: Fisher-Yates 직전 클립 제외 셔플 → 체인 concat
-- [ ] `MOCK_DSP=true` 환경: `MockDspService` — 실제 ffmpeg 미실행, 3초 대기 후 placeholder mp3 반환
-- [ ] `tasks/dsp_processing.py`: Celery DSP task
-  - [ ] `max_retries=3`, `countdown=exponential backoff (60/180/600s)`
-  - [ ] on_failure: `master_audios.status=failed` + Sentry 알림 (structlog fallback)
-  - [ ] `acks_late=True`, `soft_time_limit=35`, `time_limit=60`
-- [ ] S3 다운로드 `/tmp/` → DSP → S3 업로드 → `/tmp/` 정리 순서 보장
-- [ ] DSP 완료 후: `master_audios.status=completed` + `counter +1` (무료 유저) + `recordings.schedule_delete_at = NOW() + 24h`
+- [x] `services/dsp/ffmpeg_service.py`: DspService 클래스 구현
+  - [x] `afftdn` 노이즈 제거 단계
+  - [x] `equalizer` EQ 필터 단계
+  - [x] `aecho` reverb 단계
+  - [x] `acrossfade` concat 단계 (d=0.3, c1=c2=tri)
+  - [x] N=1 처리: `ffmpeg -i A -i A acrossfade` (단순 반복 준비)
+  - [x] N≥2 처리: Fisher-Yates 직전 클립 제외 셔플 → 체인 concat
+- [x] `MOCK_DSP=true` 환경: `MockDspService` — 실제 ffmpeg 미실행, 3초 대기 후 placeholder mp3 반환
+- [x] `tasks/dsp_processing.py`: Celery DSP task
+  - [x] `max_retries=3`, `countdown=exponential backoff (60/180/600s)`
+  - [x] on_failure: `master_audios.status=failed` + Sentry 알림 (structlog fallback)
+  - [x] `acks_late=True`, `soft_time_limit=35`, `time_limit=60`
+- [x] S3 다운로드 `/tmp/` → DSP → S3 업로드 → `/tmp/` 정리 순서 보장
+- [x] DSP 완료 후: `master_audios.status=completed` + `counter +1` (무료 유저) + `recordings.schedule_delete_at = NOW() + 24h`
 
 ### 수용 기준
 
