@@ -18,7 +18,7 @@
 
 ---
 
-## Story 1 — DB 모델 마이그레이션 (Alembic 0006)
+## Story 1 — DB 모델 마이그레이션 (Alembic 0006) [x]
 
 **GitHub Issue:** [#191](https://github.com/alruminum/jajang/issues/191)
 
@@ -31,15 +31,15 @@
 
 ### 태스크 체크리스트
 
-- [ ] `migrations/versions/006_dsp_recording_model.py` 작성 (upgrade/downgrade)
-- [ ] `recording_sessions` 테이블: id, user_id, song_key, status, idempotency_key, created_at
-- [ ] `recordings` 테이블: id, session_id, s3_key, duration_ms, is_validated, created_at, schedule_delete_at
-- [ ] `master_audios` 테이블: id, session_id, s3_key, status, dsp_duration_ms, error_message, created_at, completed_at
-- [ ] `voice_samples` DROP (downgrade에서 re-create)
-- [ ] `generated_tracks` DROP (downgrade에서 re-create)
-- [ ] SQLAlchemy ORM 신규 작성: `RecordingSession`, `Recording`, `MasterAudio`
-- [ ] ORM 기존 참조 제거: `VoiceSample`, `GeneratedTrack` 폐기 (파일 보존, import 제거)
-- [ ] `alembic upgrade head` 정상 실행 확인
+- [x] `migrations/versions/006_dsp_recording_model.py` 작성 (upgrade/downgrade)
+- [x] `recording_sessions` 테이블: id, user_id, song_key, status, idempotency_key, created_at
+- [x] `recordings` 테이블: id, session_id, s3_key, duration_ms, is_validated, created_at, schedule_delete_at
+- [x] `master_audios` 테이블: id, session_id, s3_key, status, dsp_duration_ms, error_message, created_at, completed_at
+- [x] `voice_samples` DROP (downgrade에서 re-create)
+- [x] `generated_tracks` DROP (downgrade에서 re-create)
+- [x] SQLAlchemy ORM 신규 작성: `RecordingSession`, `Recording`, `MasterAudio`
+- [x] ORM 기존 참조 제거: `VoiceSample`, `GeneratedTrack` 폐기 (파일 보존, import 제거)
+- [x] `alembic upgrade head` 정상 실행 확인
 
 ### 수용 기준
 
