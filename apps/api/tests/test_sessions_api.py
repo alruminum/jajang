@@ -107,12 +107,17 @@ def _build_app() -> FastAPI:
 class TestSessionInit_AC_SI_01_인증없음_401:
     """AC-SI-01 — JWT 없음 → 401 Unauthorized."""
 
-    def test_토큰_없이_세션_init_요청_시_401_반환(self):
-        """require_auth_with_entitlement이 credentials=None 시 401 raise."""
+    @pytest.mark.asyncio
+    async def test_토큰_없이_세션_init_요청_시_401_반환(self):
+        """require_auth_with_entitlement이 Authorization 헤더 없는 Request 시 401 raise."""
         from fastapi import HTTPException
 
+        fake_request = MagicMock()
+        fake_request.headers.get.return_value = ""
+        db = _mock_db()
+
         with pytest.raises(HTTPException) as exc_info:
-            require_auth_with_entitlement(None)
+            await require_auth_with_entitlement(request=fake_request, db=db)
 
         assert exc_info.value.status_code == 401
 
@@ -1067,7 +1072,12 @@ class TestMastersMe_본인_음원만_반환:
 
         with patch("app.api.v1.masters.storage_service.generate_presigned_url",
                    return_value="https://s3.test/m.mp3"):
-            await get_my_masters(auth={"sub": str(user_id), "entitlement": "free"}, db=db)
+            await get_my_masters(
+                cursor=None,
+                limit=20,
+                auth={"sub": str(user_id), "entitlement": "free"},
+                db=db,
+            )
 
         # execute가 2회 호출되어야 함 (completed 목록 + pending 체크)
         assert len(execute_calls) == 2
