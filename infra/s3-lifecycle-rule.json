@@ -1,0 +1,10 @@
+{
+  "Rules": [
+    {
+      "ID": "recordings-24h-ttl",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "recordings/" },
+      "Expiration": { "Days": 1 }
+    }
+  ]
+}

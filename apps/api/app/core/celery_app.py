@@ -13,6 +13,7 @@ celery_app = Celery(
         "app.tasks.generation",
         "app.tasks.hard_delete_users",
         "app.tasks.dsp_processing",   # DSP Celery task 등록
+        "app.tasks.clip_cleanup",     # 녹음 클립 24h TTL 자동 삭제
     ],
 )
 
