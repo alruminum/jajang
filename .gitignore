@@ -30,3 +30,6 @@ apps/api/static/tracks/
 # qa output (date-prefixed) — README + .gitkeep 은 추적
 docs/qa/*-monkey.md
 docs/qa/*-tour/
+
+# dcness heuristic-call metrics (auto-generated)
+.metrics/

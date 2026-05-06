@@ -1,0 +1,34 @@
+# GitHub Actions — git-naming-spec 브랜치명·PR 제목 형식 검증 게이트
+#
+# 규칙 정의: docs/process/git-naming-spec.md (SSOT)
+# PR 생성·수정·재오픈 시마다 브랜치명과 PR 제목이 규칙을 따르는지 검사한다.
+
+name: git-naming-validation
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  naming:
+    name: git-naming-spec gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate branch name
+        run: node scripts/check_git_naming.mjs --branch "${{ github.head_ref }}"
+
+      - name: Validate PR title
+        run: node scripts/check_git_naming.mjs --title "${{ github.event.pull_request.title }}"
