@@ -48,3 +48,4 @@ class MasterAudioItem(BaseModel):
 class MastersListResponse(BaseModel):
     items: list[MasterAudioItem]
     has_pending: bool    # S06 "생성 완료 음원 있음" 카드 표시 여부
+    next_cursor: str | None = None  # 다음 페이지 cursor (없으면 None)
