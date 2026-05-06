@@ -25,7 +25,7 @@
 - **모노레포 workspace 우선**: 초기 iteration 비용 낮음 (별도 레포 분리 시 publish/CI/version 관리 부담). 안정화 후 (semver 1.0.0 도달 시) 별도 레포 + npm publish 분리 옵션 열어둠.
 - **CLI 형태 (npm + bin)**: jajang 이 RN/Expo 모노레포라 Node.js 생태계 정합 + 풍부한 인자 파싱·config 검증·휴리스틱 표 생성 유리. shell wrapper 보다 npm package 가 의존성 / type 안전성 우위.
 
-**GitHub Epic Issue:** TBD (architect TASK_DECOMPOSE 진입 후 등록)
+**GitHub Epic Issue:** [#181](https://github.com/alruminum/jajang/issues/181)
 
 ---
 
@@ -152,6 +152,8 @@ plan §Track B 는 7 화면 × (navigate + screencap + LLM analysis) 흐름. nav
 ---
 
 ## Story 3 — jajang Consumer 통합 (qa.config.json + npm script + 첫 실행 검증)
+
+**GitHub Issue:** [#185](https://github.com/alruminum/jajang/issues/185)
 
 **As a** jajang 개발자
 **I want** jajang 모바일 앱이 `mobile-qa-tour` 의 첫 consumer 로 통합되고 `npm run qa:monkey` / `npm run qa:tour` 만으로 plan §Step 2~4 가 자동 실행되길 원한다
@@ -294,7 +296,7 @@ Story 4 (Pencil adapter, optional) ──────┘
 | Epic | #181 |
 | Story 1 | (PR #180 — issue 미등록, 회고용 직접 등록 X) |
 | Story 2 | #182 |
-| Story 3 | TBD |
+| Story 3 | [#185](https://github.com/alruminum/jajang/issues/185) |
 | Story 4 | TBD |
 | Story 5 | TBD |
 
