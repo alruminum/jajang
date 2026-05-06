@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * git-naming-spec 형식 검증 게이트
- * 규칙 정의: docs/process/git-naming-spec.md (SSOT)
+ * 규칙 정의: docs/plugin/git-naming-spec.md (SSOT)
  *
  * 사용:
  *   node scripts/check_git_naming.mjs --branch <branch-name>
