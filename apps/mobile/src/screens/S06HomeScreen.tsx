@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -19,9 +19,12 @@ import TrialExpiryBanner from '@components/TrialExpiryBanner';
 import MiniPlayer from '@components/MiniPlayer';
 import MasterAudioCard from '@components/MasterAudioCard';
 import EmptyMastersState from '@components/EmptyMastersState';
+import JustArrivedMasterCard from '@components/JustArrivedMasterCard';
 import { useMastersStore } from '@store/mastersSlice';
 import { useTrialExpiredGuard } from '@hooks/useTrialExpiredGuard';
 import type { MasterItem } from '@services/api/masters';
+import { loadPendingSession, clearPendingSession } from '@services/storage/pendingSession';
+import { getSessionStatus } from '@services/api/sessions';
 
 type NavProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -39,6 +42,33 @@ export default function S06HomeScreen() {
   const isFreeUser = entitlement === 'free';
 
   const { items, hasPending, nextCursor, isLoading, loadMasters, loadMore } = useMastersStore();
+
+  // pending session 복원 — impl/07 §3
+  const [justArrived, setJustArrived] = useState<{ sessionId: string; presignedUrl: string } | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const sid = await loadPendingSession();
+      if (!sid) return;
+
+      try {
+        const res = await getSessionStatus(sid);
+        if (res.status === 'completed' && res.presigned_url) {
+          setJustArrived({ sessionId: sid, presignedUrl: res.presigned_url });
+          await clearPendingSession();
+        } else if (res.status === 'failed') {
+          await clearPendingSession();
+          // 실패 케이스 — SecureStore 클리어 (toast는 추후 cycle)
+        }
+        // generating 상태 — hasPending 카드로 표현 (별도 처리 X)
+      } catch (e: any) {
+        if (e?.response?.status === 404 || e?.status === 404) {
+          // orphan session — SecureStore 클리어
+          await clearPendingSession();
+        }
+      }
+    })();
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -78,6 +108,20 @@ export default function S06HomeScreen() {
         <View style={styles.counterBadge}>
           <Text style={styles.counterText}>생성 횟수 확인</Text>
         </View>
+      )}
+
+      {/* "방금 도착" 카드 — pending session 복원 후 completed 시 (impl/07) */}
+      {justArrived && (
+        <JustArrivedMasterCard
+          songKey="lullaby"
+          onPlay={() =>
+            navigation.navigate('Play', {
+              trackId: justArrived.sessionId,
+              presignUrl: justArrived.presignedUrl,
+            })
+          }
+          onDismiss={() => setJustArrived(null)}
+        />
       )}
 
       {/* 처리 중 세션 존재 카드 */}

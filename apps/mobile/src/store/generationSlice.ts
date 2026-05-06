@@ -1,69 +1,59 @@
 // apps/mobile/src/store/generationSlice.ts
-// 생성 상태 Zustand slice (persist: 앱 재시작 후 activeJobId 복원)
+// 생성 상태 Zustand store
+//
+// impl/07 — sessions API 기반 sessionId / pollState / isRetrying 추가
+// 기존 Epic 06 API (tracks / removeTrack / clearAllTracks) 유지 (호환성)
 
-import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import type { Track } from '../services/dataManagementApi'
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { Track } from '../services/dataManagementApi';
+import type { PollState } from '../hooks/useSessionPolling';
 
-interface GenerationState {
-  // 현재 진행 중인 job
-  activeJobId:    string | null
-  activeTrackId:  string | null
-  activeSongKey:  string | null
+type GenerationState = {
+  // ── impl/07 (sessions API 기반) ──────────────────────────────────────────
+  sessionId: string | null;
+  pollState: PollState | null;
+  isRetrying: boolean;
 
-  // 완료된 job 결과 (S12 → S13 이동 또는 홈 복귀 후 카드 표시)
-  completedJobId:      string | null
-  completedTrackId:    string | null
-  completedPresignUrl: string | null
+  setSessionId: (sessionId: string | null) => void;
+  setPollState: (pollState: PollState | null) => void;
+  setRetrying: (isRetrying: boolean) => void;
+  reset: () => void;
 
-  // 완료된 음원 목록 (Epic 06: 데이터 관리 섹션에서 삭제 처리)
-  tracks: Track[]
+  // ── Epic 06 호환 (tracks 관리 — DeleteTracksSheet / AccountDeletionScreen) ──
+  tracks: Track[];
 
-  // 액션
-  setActiveJob:    (jobId: string, trackId: string, songKey: string) => void
-  setCompleted:    (jobId: string, trackId: string, presignUrl: string) => void
-  clearActive:     () => void
-  clearCompleted:  () => void
-  removeTrack:     (trackId: string) => void
-  clearAllTracks:  () => void
-}
+  removeTrack: (trackId: string) => void;
+  clearAllTracks: () => void;
+};
 
 export const useGenerationStore = create<GenerationState>()(
   persist(
     (set) => ({
-      activeJobId:    null,
-      activeTrackId:  null,
-      activeSongKey:  null,
-      completedJobId:      null,
-      completedTrackId:    null,
-      completedPresignUrl: null,
+      // impl/07 state
+      sessionId: null,
+      pollState: null,
+      isRetrying: false,
+
+      setSessionId: (sessionId) => set({ sessionId }),
+      setPollState: (pollState) => set({ pollState }),
+      setRetrying: (isRetrying) => set({ isRetrying }),
+      reset: () => set({ sessionId: null, pollState: null, isRetrying: false }),
+
+      // Epic 06 호환
       tracks: [],
-
-      setActiveJob: (jobId, trackId, songKey) =>
-        set({ activeJobId: jobId, activeTrackId: trackId, activeSongKey: songKey }),
-
-      setCompleted: (jobId, trackId, presignUrl) =>
-        set({
-          activeJobId: null, activeTrackId: null, activeSongKey: null,
-          completedJobId: jobId, completedTrackId: trackId, completedPresignUrl: presignUrl,
-        }),
-
-      clearActive:    () => set({ activeJobId: null, activeTrackId: null, activeSongKey: null }),
-      clearCompleted: () => set({ completedJobId: null, completedTrackId: null, completedPresignUrl: null }),
 
       removeTrack: (trackId) =>
         set((state) => ({
           tracks: state.tracks.filter((t) => t.id !== trackId),
         })),
 
-      clearAllTracks: () =>
-        set({ tracks: [] }),
+      clearAllTracks: () => set({ tracks: [] }),
     }),
     {
       name: 'jajang-generation',
       storage: createJSONStorage(() => AsyncStorage),
-      // persist 이유: 앱 재시작 후에도 activeJobId 복원 → 홈에서 has_pending 카드 표시
     },
   ),
-)
+);
