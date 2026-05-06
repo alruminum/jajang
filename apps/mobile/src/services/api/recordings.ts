@@ -50,7 +50,8 @@ export const recordingsApi = {
       headers: { 'Content-Type': contentType },
     })
     if (result.status < 200 || result.status >= 300) {
-      throw new Error(`S3 upload failed: ${result.status}`)
+      const bodyPreview = result.body ? ` ${result.body.slice(0, 200)}` : ''
+      throw new Error(`S3 upload failed: ${result.status}${bodyPreview}`)
     }
   },
 
