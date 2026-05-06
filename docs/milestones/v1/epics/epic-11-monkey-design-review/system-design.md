@@ -298,15 +298,15 @@ const result = await runTour(config, { only: 'S10' });
 
 ## 8. 후속 epic 후보
 
-| ID (가칭) | 제목 | 트리거 |
-|---|---|---|
-| epic-12 | Theme drift fix (직접 hex → theme token 마이그레이션) | drift 89% 정정. tour 휴리스틱이 색상 검출 정확도 올려준 후 |
-| epic-13 | `mobile-qa-tour` 별도 레포 분리 + npm publish | semver 1.0.0 안정화 후 (외부 사용자 발생 시점) |
-| epic-14 | QA tour CI 자동화 (GitHub Actions) | PR merge 전 자동 실행 + 리포트 PR 코멘트 |
-| epic-15 | iOS 시뮬레이터 지원 (`xcrun simctl` wrapper) | iOS QA 필요 시점 (TestFlight 배포 직전) |
-| epic-16 | Pencil 노드 매핑 확장 (S10 외 6 화면) | 디자인 폴리시 마무리 단계 (1~2주 작업) |
-| epic-17 | Deep-link 인프라 + Preview/Generating/Play 화면 tour 포함 | 30초 녹음 우회 mock + deep-link 추가 후 |
-| epic-18 | testID 확대 (82 → 19 screens × 5+ avg) | tour 좌표 fallback 의존 제거 |
+| ID (가칭) | 제목 | 트리거 | backlog 등록 |
+|---|---|---|---|
+| epic-12 | Theme drift fix (직접 hex → theme token 마이그레이션) | drift 89% 정정. tour 휴리스틱이 색상 검출 정확도 올려준 후 | ⬜ Epic 11 종료 후 등록 |
+| epic-13 | `mobile-qa-tour` 별도 레포 분리 + npm publish | semver 1.0.0 안정화 후 (외부 사용자 발생 시점) | ⬜ |
+| epic-14 | QA tour CI 자동화 (GitHub Actions) | PR merge 전 자동 실행 + 리포트 PR 코멘트 | ⬜ |
+| epic-15 | iOS 시뮬레이터 지원 (`xcrun simctl` wrapper) | iOS QA 필요 시점 (TestFlight 배포 직전) | ⬜ |
+| epic-16 | Pencil 노드 매핑 확장 (S10 외 6 화면) | 디자인 폴리시 마무리 단계 (1~2주 작업) | ⬜ |
+| epic-17 | Deep-link 인프라 + Preview/Generating/Play 화면 tour 포함 | 30초 녹음 우회 mock + deep-link 추가 후 | ⬜ |
+| epic-18 | testID 확대 (82 → 19 screens × 5+ avg) | tour 좌표 fallback 의존 제거 | ⬜ |
 
 ---
 

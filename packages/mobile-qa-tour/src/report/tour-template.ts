@@ -27,9 +27,7 @@ export function renderTourScreenReport(input: TourScreenReport): string {
     ? `<!-- ux-flow ref: ${uxFlowAnchor}#${screen.id} -->`
     : '<!-- ux-flow ref: (없음) -->';
 
-  const pencilRefContent = pencilSlot
-    ? `<!-- pencil ref slot: nodeIds=[${pencilSlot}] -->`
-    : '<!-- pencil ref slot: nodeIds=[...] -->   (batch 05)';
+  const pencilRefContent = pencilSlot ?? '<!-- pencil ref: 매핑 없음 -->';
 
   return `${title}
 

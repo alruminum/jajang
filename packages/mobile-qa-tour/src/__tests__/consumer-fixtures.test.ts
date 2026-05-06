@@ -11,19 +11,29 @@ const mockReadFile = vi.mocked(fsp.readFile as (path: string, enc: string) => Pr
 // REQ-CONSUMER-01 — jajang qa.config.json fixture 가 QaConfigSchema 를 통과
 // REQ-CONSUMER-02 — jajang screen-registry.json fixture 가 ScreenSchema[] 를 통과
 // REQ-CONSUMER-03 — loadConfig 가 jajang fixture 조합(config + registry)을 올바르게 머지
+// REQ-CONSUMER-04 — qa.config.json 에 pencil 블록 추가 시 QaConfigSchema 정합 (impl/05)
 //
 // 이 파일은 TDD RED 상태에서 시작.
 // engineer 가 impl/04 산출 후 GREEN 전환 — 스키마·인터페이스 검증이 목적.
+// impl/05 에서 JAJANG_QA_CONFIG 에 pencil 블록 추가 → REQ-CONSUMER-04 GREEN 확인.
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
 // fixture: apps/mobile/qa.config.json 인터페이스 그대로 (impl §인터페이스 기준)
+// impl/05 에서 pencil 블록 추가됨.
 // ---------------------------------------------------------------------------
 const JAJANG_QA_CONFIG = {
   appPackage: 'com.jajang.app',
   outputDir: '../../docs/qa',
   uxFlowAnchor: '../../docs/ux-flow.md',
   screenRegistryPath: './screen-registry.json',
+  pencil: {
+    enabled: true,
+    documentPath: '../../design/jajang.pen',
+    nodeIds: {
+      S10: ['llTp1', 'r97aM'],
+    },
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -133,6 +143,54 @@ describe('REQ-CONSUMER-01 jajang qa.config.json — QaConfigSchema 정합', () =
 });
 
 // ---------------------------------------------------------------------------
+// REQ-CONSUMER-04: impl/05 pencil 블록 — QaConfigSchema 정합 (신규)
+// qa.config.json 에 pencil 블록 추가 시 기존 스키마를 통과하는지 검증.
+// ---------------------------------------------------------------------------
+describe('REQ-CONSUMER-04 jajang qa.config.json — pencil 블록 스키마 정합 (impl/05)', () => {
+  it('pencil 블록 포함 fixture 가 QaConfigSchema.safeParse 를 통과', () => {
+    const result = QaConfigSchema.safeParse(JAJANG_QA_CONFIG);
+    expect(result.success).toBe(true);
+  });
+
+  it('parse 후 pencil.enabled 가 true', () => {
+    const result = QaConfigSchema.safeParse(JAJANG_QA_CONFIG);
+    expect(result.success).toBe(true);
+    expect((result as any).data.pencil?.enabled).toBe(true);
+  });
+
+  it('parse 후 pencil.documentPath 가 ../../design/jajang.pen', () => {
+    const result = QaConfigSchema.safeParse(JAJANG_QA_CONFIG);
+    expect(result.success).toBe(true);
+    expect((result as any).data.pencil?.documentPath).toBe('../../design/jajang.pen');
+  });
+
+  it('parse 후 pencil.nodeIds.S10 가 ["llTp1", "r97aM"]', () => {
+    const result = QaConfigSchema.safeParse(JAJANG_QA_CONFIG);
+    expect(result.success).toBe(true);
+    expect((result as any).data.pencil?.nodeIds?.S10).toEqual(['llTp1', 'r97aM']);
+  });
+
+  it('pencil.enabled=false 인 config 도 QaConfigSchema 통과 (선택적 비활성)', () => {
+    const disabledPencil = {
+      ...JAJANG_QA_CONFIG,
+      pencil: { enabled: false },
+    };
+    const result = QaConfigSchema.safeParse(disabledPencil);
+    expect(result.success).toBe(true);
+  });
+
+  it('pencil 블록 없는 config 도 QaConfigSchema 통과 (optional 필드)', () => {
+    const withoutPencil = {
+      appPackage: 'com.jajang.app',
+      outputDir: '../../docs/qa',
+      screenRegistryPath: './screen-registry.json',
+    };
+    const result = QaConfigSchema.safeParse(withoutPencil);
+    expect(result.success).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // REQ-CONSUMER-02: screen-registry.json 스키마 정합
 // 수용 기준 (CLI) "npm run qa:tour" 전제 조건 — registry 가 스키마 통과해야 tour 실행 가능.
 // ---------------------------------------------------------------------------
@@ -216,6 +274,15 @@ describe('REQ-CONSUMER-03 loadConfig — jajang fixture 조합 머지', () => {
     const config = await loadConfig('/apps/mobile/qa.config.json');
     expect(config.screens![0].id).toBe('S06');
     expect(config.screens![0].entrySteps).toHaveLength(0);
+  });
+
+  it('머지 결과 config.pencil.enabled 가 true (impl/05 pencil 블록 보존)', async () => {
+    mockReadFile
+      .mockResolvedValueOnce(JSON.stringify(JAJANG_QA_CONFIG))
+      .mockResolvedValueOnce(JSON.stringify(JAJANG_SCREEN_REGISTRY));
+
+    const config = await loadConfig('/apps/mobile/qa.config.json');
+    expect(config.pencil?.enabled).toBe(true);
   });
 
   it('registry 에 schema 위반 항목 있으면 ConfigLoadError 발생 — consumer 오기입 회귀 방지', async () => {
