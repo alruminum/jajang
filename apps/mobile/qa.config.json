@@ -1,0 +1,6 @@
+{
+  "appPackage": "com.jajang.app",
+  "outputDir": "../../docs/qa",
+  "uxFlowAnchor": "../../docs/ux-flow.md",
+  "screenRegistryPath": "./screen-registry.json"
+}

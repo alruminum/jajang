@@ -25,7 +25,7 @@
 - **모노레포 workspace 우선**: 초기 iteration 비용 낮음 (별도 레포 분리 시 publish/CI/version 관리 부담). 안정화 후 (semver 1.0.0 도달 시) 별도 레포 + npm publish 분리 옵션 열어둠.
 - **CLI 형태 (npm + bin)**: jajang 이 RN/Expo 모노레포라 Node.js 생태계 정합 + 풍부한 인자 파싱·config 검증·휴리스틱 표 생성 유리. shell wrapper 보다 npm package 가 의존성 / type 안전성 우위.
 
-**GitHub Epic Issue:** TBD (architect TASK_DECOMPOSE 진입 후 등록)
+**GitHub Epic Issue:** [#181](https://github.com/alruminum/jajang/issues/181)
 
 ---
 
@@ -153,6 +153,8 @@ plan §Track B 는 7 화면 × (navigate + screencap + LLM analysis) 흐름. nav
 
 ## Story 3 — jajang Consumer 통합 (qa.config.json + npm script + 첫 실행 검증)
 
+**GitHub Issue:** [#185](https://github.com/alruminum/jajang/issues/185)
+
 **As a** jajang 개발자
 **I want** jajang 모바일 앱이 `mobile-qa-tour` 의 첫 consumer 로 통합되고 `npm run qa:monkey` / `npm run qa:tour` 만으로 plan §Step 2~4 가 자동 실행되길 원한다
 **So that** plan 의 7 화면 (S06/S07/S09/S10/S11/S16/AccountDeletion) tour 결과가 매번 동일 형식으로 `docs/qa/` 에 누적되고 메인 Claude 가 멀티모달 검수만 채우면 된다.
@@ -171,7 +173,7 @@ plan §Track B 는 7 화면 × (navigate + screencap + LLM analysis) 흐름. nav
 
 ### 태스크 체크리스트
 
-- [ ] `qa.config.json` 작성 — 7 화면 정의
+- [x] `qa.config.json` 작성 — 7 화면 정의 (entrySteps 는 screen-registry.json 으로 분리, qa.config.json 은 4-key 진입점)
   - S06 Home: 시작점 (entrySteps 비어있음, settleMs 2000)
   - S07 SongSelect: tap "자장가 만들기" CTA (testID 또는 좌표)
   - S09 RecordGuide: S07 + tap song
@@ -179,12 +181,12 @@ plan §Track B 는 7 화면 × (navigate + screencap + LLM analysis) 흐름. nav
   - S11 Preview: S10 + 30초 wait OR mock recording (현실적 선택 — skip + 후속 epic 으로 미루기 권장)
   - S16 Settings: tab "설정"
   - AccountDeletion: S16 + tap "계정 삭제" (smoke only — 실제 호출 차단 표시)
-- [ ] `screen-registry.json` 의 testID 매핑 — `apps/mobile/src/screens/S0*.tsx` 의 실제 testID grep 후 정합
-- [ ] testID 부재 화면은 좌표 fallback 명시 (해상도 1080×1920 기준 좌표 + 주의)
-- [ ] `npm run qa:init` 으로 jajang 디렉토리에 템플릿 첫 생성 검증 (그 후 위 jajang-specific 내용으로 덮어씀)
-- [ ] `npm run qa:monkey` 첫 run — 1000 events / crash 0 / 리포트 생성 확인
-- [ ] `npm run qa:tour` 첫 run — 6 화면 (S11 제외) screenshot + 휴리스틱 표 생성
-- [ ] 메인 Claude 가 LLM 검수 슬롯 채우는 운영 SOP 문서화 (`docs/qa/README.md`)
+- [x] `screen-registry.json` 의 testID 매핑 — `apps/mobile/src/screens/S0*.tsx` 의 실제 testID grep 후 정합 (S09 만 `record-guide-cta` 실존, 나머지 좌표 fallback + epic-18 후속 후보)
+- [x] testID 부재 화면은 좌표 fallback 명시 (해상도 1080×1920 기준 좌표 + `_comment` 주석)
+- [ ] `npm run qa:init` 으로 jajang 디렉토리에 템플릿 첫 생성 검증 — 운영자 smoke (emulator 필요)
+- [ ] `npm run qa:monkey` 첫 run — 1000 events / crash 0 / 리포트 생성 확인 — 운영자 smoke (emulator 필요)
+- [ ] `npm run qa:tour` 첫 run — 6 화면 (S11 제외) screenshot + 휴리스틱 표 생성 — 운영자 smoke (emulator 필요)
+- [x] 메인 Claude 가 LLM 검수 슬롯 채우는 운영 SOP 문서화 (`docs/qa/README.md`)
 
 ### 수용 기준
 
@@ -294,7 +296,7 @@ Story 4 (Pencil adapter, optional) ──────┘
 | Epic | #181 |
 | Story 1 | (PR #180 — issue 미등록, 회고용 직접 등록 X) |
 | Story 2 | #182 |
-| Story 3 | TBD |
+| Story 3 | [#185](https://github.com/alruminum/jajang/issues/185) |
 | Story 4 | TBD |
 | Story 5 | TBD |
 

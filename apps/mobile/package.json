@@ -8,7 +8,10 @@
     "android": "bash scripts/setup-adb-reverse.sh && expo run:android",
     "reverse": "bash scripts/setup-adb-reverse.sh",
     "type-check": "tsc --noEmit",
-    "lint": "eslint src --ext .ts,.tsx"
+    "lint": "eslint src --ext .ts,.tsx",
+    "qa:init": "mobile-qa-tour init --out .",
+    "qa:monkey": "mobile-qa-tour monkey --package com.jajang.app --events 1000 --output ../../docs/qa",
+    "qa:tour": "mobile-qa-tour tour --config ./qa.config.json"
   },
   "dependencies": {
     "@invertase/react-native-apple-authentication": "^2.3.0",
@@ -33,6 +36,7 @@
     "zustand": "^4.5.0"
   },
   "devDependencies": {
+    "mobile-qa-tour": "*",
     "@babel/core": "^7.24.0",
     "@testing-library/jest-native": "^5.4.3",
     "@testing-library/react-native": "^12.0.0",
