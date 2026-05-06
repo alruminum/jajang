@@ -1,5 +1,7 @@
 # Epic 03 — DSP 음원 후처리 생성
 
+**GitHub Epic Issue:** [#190](https://github.com/alruminum/jajang/issues/190)
+
 > **[v1.3.1 피벗 (2026-04-30)]**: 에픽 명칭 변경 ("AI 음원 생성" → "DSP 음원 후처리 생성"). GPU/AI 합성 관련 Story 1~6 전부 폐기. ffmpeg DSP 파이프라인 + 신규 데이터 모델(RecordingSession/Recording/MasterAudio) 기반으로 전면 재정의.
 >
 > **폐기된 story/impl 목록**:
@@ -17,6 +19,8 @@
 ---
 
 ## Story 1 — DB 모델 마이그레이션 (Alembic 0006)
+
+**GitHub Issue:** [#191](https://github.com/alruminum/jajang/issues/191)
 
 **As a** 시스템  
 **I want** RecordingSession / Recording / MasterAudio 테이블을 신설하고 구 테이블을 폐기하고 싶다  
@@ -51,6 +55,8 @@
 
 ## Story 2 — DSP 서버 파이프라인 (ffmpeg + Celery)
 
+**GitHub Issue:** [#192](https://github.com/alruminum/jajang/issues/192)
+
 **As a** 시스템  
 **I want** 업로드된 녹음 클립에 ffmpeg DSP를 적용해 master.mp3를 생성하고 싶다  
 **So that** 부모 목소리가 노이즈 제거 + EQ + reverb + crossfade로 정제된 자장가 음원을 제공할 수 있다
@@ -75,17 +81,20 @@
 ### 수용 기준
 
 - Given `MOCK_DSP=true` / When Celery task 실행 / Then 3초 후 `master_audios.status=completed`
+- Given `MOCK_DSP=true` + 무료 유저 / When Celery task 완료 / Then 카운터 차감 없음 (개발 환경 소진 방지)
 - Given N=1 클립 / When DSP 실행 / Then 셔플 concat 미적용 + DSP 후처리(노이즈/EQ/reverb/crossfade) 정상
 - Given N≥2 클립 / When DSP 실행 / Then 직전 클립 제외 Fisher-Yates 셔플 + acrossfade concat
 - Given DSP 처리 실패 / When 3회 재시도 후 / Then `master_audios.status=failed` + Sentry 알림
 - Given DSP 성공 / When 완료 / Then `recordings.schedule_delete_at = NOW() + 24h` 설정 확인
-- Given DSP 성공 (무료 유저) / When 완료 / Then `generation_counters.count +1` 확인
+- Given DSP 성공 (무료 유저, MOCK_DSP=false) / When 완료 / Then `generation_counters.count +1` 확인
 
 **관련 impl**: `impl/02-server-dsp-pipeline.md`
 
 ---
 
 ## Story 3 — 세션/녹음/마스터 API (POST /sessions + recordings + generate)
+
+**GitHub Issue:** [#193](https://github.com/alruminum/jajang/issues/193)
 
 **As a** 클라이언트  
 **I want** 녹음 세션 생성 → 클립 등록 → DSP 생성 트리거를 REST API로 처리하고 싶다  
@@ -120,6 +129,8 @@
 
 ## Story 4 — 녹음 샘플 서버 자동 삭제 (24h TTL)
 
+**GitHub Issue:** [#194](https://github.com/alruminum/jajang/issues/194)
+
 **As a** 시스템  
 **I want** DSP 완료 후 업로드된 녹음 클립을 24시간 이내 삭제하고 싶다  
 **So that** 생체정보를 최소 기간만 보관하고 법적 요건(PRD §F13)을 충족할 수 있다
@@ -143,6 +154,8 @@
 
 ## Story 5 — 홈 화면 음원 목록 (MasterAudio 기반)
 
+**GitHub Issue:** [#195](https://github.com/alruminum/jajang/issues/195)
+
 **As a** 유저  
 **I want** 내가 생성한 음원 목록을 홈에서 확인하고 싶다  
 **So that** 이전에 만든 자장가를 바로 재생할 수 있다
@@ -156,7 +169,7 @@
 - [ ] 생성된 음원 없을 시: 빈 상태 UI + "자장가 만들기" CTA
 - [ ] 음원 카드 탭 → 재생 화면(S13) 이동
 - [ ] 생성 완료 후 홈 재진입 시: "생성 완료 음원 있음" 카드 자동 노출 (배지 + 탭 시 S13)
-- [ ] PlayerSlice.currentSessionId 갱신 (MasterAudio의 session_id 참조)
+- [ ] 현재 재생 중인 음원 상태 갱신 (MasterAudio의 세션 식별자 기반)
 
 ### 수용 기준
 
@@ -168,6 +181,8 @@
 ---
 
 ## Story 6 — DSP 생성 횟수 카운터 서버사이드 enforcement
+
+**GitHub Issue:** [#196](https://github.com/alruminum/jajang/issues/196)
 
 **As a** 시스템  
 **I want** 무료 유저의 DSP 음원 생성 횟수를 계정 단위로 서버사이드에서 제한하고 싶다  
@@ -188,10 +203,14 @@
 - Given 무료 유저 count=3 / When 생성 API 요청 / Then 402 응답 + 클라이언트 S14 팝업
 - Given DSP 실패 후 재시도 / When 동일 session_id 재생성 / Then 카운터 추가 차감 없음
 - Given Premium 유저 / When 생성 API 요청 / Then 카운터 체크 skip
+- Given Trial 유저 (7일 체험 중) / When 생성 API 요청 / Then 카운터 체크 skip (Premium 동등 취급) + DSP 완료 후 카운터 +1 없음
+- Given Trial 만료 후 무료 다운그레이드 / When 이미 Trial 전 2회 소진 상태 / Then `generation_counter = 2` 유지 (Trial 기간 생성분 무가산, 1회만 추가 허용)
 
 ---
 
 ## Story 7 — 생성 중 대기 화면 & 실패 처리 (S12, 클라이언트)
+
+**GitHub Issue:** [#197](https://github.com/alruminum/jajang/issues/197)
 
 **As a** 유저  
 **I want** DSP 생성이 진행 중임을 시각적으로 확인하고, 실패 시 재시도하거나 홈으로 이동하고 싶다  
@@ -202,17 +221,23 @@
 ### 태스크 체크리스트
 
 - [ ] S12 생성 중 애니메이션 UI + "30초 이내" 예상 시간 안내
-- [ ] `GET /sessions/{id}/status` 5초 간격 폴링
-- [ ] 생성 완료 수신 → S13 재생 화면 자동 이동
-- [ ] 30초 타임아웃: 재시도 버튼 + "홈으로 이동" 버튼
-- [ ] "홈으로 이동": S06 홈 이동 → 완료 시 "생성 완료 음원 있음" 카드 자동 노출
-- [ ] 재시도: 동일 session_id 재사용 (재녹음 없이, 횟수 차감 없음)
+- [ ] `GET /sessions/{id}/status` 5초 간격 폴링 (서버 status 가 completed/failed 도달 시까지 계속)
+- [ ] 생성 완료 (`status=completed`) 수신 → S13 재생 화면 자동 이동
+- [ ] 클라이언트 30초 경과 시: "처리 중 (재시도 대기)" 메시지 + 재시도 버튼 *비활성* + "홈으로 이동" 버튼 활성 노출 (Celery retry 진행 중 중복 task 방지)
+- [ ] 클라이언트 30초 이후에도 폴링 계속 유지 — 서버 `status=completed` 도달 시 S13 자동 이동
+- [ ] 서버 `status=failed` (Celery 재시도 모두 소진) 도달 시: 재시도 버튼 활성 + 실패 메시지 노출
+- [ ] 재시도 (`status=failed` 후): 동일 session_id POST 재요청 (횟수 차감 없음)
+- [ ] "홈으로 이동": 항상 활성 → S06 홈 이동 → 완료 시 "생성 완료 음원 있음" 카드 자동 노출
 
 ### 수용 기준
 
 - Given 생성 요청 완료 / When 대기 화면 / Then 애니메이션 + "30초 이내" 안내 노출
-- Given 생성 성공 / When 완료 수신 / Then S13 재생 화면 자동 이동
-- Given 30초 초과 / When 타임아웃 / Then 재시도 버튼 + "홈으로 이동" 버튼 노출
+- Given 생성 성공 / When `status=completed` 수신 / Then S13 재생 화면 자동 이동
+- Given 클라이언트 30초 경과 / When 서버 `status=processing` 중 / Then "처리 중 (재시도 대기)" 메시지 표시 + 재시도 버튼 비활성 + "홈으로 이동" 버튼 활성
+- Given 클라이언트 30초 이후 폴링 중 / When `status=completed` 수신 / Then 즉시 S13 재생 화면 이동
+- Given 서버 `status=failed` (Celery 재시도 전부 소진) / When 폴링 수신 / Then 재시도 버튼 활성 + 에러 메시지 노출
+- Given 재시도 버튼 탭 (`status=failed` 후) / When / Then 동일 session_id 재요청 (새 세션 생성 X, 횟수 차감 X)
+- Given 홈으로 이동 탭 / When 서버 처리 중이든 완료든 / Then 즉시 S06 이동 가능
 - Given 홈으로 이동 후 / When 서버 처리 완료 / Then 홈에 "생성 완료 음원 있음" 카드 자동 노출
 
 ---
@@ -221,12 +246,13 @@
 
 | 스토리 | GitHub Issue |
 |---|---|
-| Epic | [#58](https://github.com/alruminum/jajang/issues/58) — v1.3.1 피벗으로 재정의 |
-| 구 Story 1~6 (AI 합성 기반) | [#59](https://github.com/alruminum/jajang/issues/59)~[#64](https://github.com/alruminum/jajang/issues/64) — v1.3.1 피벗으로 폐기 |
-| Story 1 (DB 마이그레이션 0006) | 신규 이슈 필요 |
-| Story 2 (DSP 파이프라인) | 신규 이슈 필요 |
-| Story 3 (세션 API) | 신규 이슈 필요 |
-| Story 4 (클립 삭제) | 신규 이슈 필요 |
-| Story 5 (홈 목록 MasterAudio) | 신규 이슈 필요 |
-| Story 6 (카운터 enforcement) | 신규 이슈 필요 |
-| Story 7 (S12 대기 화면) | 신규 이슈 필요 |
+| Epic (v1.3.1 신규) | [#190](https://github.com/alruminum/jajang/issues/190) |
+| 구 Epic (AI 합성 기반) | [#58](https://github.com/alruminum/jajang/issues/58) — closed, v1.3.1 피벗으로 대체 |
+| 구 Story 1~6 (AI 합성 기반) | [#59](https://github.com/alruminum/jajang/issues/59)~[#64](https://github.com/alruminum/jajang/issues/64) — closed, v1.3.1 피벗으로 폐기 |
+| Story 1 (DB 마이그레이션 0006) | [#191](https://github.com/alruminum/jajang/issues/191) |
+| Story 2 (DSP 파이프라인) | [#192](https://github.com/alruminum/jajang/issues/192) |
+| Story 3 (세션 API) | [#193](https://github.com/alruminum/jajang/issues/193) |
+| Story 4 (클립 삭제) | [#194](https://github.com/alruminum/jajang/issues/194) |
+| Story 5 (홈 목록 MasterAudio) | [#195](https://github.com/alruminum/jajang/issues/195) |
+| Story 6 (카운터 enforcement) | [#196](https://github.com/alruminum/jajang/issues/196) |
+| Story 7 (S12 대기 화면) | [#197](https://github.com/alruminum/jajang/issues/197) |

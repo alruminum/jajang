@@ -2,7 +2,7 @@
 depth: std
 ---
 
-# impl/01 — 서버: Alembic 0006 DB 마이그레이션 + DSP ORM 모델
+# impl/01 — [Story 1 / #191] 서버: Alembic 0006 DB 마이그레이션 + DSP ORM 모델
 
 **Epic**: 03 — DSP 음원 후처리 생성  
 **커버 스토리**: Story 1 (DB 모델 마이그레이션 0006)  
@@ -438,3 +438,7 @@ DSP는 세션 전체 클립을 concat해 single master.mp3 생성. 재생성 요
 - **user.py 수정 필수**: `voice_samples`, `generated_tracks` relationship 제거 + `recording_sessions` relationship 추가. 제거하지 않으면 `VoiceSample`/`GeneratedTrack` import 제거 후 앱 기동 시 `NameError` 발생.
 - **RecordingSession.user relationship 필수**: `back_populates="user"` 짝 없으면 SQLAlchemy 기동 시 `InvalidRequestError`. §3 코드블록에 이미 포함됨 — 구현 시 누락 주의.
 - 구 테이블 참조 코드(services, tasks, API 라우터)가 남아있으면 `NameError`. 이번 impl은 DB 레이어만. 구 참조 코드 제거는 impl/02~03에서 진행.
+
+---
+
+MODULE_PLAN_READY
