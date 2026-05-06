@@ -50,7 +50,6 @@ class VoiceSample(Base):
     )
 
     user: Mapped["User"] = relationship(  # noqa: F821
-        back_populates="voice_samples"
     )
     # Epic 03 역참조 — SET NULL이므로 Optional list
     generated_tracks: Mapped[list["GeneratedTrack"]] = relationship(  # noqa: F821

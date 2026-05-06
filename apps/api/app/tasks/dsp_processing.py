@@ -16,11 +16,6 @@ from app.core.config import settings
 from app.models.recording import Recording
 from app.models.master_audio import MasterAudio
 from app.models.generation_counter import GenerationCounter
-# VoiceSample/GeneratedTrack: 직접 사용하지 않지만 SQLAlchemy mapper 전체 초기화를 위해 import.
-# VoiceSample.user.back_populates="voice_samples" 및 VoiceSample.generated_tracks가
-# 이 두 모델을 참조하므로, mapper configure 시 찾을 수 있어야 한다.
-from app.models.voice_sample import VoiceSample  # noqa: F401
-from app.models.generated_track import GeneratedTrack  # noqa: F401
 from app.services.counter_service import PAID_ENTITLEMENTS
 from app.services.dsp import get_dsp_service
 from app.services.storage_service import upload_mp3, delete_object

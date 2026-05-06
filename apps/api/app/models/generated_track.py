@@ -79,7 +79,7 @@ class GeneratedTrack(Base):
     )
 
     # Relationships
-    user: Mapped["User"] = relationship(back_populates="generated_tracks")
+    user: Mapped["User"] = relationship()
     voice_sample: Mapped[Optional["VoiceSample"]] = relationship(
         back_populates="generated_tracks"
     )
