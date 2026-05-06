@@ -778,10 +778,13 @@ class TestAC_T09_FailTaskHelpers:
 
 
 class TestAC_T11_ClipCleanupTask:
-    """REQ-DSP-02 AC-T11 — clip_cleanup_task가 만료 레코드 S3 삭제 후 s3_key=None."""
+    """REQ-DSP-02 AC-T11 — clip_cleanup_task가 만료 레코드 S3 삭제 후 s3_key=None.
+
+    impl/04 이후 clip_cleanup_task 는 app.tasks.clip_cleanup 으로 이전됨.
+    """
 
     def test_만료_recording_delete_object_호출_후_s3_key_None(self):
-        from app.tasks.dsp_processing import clip_cleanup_task
+        from app.tasks.clip_cleanup import clip_cleanup_task
 
         rec = MagicMock()
         rec.id = uuid.uuid4()
@@ -799,8 +802,8 @@ class TestAC_T11_ClipCleanupTask:
         ctx.__enter__ = MagicMock(return_value=db)
         ctx.__exit__ = MagicMock(return_value=False)
 
-        with patch("app.tasks.dsp_processing.SyncSessionLocal", return_value=ctx):
-            with patch("app.tasks.dsp_processing.delete_object") as mock_delete:
+        with patch("app.tasks.clip_cleanup.SyncSessionLocal", return_value=ctx):
+            with patch("app.tasks.clip_cleanup.delete_object") as mock_delete:
                 clip_cleanup_task()
 
         mock_delete.assert_called_once_with("recordings/user/clip.wav")
@@ -811,7 +814,7 @@ class TestAC_T11_ClipCleanupTask:
         db.commit.assert_called_once()
 
     def test_빈_만료_목록_시_delete_object_미호출(self):
-        from app.tasks.dsp_processing import clip_cleanup_task
+        from app.tasks.clip_cleanup import clip_cleanup_task
 
         db = MagicMock()
         scalars = MagicMock()
@@ -824,8 +827,8 @@ class TestAC_T11_ClipCleanupTask:
         ctx.__enter__ = MagicMock(return_value=db)
         ctx.__exit__ = MagicMock(return_value=False)
 
-        with patch("app.tasks.dsp_processing.SyncSessionLocal", return_value=ctx):
-            with patch("app.tasks.dsp_processing.delete_object") as mock_delete:
+        with patch("app.tasks.clip_cleanup.SyncSessionLocal", return_value=ctx):
+            with patch("app.tasks.clip_cleanup.delete_object") as mock_delete:
                 clip_cleanup_task()
 
         mock_delete.assert_not_called()
@@ -837,10 +840,13 @@ class TestAC_T11_ClipCleanupTask:
 
 
 class TestAC_T12_ClipCleanupPartialFailure:
-    """REQ-DSP-02 AC-T12 — delete_object 실패 시 해당 레코드 스킵, 다음 레코드 처리."""
+    """REQ-DSP-02 AC-T12 — delete_object 실패 시 해당 레코드 스킵, 다음 레코드 처리.
+
+    impl/04 이후 clip_cleanup_task 는 app.tasks.clip_cleanup 으로 이전됨.
+    """
 
     def test_첫번째_삭제_실패_시_두번째_레코드는_삭제된다(self):
-        from app.tasks.dsp_processing import clip_cleanup_task
+        from app.tasks.clip_cleanup import clip_cleanup_task
 
         rec1 = MagicMock()
         rec1.id = uuid.uuid4()
@@ -867,8 +873,8 @@ class TestAC_T12_ClipCleanupPartialFailure:
             if key == "recordings/fail.wav":
                 raise Exception("S3 ClientError")
 
-        with patch("app.tasks.dsp_processing.SyncSessionLocal", return_value=ctx):
-            with patch("app.tasks.dsp_processing.delete_object", side_effect=side_effect_delete):
+        with patch("app.tasks.clip_cleanup.SyncSessionLocal", return_value=ctx):
+            with patch("app.tasks.clip_cleanup.delete_object", side_effect=side_effect_delete):
                 clip_cleanup_task()  # 예외가 task 전체를 중단시키지 않아야 함
 
         assert "recordings/fail.wav" in delete_calls

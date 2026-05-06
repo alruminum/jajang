@@ -127,7 +127,7 @@
 
 ---
 
-## Story 4 — 녹음 샘플 서버 자동 삭제 (24h TTL)
+## Story 4 — 녹음 샘플 서버 자동 삭제 (24h TTL) [x]
 
 **GitHub Issue:** [#194](https://github.com/alruminum/jajang/issues/194)
 
@@ -137,11 +137,11 @@
 
 ### 태스크 체크리스트
 
-- [ ] DSP 성공/실패 시 모두 `recordings.schedule_delete_at = NOW() + 24h` 설정 (Story 2에서 통합)
-- [ ] Celery Beat task `clip_cleanup`: 1시간 주기, `schedule_delete_at <= NOW()` 대상 S3 삭제 + `recordings.s3_key = NULL`
-- [ ] S3 lifecycle rule 백업 (24h TTL, Celery 실패 대비)
-- [ ] 삭제 완료 structlog 기록 (파일 ID + 타임스탬프)
-- [ ] 클라이언트 로컬 임시 녹음 파일: 업로드 완료 후 삭제 (`expo-file-system deleteAsync`)
+- [x] DSP 성공/실패 시 모두 `recordings.schedule_delete_at = NOW() + 24h` 설정 (Story 2에서 통합)
+- [x] Celery Beat task `clip_cleanup`: 1시간 주기, `schedule_delete_at <= NOW()` 대상 S3 삭제 + `recordings.s3_key = NULL`
+- [x] S3 lifecycle rule 백업 (24h TTL, Celery 실패 대비)
+- [x] 삭제 완료 structlog 기록 (파일 ID + 타임스탬프)
+- [x] 클라이언트 로컬 임시 녹음 파일: 업로드 완료 후 삭제 (`expo-file-system deleteAsync`)
 
 ### 수용 기준
 

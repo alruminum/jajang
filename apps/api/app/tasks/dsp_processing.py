@@ -18,7 +18,7 @@ from app.models.master_audio import MasterAudio
 from app.models.generation_counter import GenerationCounter
 from app.services.counter_service import PAID_ENTITLEMENTS
 from app.services.dsp import get_dsp_service
-from app.services.storage_service import upload_mp3, delete_object
+from app.services.storage_service import upload_mp3
 
 logger = structlog.get_logger()
 
@@ -245,38 +245,3 @@ def _fail_task_final(master_id: uuid.UUID, error_message: str) -> None:
 # bind=True task에서 __wrapped__가 bound method로 설정되어 테스트에서 직접 호출 불가.
 # __wrapped__.__func__ (unbound, self 포함 시그니처)로 교체하여 테스트 호환성 보장.
 dsp_process_task.__wrapped__ = dsp_process_task.__wrapped__.__func__
-
-
-@shared_task(name="tasks.clip_cleanup")
-def clip_cleanup_task():
-    """
-    1시간 주기 실행. schedule_delete_at <= NOW() 인 recordings S3 삭제 후 s3_key = NULL.
-    S3 삭제 실패 시 해당 레코드 스킵 — 다음 주기에 재시도.
-    """
-    now = datetime.now(timezone.utc)
-
-    with SyncSessionLocal() as db:
-        result = db.execute(
-            select(Recording)
-            .where(
-                Recording.schedule_delete_at <= now,
-                Recording.s3_key.isnot(None),
-            )
-        )
-        targets = result.scalars().all()
-
-        for rec in targets:
-            s3_key = rec.s3_key
-            try:
-                delete_object(s3_key)   # storage_service.delete_object (실존 함수명)
-                db.execute(
-                    update(Recording)
-                    .where(Recording.id == rec.id)
-                    .values(s3_key=None)
-                )
-                logger.info("clip.deleted", recording_id=str(rec.id), s3_key=s3_key)
-            except Exception as e:
-                logger.warning("clip.delete_failed", recording_id=str(rec.id), error=str(e))
-                # schedule_delete_at 유지 → 다음 주기에 재시도
-
-        db.commit()
