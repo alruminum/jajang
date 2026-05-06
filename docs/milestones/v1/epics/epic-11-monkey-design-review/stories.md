@@ -200,6 +200,8 @@ plan §Track B 는 7 화면 × (navigate + screencap + LLM analysis) 흐름. nav
 
 ## Story 4 — Pencil MCP Adapter (S10 reference 캡처, optional)
 
+**GitHub Issue:** [#187](https://github.com/alruminum/jajang/issues/187)
+
 **As a** S10 디자인 검수 사용자
 **I want** `qa.config.json.pencil.enabled = true` 일 때 tour 가 S10 진입 후 Pencil MCP 의 `get_screenshot` 으로 reference 캡처를 함께 수집해 per-screen 리포트의 `pencil ref` 슬롯에 채우길 원한다
 **So that** plan §Track B 의 "S10 한정 Pencil 비교" 가 자동화되고 메인 Claude 가 1:1 비교 가능.
@@ -297,7 +299,7 @@ Story 4 (Pencil adapter, optional) ──────┘
 | Story 1 | (PR #180 — issue 미등록, 회고용 직접 등록 X) |
 | Story 2 | #182 |
 | Story 3 | [#185](https://github.com/alruminum/jajang/issues/185) |
-| Story 4 | TBD |
+| Story 4 | [#187](https://github.com/alruminum/jajang/issues/187) |
 | Story 5 | TBD |
 
 > architect TASK_DECOMPOSE 진입 시 GitHub Issues 등록.
