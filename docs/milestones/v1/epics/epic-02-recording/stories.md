@@ -1,5 +1,7 @@
 # Epic 02 — 목소리 녹음 & 품질 검증
 
+**GitHub Epic Issue:** [#52](https://github.com/alruminum/jajang/issues/52)
+
 **포함 기능:** F2 (목소리 녹음), F3 (샘플 품질 검증)  
 **선행 조건:** Epic 01 완료 (로그인 상태), F5 자장가 선택 화면 (S07, Epic 02 내)  
 **완료 기준:** 녹음 → 품질 검증 → DSP 생성 진입 가능한 상태
@@ -45,6 +47,8 @@
 
 ## Story 2 (재정의) — 녹음 가이드 화면 v1.3.1 (S09 단일흐름)
 
+**GitHub Issue:** [#221](https://github.com/alruminum/jajang/issues/221)
+
 **As a** 유저  
 **I want** 녹음 시작 전 가사 미리보기와 이어폰 권장 안내, "1 loop 자유 녹음" 가이드를 보고 싶다  
 **So that** 준비된 상태로 자연스럽게 1 loop 녹음할 수 있다
@@ -76,6 +80,8 @@
 ---
 
 ## Story 3 — 실시간 녹음 (S10, v1.3.1 단일흐름)
+
+**GitHub Issue:** [#222](https://github.com/alruminum/jajang/issues/222)
 
 **As a** 유저  
 **I want** 마이크로 내 목소리를 1 loop 동안 녹음하고 싶다. BGM 30%와 가사 박스가 함께 나오길 원한다  
@@ -199,8 +205,8 @@
 | Epic | [#52](https://github.com/alruminum/jajang/issues/52) |
 | Story 1 | [#53](https://github.com/alruminum/jajang/issues/53) |
 | Story 2 (구 S08, 폐기) | [#54](https://github.com/alruminum/jajang/issues/54) — v1.3.1 폐기 |
-| Story 2 재정의 (S09 단일흐름) | 신규 이슈 필요 |
-| Story 3 갱신 (S10 단일흐름) | 신규 이슈 필요 |
+| Story 2 재정의 (S09 단일흐름) | [#221](https://github.com/alruminum/jajang/issues/221) |
+| Story 3 갱신 (S10 단일흐름) | [#222](https://github.com/alruminum/jajang/issues/222) |
 | Story 4 | [#56](https://github.com/alruminum/jajang/issues/56) |
 | Story 5 | [#57](https://github.com/alruminum/jajang/issues/57) |
 | Story 6 갱신 | [#64](https://github.com/alruminum/jajang/issues/64) |
