@@ -36,29 +36,28 @@ export function RecordGuideScreen({ navigation, route }: Props) {
 
   const lyricsAvailable = !!getLyrics(songKey) && !!SONG_NAMES[songKey];
 
+  const checkEarphoneAndNavigate = async () => {
+    const warningDismissed = await AsyncStorage.getItem(EARPHONE_WARNING_KEY);
+    if (!warningDismissed) {
+      setShowEarphoneModal(true);
+      return;
+    }
+    navigation.navigate('Record', { songKey });
+  };
+
   const handleStartRecording = async () => {
     const current = await getRecordingPermissionsAsync();
 
     if (current.status === 'granted') {
       // 이어폰 경고 1회 정책 체크 (자동 감지 없음 — PRD §위험/완화)
-      const warningDismissed = await AsyncStorage.getItem(EARPHONE_WARNING_KEY);
-      if (!warningDismissed) {
-        setShowEarphoneModal(true);
-        return;
-      }
-      navigation.navigate('Record', { songKey });
+      await checkEarphoneAndNavigate();
       return;
     }
 
     if (current.canAskAgain) {
       const { status } = await requestRecordingPermissionsAsync();
       if (status === 'granted') {
-        const warningDismissed = await AsyncStorage.getItem(EARPHONE_WARNING_KEY);
-        if (!warningDismissed) {
-          setShowEarphoneModal(true);
-          return;
-        }
-        navigation.navigate('Record', { songKey });
+        await checkEarphoneAndNavigate();
       } else {
         const after = await getRecordingPermissionsAsync();
         if (!after.canAskAgain) {

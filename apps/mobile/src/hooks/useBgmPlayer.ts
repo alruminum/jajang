@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createAudioPlayer } from 'expo-audio';
+import type { AudioPlayer, AudioStatus } from 'expo-audio';
 
 import { songsApi } from '../services/songs-api';
 
@@ -7,6 +8,7 @@ interface UseBgmPlayerOptions {
   songKey: string;
   enabled: boolean;
   onLoadError?: () => void;
+  onPlaybackEnd?: () => void;
 }
 
 interface UseBgmPlayerReturn {
@@ -21,29 +23,29 @@ const RAMP_STEP = 0.03;
 const RAMP_UP_INTERVAL_MS = 30;
 const RAMP_DOWN_INTERVAL_MS = 20;
 
-type AudioPlayerInstance = {
-  loop: boolean;
-  volume: number;
-  play: () => void;
-  pause: () => void;
-  remove: () => void;
-};
+type PlaybackStatusListener = ReturnType<AudioPlayer['addListener']>;
 
 export function useBgmPlayer(options: UseBgmPlayerOptions): UseBgmPlayerReturn {
-  const { songKey, enabled, onLoadError } = options;
+  const { songKey, enabled, onLoadError, onPlaybackEnd } = options;
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
 
-  const playerRef = useRef<AudioPlayerInstance | null>(null);
+  const playerRef = useRef<AudioPlayer | null>(null);
+  const listenerRef = useRef<PlaybackStatusListener | null>(null);
   const rampUpRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const rampDownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const loadFailedRef = useRef(false);
   const onLoadErrorRef = useRef(onLoadError);
+  const onPlaybackEndRef = useRef(onPlaybackEnd);
 
   useEffect(() => {
     onLoadErrorRef.current = onLoadError;
   }, [onLoadError]);
+
+  useEffect(() => {
+    onPlaybackEndRef.current = onPlaybackEnd;
+  }, [onPlaybackEnd]);
 
   const clearRampUp = () => {
     if (rampUpRef.current) {
@@ -59,7 +61,14 @@ export function useBgmPlayer(options: UseBgmPlayerOptions): UseBgmPlayerReturn {
     }
   };
 
-  const startBgm = async (): Promise<void> => {
+  const removeListener = () => {
+    if (listenerRef.current) {
+      listenerRef.current.remove();
+      listenerRef.current = null;
+    }
+  };
+
+  const startBgm = useCallback(async (): Promise<void> => {
     if (!enabled || loadFailedRef.current) return;
     if (playerRef.current) return;
 
@@ -76,9 +85,19 @@ export function useBgmPlayer(options: UseBgmPlayerOptions): UseBgmPlayerReturn {
 
     const player = createAudioPlayer(
       { uri: url } as Parameters<typeof createAudioPlayer>[0],
-    ) as unknown as AudioPlayerInstance;
+    );
     player.volume = 0;
-    player.loop = true;
+    player.loop = false;
+
+    listenerRef.current = player.addListener(
+      'playbackStatusUpdate',
+      (status: AudioStatus) => {
+        if (status.isFinished) {
+          onPlaybackEndRef.current?.();
+        }
+      },
+    );
+
     player.play();
 
     playerRef.current = player;
@@ -95,9 +114,9 @@ export function useBgmPlayer(options: UseBgmPlayerOptions): UseBgmPlayerReturn {
       p.volume = next;
       if (next >= TARGET_VOLUME) clearRampUp();
     }, RAMP_UP_INTERVAL_MS);
-  };
+  }, [enabled, songKey]);
 
-  const stopBgm = async (): Promise<void> => {
+  const stopBgm = useCallback(async (): Promise<void> => {
     if (!playerRef.current) return;
 
     clearRampUp();
@@ -113,18 +132,20 @@ export function useBgmPlayer(options: UseBgmPlayerOptions): UseBgmPlayerReturn {
       cur.volume = next;
       if (next <= 0) {
         clearRampDown();
+        removeListener();
         cur.pause();
         cur.remove();
         playerRef.current = null;
         setIsPlaying(false);
       }
     }, RAMP_DOWN_INTERVAL_MS);
-  };
+  }, []);
 
   useEffect(() => {
     return () => {
       clearRampUp();
       clearRampDown();
+      removeListener();
       const p = playerRef.current;
       if (p) {
         p.pause();

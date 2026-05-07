@@ -2,6 +2,38 @@
 
 ---
 
+## S10 녹음 화면 — v1.3.1 (Issue #222)
+
+### Issue: #222
+### Selected Variant: C (THREE_WAY)
+### Target: S10 v1.3.1 — 단일흐름 (모드 분기 완전 제거, 1 loop 자동종료)
+
+### Pencil Frame IDs:
+| 상태 | Frame ID | 프레임명 |
+|---|---|---|
+| 카운트다운 | `llTp1` | S10 v1.2.1 — 카운트다운 (유지) |
+| 녹음중 (단일흐름) | `2zWry` | S10 v1.3.1 — variant-C 녹음중 |
+| fallback·BGM실패 | `AxV5Q` | S10 v1.2.1 — fallback·BGM실패 (유지) |
+| fallback·가사없음 | `23JX3` | S10 v1.2.1 — fallback·가사없음 (유지) |
+
+> **폐기**: `glazr` (쉬·녹음중), `O8tTG` (허밍·30초충족) — v1.3.1 에서 해당 상태 없음
+
+### v1.3.1 핵심 변경 (v1.2.1 대비)
+- 쉬/허밍 모드 분기 완전 제거 → 단일 흐름
+- BGM chip + 가사박스 항상 표시 (조건부 렌더 없음)
+- "30초 채워주세요" hint 제거 → encourage text "더 많이 녹음할수록 더 풍성해집니다"
+- 타이머: elapsed 단독 (`00:18`, `/MM:SS` 상한 표시 제거)
+- 1 loop 자동종료: `bgmTracks.ts`의 `loopDurationMs` 기준
+- production navigator 정리: `S10RecordScreen.tsx` (impl/10 BGM 미반영 dead 파일) 삭제, `RecordScreen.tsx` 로 wire-up
+
+### Notes for Engineer (v1.3.1 추가)
+- `isHummingMode` 완전 제거 — `useBgmPlayer({ enabled: true })`
+- `loopDurationMs = BGM_TRACKS[songKey]?.loopDurationMs ?? 120000` — setTimeout 기준 자동종료
+- `isStoppingRef` 중복 stop 가드 필수 (onPlaybackEnd + loopTimer 동시 트리거 방지)
+- expo-audio: `player.loop = false`, `addListener('playbackStatusUpdate')` 로 isFinished 감지
+
+---
+
 ## S10 녹음 화면 — v1.2.1 (Issue #133)
 
 ### Issue: #133

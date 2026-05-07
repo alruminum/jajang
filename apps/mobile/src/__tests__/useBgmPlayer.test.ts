@@ -10,6 +10,10 @@ jest.mock('../services/songs-api', () => ({
   },
 }))
 
+type FakeListenerSubscription = {
+  remove: jest.Mock
+}
+
 type FakePlayer = {
   loop: boolean
   volume: number
@@ -17,11 +21,18 @@ type FakePlayer = {
   pause: jest.Mock
   remove: jest.Mock
   seekTo: jest.Mock
+  addListener: jest.Mock
+  // impl/14: playbackStatusUpdate 리스너 캡처용
+  triggerPlaybackEnd: () => void
 }
 
 const mockCreatedPlayers: FakePlayer[] = []
 const mockCreateAudioPlayer = jest.fn(
   (_source: { uri: string }, initialVolume: number = 0): FakePlayer => {
+    let capturedListener:
+      | ((status: { isFinished: boolean }) => void)
+      | null = null
+    const subscription: FakeListenerSubscription = { remove: jest.fn() }
     const player: FakePlayer = {
       loop: false,
       volume: initialVolume,
@@ -29,6 +40,11 @@ const mockCreateAudioPlayer = jest.fn(
       pause: jest.fn(),
       remove: jest.fn(),
       seekTo: jest.fn(),
+      addListener: jest.fn((_event: string, listener) => {
+        capturedListener = listener
+        return subscription
+      }),
+      triggerPlaybackEnd: () => capturedListener?.({ isFinished: true }),
     }
     mockCreatedPlayers.push(player)
     return player
@@ -67,7 +83,7 @@ describe('useBgmPlayer (impl/10 §3)', () => {
     expect(result.current.isPlaying).toBe(false)
   })
 
-  it('enabled=true: presigned URL 조회 → loop=true 플레이어 생성 → volume 0에서 시작', async () => {
+  it('enabled=true: presigned URL 조회 → loop=false 플레이어 생성 (impl/14: 1 loop 자동종료) → volume 0에서 시작', async () => {
     mockGetPreviewUrl.mockResolvedValueOnce({
       preview_url: 'https://signed.example/twinkle.mp3',
     })
@@ -83,10 +99,36 @@ describe('useBgmPlayer (impl/10 §3)', () => {
     expect(mockGetPreviewUrl).toHaveBeenCalledWith('twinkle')
     expect(mockCreateAudioPlayer).toHaveBeenCalledTimes(1)
     const player = mockCreatedPlayers[0]
-    expect(player.loop).toBe(true)
+    expect(player.loop).toBe(false)
     expect(player.play).toHaveBeenCalledTimes(1)
     expect(player.volume).toBe(0)
+    expect(player.addListener).toHaveBeenCalledWith(
+      'playbackStatusUpdate',
+      expect.any(Function),
+    )
     expect(result.current.isPlaying).toBe(true)
+  })
+
+  it('impl/14: BGM 1 loop 종료(isFinished=true) → onPlaybackEnd 콜백 호출', async () => {
+    mockGetPreviewUrl.mockResolvedValueOnce({
+      preview_url: 'https://signed.example/twinkle.mp3',
+    })
+    const onPlaybackEnd = jest.fn()
+
+    const { result } = renderHook(() =>
+      useBgmPlayer({ songKey: 'twinkle', enabled: true, onPlaybackEnd }),
+    )
+
+    await act(async () => {
+      await result.current.startBgm()
+    })
+    const player = mockCreatedPlayers[0]
+
+    act(() => {
+      player.triggerPlaybackEnd()
+    })
+
+    expect(onPlaybackEnd).toHaveBeenCalledTimes(1)
   })
 
   it('startBgm: volume ramp 0→0.3 over 300ms (30ms × 10 step, 매 tick +0.03)', async () => {
