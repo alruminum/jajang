@@ -53,13 +53,13 @@
 
 ### 태스크 체크리스트
 
-- [ ] S09 단일 흐름 (모드 선택 없음): 선택 곡 가사 박스(1절 4~6줄) + 이어폰 권장 chip 항상 노출
-- [ ] 가이드 문구: "1 loop 동안 자유롭게 — 따라불러도, 허밍해도, 쉬쉬 소리만 내도 좋습니다"
-- [ ] 이어폰 미착용 감지 시 1회 경고 팝업 ("그래도 진행" 버튼 포함, 이후 재노출 없음)
-- [ ] 마이크 권한 요청 (미승인 시 설정 유도 팝업)
-- [ ] `navigation/types.ts` RecordGuide params: `{ songKey: string }` (mode 필드 제거)
-- [ ] S07(SongSelectScreen)에서 `RecordGuide: { songKey }` 직결 navigate (RecordMode 경유 없음)
-- [ ] 기존 S08 관련 route 항목 types.ts에서 제거
+- [x] S09 단일 흐름 (모드 선택 없음): 선택 곡 가사 박스(1절 4~6줄) + 이어폰 권장 chip 항상 노출
+- [x] 가이드 문구: "1 loop 동안 자유롭게 — 따라불러도, 허밍해도, 쉬쉬 소리만 내도 좋습니다"
+- [x] 이어폰 미착용 감지 시 1회 경고 팝업 ("그래도 진행" 버튼 포함, 이후 재노출 없음)
+- [x] 마이크 권한 요청 (미승인 시 설정 유도 팝업)
+- [x] `navigation/types.ts` RecordGuide params: `{ songKey: string }` (mode 필드 제거)
+- [x] S07(SongSelectScreen)에서 `RecordGuide: { songKey }` 직결 navigate (RecordMode 경유 없음)
+- [x] 기존 S08 관련 route 항목 types.ts에서 제거
 - [ ] 무료 유저 "생성 N/3" 표시
 
 ### 수용 기준
@@ -93,11 +93,11 @@
 - [ ] 가사 박스: 카운트다운 종료 → fade-in 400ms (단일 흐름)
 - [ ] 1 loop 자동 종료: 선택 곡 전체 재생 길이 기준 자동 종료 (고정 60초 X)
 - [ ] 1 loop 종료 시 BGM 즉시 정지
-- [ ] 무음 감지 10초 경고 (기존 유지)
+- [x] 무음 감지 10초 경고 (기존 유지)
 - [ ] BGM 로드 실패: 상단 토스트 "음악 없이 녹음할게요" + 녹음 계속 진행
 - [ ] 가사 미준비 fallback: 가사 박스 숨김 + "자유롭게 따라불러 주세요"
 - [ ] 무료 유저 "생성 N/3" 표시
-- [ ] route.params: `{ songKey: string }` (mode 필드 제거)
+- [x] route.params: `{ songKey: string }` (mode 필드 제거)
 - [ ] 다시 녹음: BGM 정지 → 카운트다운 재시작 → BGM 처음부터 재생
 
 ### 수용 기준
