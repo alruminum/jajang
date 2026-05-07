@@ -37,13 +37,15 @@ vitest + esbuild는 react-native Flow 타입 문법(`opaque type`, `interface X 
 
 ## 수정/생성 파일 목록
 
-| 파일 | 작업 | 설명 |
-|---|---|---|
-| `apps/mobile/package.json` | 수정 | devDeps 교체 + scripts 추가 |
-| `apps/mobile/jest.config.js` | 신규 생성 | jest-expo preset + transformIgnorePatterns + moduleNameMapper |
-| `apps/mobile/babel.config.js` | 수정 없음 | babel-preset-expo 이미 설정됨 — 변경 불필요 |
-| `apps/mobile/tsconfig.test.json` | 수정 | `vitest/globals` → `jest` |
-| `apps/mobile/vitest.config.ts` | 비활성화 | `vitest.config.ts.disabled` 로 리네임 (삭제 아님 — 롤백 보존) |
+| 파일 | 작업 | 상태 | 설명 |
+|---|---|---|---|
+| `apps/mobile/package.json` | 수정 | **미완료** | devDeps 교체 + scripts 추가 |
+| `apps/mobile/jest.config.js` | 신규 생성 | **완료** | 이미 생성됨 — 수정 불필요 |
+| `apps/mobile/babel.config.js` | 수정 없음 | 완료 | babel-preset-expo 이미 설정됨 — 변경 불필요 |
+| `apps/mobile/tsconfig.test.json` | 수정 | **완료** | 이미 `"types": ["jest"]` 로 설정됨 |
+| `apps/mobile/vitest.config.ts` | 비활성화 | **완료** | 파일이 이미 존재하지 않음 (비활성화 완료) |
+
+> **실제 작업 범위**: `package.json` 변경만 수행하면 됨. 나머지 파일은 이미 목표 상태.
 
 ---
 
@@ -138,7 +140,7 @@ module.exports = {
   },
 
   // ─── 전역 setup ────────────────────────────────────────────────────────────
-  setupFilesAfterEnv: ['./src/__tests__/setup.ts'],
+  setupFilesAfterEnv: ['./src/__tests__/_setup.ts'],
 
   // ─── 테스트 환경 ───────────────────────────────────────────────────────────
   // jest-expo 기본값은 'node'. @testing-library/react-native는 node 환경에서 동작.
@@ -155,7 +157,7 @@ module.exports = {
   // ─── setup 파일 자체는 테스트 대상 제외 ────────────────────────────────────
   testPathIgnorePatterns: [
     '/node_modules/',
-    '/src/__tests__/setup\\.ts$',
+    '/src/__tests__/_setup\\.ts$',
   ],
 };
 ```
@@ -193,24 +195,23 @@ mv vitest.config.ts vitest.config.ts.disabled
 
 ## 구현 레시피 (순서)
 
+> jest.config.js, tsconfig.test.json, vitest.config.ts 비활성화는 이미 완료 상태.
+> 실제 작업은 package.json 변경 + npm install + 검증만 수행.
+
 1. `npm view jest-expo@~55.0.0 peerDependencies` 실행 → react-test-renderer 지원 버전 확인
 2. `package.json` devDependencies 수정 (위 명세대로)
 3. `npm install` 실행 → peerDep 경고 0건 확인
-4. `jest.config.js` 신규 생성 (위 전체 내용)
-5. `tsconfig.test.json` `types` 수정
-6. `mv vitest.config.ts vitest.config.ts.disabled`
-7. `npm test -- --listTests` 실행 → 에러 없이 .test.ts(x) 목록 출력 확인
-8. `npm test -- --passWithNoTests` 실행 → 0 exit code 확인
+4. `npm test -- --listTests` 실행 → 에러 없이 .test.ts(x) 목록 출력 확인
+5. `npm test -- --passWithNoTests` 실행 → 0 exit code 확인
 
 ---
 
 ## 수용 기준
 
 - (TEST) `npm test -- --listTests` 실행 시 에러 없이 .test.ts(x) 파일 목록 출력 (0 exit code)
-- (TEST) `npm test -- --passWithNoTests` 가 0 exit code로 종료
+- (TEST) `npm test -- --testPathPattern=infra/jest-setup` 6/6 GREEN (0 exit code) — jest 인프라 기동 확인용. 전체 suite GREEN은 Story 3(#153) 수용 기준.
 - (MANUAL) `npm install` 후 peerDep 경고 0건 (react-test-renderer ^19.2.0 + @types/react ^19.0.0 정합)
-- (MANUAL) `ls apps/mobile/vitest.config.ts` → No such file (비활성화 확인)
-- (MANUAL) `ls apps/mobile/vitest.config.ts.disabled` → 파일 존재
+- (MANUAL) `ls apps/mobile/vitest.config.ts` → No such file (이미 존재하지 않음, 확인만)
 
 ---
 

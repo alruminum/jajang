@@ -9,6 +9,8 @@
     "reverse": "bash scripts/setup-adb-reverse.sh",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
+    "test": "jest",
+    "test:ci": "jest --ci --coverage",
     "qa:init": "mobile-qa-tour init --out .",
     "qa:monkey": "mobile-qa-tour monkey --package com.jajang.app --events 1000 --output ../../docs/qa --pct-syskeys 0 --pct-nav 0",
     "qa:tour": "mobile-qa-tour tour --config ./qa.config.json"
@@ -41,13 +43,16 @@
     "@babel/core": "^7.24.0",
     "@testing-library/jest-native": "^5.4.3",
     "@testing-library/react-native": "^12.0.0",
-    "@types/react": "~18.3.0",
+    "@types/jest": "^29.0.0",
+    "@types/react": "^19.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
+    "babel-jest": "^29.0.0",
     "babel-plugin-module-resolver": "^5.0.0",
     "eslint": "^9.0.0",
+    "jest": "^29.0.0",
+    "jest-expo": "~55.0.0",
     "react-test-renderer": "^19.2.5",
-    "typescript": "~5.3.0",
-    "vitest": "^3.0.0"
+    "typescript": "~5.3.0"
   }
 }
