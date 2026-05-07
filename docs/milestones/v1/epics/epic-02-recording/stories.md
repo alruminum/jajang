@@ -105,7 +105,7 @@
 - [ ] 무료 유저 "생성 N/3" 표시
 - [x] route.params: `{ songKey: string }` (mode 필드 제거)
 - [x] 다시 녹음: BGM 정지 → 카운트다운 재시작 → BGM 처음부터 재생
-- [ ] variant-C 시각 정제 (issue #225): 타이머 28px / "녹음 중" 라벨 / 정지버튼 outline ring 96+72 / encourage text accentSecondary — impl/15
+- [x] variant-C 시각 정제 (issue #225): 타이머 28px / "녹음 중" 라벨 / 정지버튼 outline ring 96+72 / encourage text accentSecondary — impl/15
 
 ### 수용 기준
 

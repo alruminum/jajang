@@ -22,6 +22,7 @@ import { useBgmPlayer } from '../hooks/useBgmPlayer';
 import { useRecordingStore } from '../store/recordingSlice';
 import { BGM_TRACKS } from '../data/bgmTracks';
 import { Typography } from '../theme/typography';
+import { darkColors, FontSize } from '../theme/tokens';
 import type { MainStackParamList } from '../navigation/types';
 
 const COUNTDOWN_START = 3;
@@ -320,7 +321,8 @@ export function RecordScreen() {
         >
           <Text style={styles.cancelText}>✕ 취소</Text>
         </Pressable>
-        <Text style={styles.timer}>{formatTime(elapsedSec)}</Text>
+        <Text style={styles.recordingStatusLabel} testID="recording-status-label">녹음 중</Text>
+        <Text style={styles.timer} testID="recording-timer">{formatTime(elapsedSec)}</Text>
       </View>
 
       {showBgmFailToast && (
@@ -354,12 +356,14 @@ export function RecordScreen() {
         </Pressable>
 
         <Pressable
-          style={styles.stopBtn}
           onPress={handleStopPress}
           accessibilityLabel="녹음 중지"
           testID="stop-recording-button"
+          style={styles.stopRing}
         >
-          <View style={styles.stopIcon} />
+          <View style={styles.stopBtn} testID="stop-button-inner" pointerEvents="none">
+            <View style={styles.stopIcon} />
+          </View>
         </Pressable>
 
         <View style={styles.spacer} />
@@ -398,6 +402,12 @@ const styles = StyleSheet.create({
   cancelText: { color: '#7B80A0', fontSize: 15 },
   timer: {
     ...Typography.timerMono,
+    fontSize: FontSize.xxl,
+    lineHeight: FontSize.xxl * 1.2,
+  },
+  recordingStatusLabel: {
+    ...Typography.caption,
+    textAlign: 'center',
   },
   bgmChip: {
     color: '#A9B0D0',
@@ -414,7 +424,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   encourageText: {
-    color: '#7B80A0',
+    color: darkColors.accentSecondary,
     fontSize: 13,
     textAlign: 'center',
     marginTop: 8,
@@ -449,6 +459,15 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
   spacer: { width: 80 },
+  stopRing: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    borderWidth: 2,
+    borderColor: '#FF4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   stopBtn: {
     width: 72,
     height: 72,
