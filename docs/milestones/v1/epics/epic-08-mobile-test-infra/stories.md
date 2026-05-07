@@ -1,5 +1,7 @@
 # Epic 08 — Mobile Test Infra: Vitest → Jest (jest-expo) 마이그레이션
 
+**GitHub Epic Issue:** [#150](https://github.com/alruminum/jajang/issues/150)
+
 **목표:** mobile 테스트 자동화 정상화. vitest + esbuild 환경에서 react-native Flow 타입 문법 파싱 불가 문제 근본 해결.  
 **선행 조건:** 없음 (인프라 에픽, 기능 에픽 독립)  
 **완료 기준:** `npm test` 전체 suite 0 failures. vitest 의존성 제거.
@@ -20,6 +22,8 @@
 ---
 
 ## Story 1 — Jest 인프라 설치 (deps + config)
+
+**GitHub Issue:** [#151](https://github.com/alruminum/jajang/issues/151)
 
 **As a** 개발자  
 **I want** mobile 테스트 환경을 vitest에서 jest-expo로 교체하고 싶다  
@@ -50,6 +54,8 @@
 ---
 
 ## Story 2 — Setup 파일 & __mocks__ jest 변환 (vi.* → jest.*)
+
+**GitHub Issue:** [#152](https://github.com/alruminum/jajang/issues/152)
 
 **As a** 개발자  
 **I want** 기존 vitest 전용 API를 jest API로 변환하고 싶다  
@@ -118,6 +124,8 @@ await Promise.resolve();  // microtask flush
 ---
 
 ## Story 3 — 기존 테스트 파일 jest 호환 검증 + 전체 suite 통과
+
+**GitHub Issue:** [#153](https://github.com/alruminum/jajang/issues/153)
 
 **As a** 개발자  
 **I want** 기존 모든 테스트 파일이 jest 환경에서 통과하길 원한다  
