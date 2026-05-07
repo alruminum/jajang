@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createAudioPlayer } from 'expo-audio';
 import type { AudioPlayer, AudioStatus } from 'expo-audio';
 
@@ -68,7 +68,7 @@ export function useBgmPlayer(options: UseBgmPlayerOptions): UseBgmPlayerReturn {
     }
   };
 
-  const startBgm = async (): Promise<void> => {
+  const startBgm = useCallback(async (): Promise<void> => {
     if (!enabled || loadFailedRef.current) return;
     if (playerRef.current) return;
 
@@ -114,9 +114,9 @@ export function useBgmPlayer(options: UseBgmPlayerOptions): UseBgmPlayerReturn {
       p.volume = next;
       if (next >= TARGET_VOLUME) clearRampUp();
     }, RAMP_UP_INTERVAL_MS);
-  };
+  }, [enabled, songKey]);
 
-  const stopBgm = async (): Promise<void> => {
+  const stopBgm = useCallback(async (): Promise<void> => {
     if (!playerRef.current) return;
 
     clearRampUp();
@@ -139,7 +139,7 @@ export function useBgmPlayer(options: UseBgmPlayerOptions): UseBgmPlayerReturn {
         setIsPlaying(false);
       }
     }, RAMP_DOWN_INTERVAL_MS);
-  };
+  }, []);
 
   useEffect(() => {
     return () => {

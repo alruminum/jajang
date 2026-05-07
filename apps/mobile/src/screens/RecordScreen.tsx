@@ -28,6 +28,7 @@ const COUNTDOWN_START = 3;
 const SILENCE_THRESHOLD = 0.02;
 const SILENCE_WARN_SEC = 10;
 const BGM_FAIL_TOAST_MS = 3000;
+// BGM_TRACKS 에 songKey 매핑 없을 때 사용할 fallback (실제 곡은 매번 매핑되어 사용됨)
 const FALLBACK_LOOP_DURATION_MS = 120000;
 
 type ScreenPhase = 'countdown' | 'recording';
@@ -88,27 +89,6 @@ export function RecordScreen() {
   const recorder = ExpoAudio.useAudioRecorder(RECORDING_OPTIONS);
   const recorderState = useAudioRecorderStateSafe(recorder, 100);
 
-  const handleAutoStop = useCallback(async () => {
-    if (isStoppingRef.current) return;
-    isStoppingRef.current = true;
-    if (loopTimerRef.current) {
-      clearTimeout(loopTimerRef.current);
-      loopTimerRef.current = null;
-    }
-    await stopAndNavigate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const { isPlaying: isBgmPlaying, loadFailed: bgmLoadFailed, startBgm, stopBgm } =
-    useBgmPlayer({
-      songKey,
-      enabled: true,
-      onLoadError: () => setShowBgmFailToast(true),
-      onPlaybackEnd: () => {
-        handleAutoStop();
-      },
-    });
-
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const loopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isStoppingRef = useRef(false);
@@ -116,6 +96,130 @@ export function RecordScreen() {
   const levelsRef = useRef<number[]>([]);
   const recordingStartedRef = useRef(false);
   const failToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // forward-ref: handleAutoStop 가 useBgmPlayer 보다 먼저 선언돼야 하므로
+  // stopAndNavigate 의 최신 참조를 ref 로 노출한다.
+  const stopAndNavigateRef = useRef<(() => Promise<void>) | null>(null);
+
+  const handleAutoStop = useCallback(async () => {
+    if (isStoppingRef.current) return;
+    isStoppingRef.current = true;
+    if (loopTimerRef.current) {
+      clearTimeout(loopTimerRef.current);
+      loopTimerRef.current = null;
+    }
+    await stopAndNavigateRef.current?.();
+  }, []);
+
+  const { isPlaying: isBgmPlaying, loadFailed: bgmLoadFailed, startBgm, stopBgm } =
+    useBgmPlayer({
+      songKey,
+      enabled: true,
+      onLoadError: () => setShowBgmFailToast(true),
+      onPlaybackEnd: handleAutoStop,
+    });
+
+  const cleanupRecording = useCallback(async (): Promise<string | null> => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (!recordingStartedRef.current) return null;
+    try {
+      await recorder.stop();
+      recordingStartedRef.current = false;
+      return recorder.uri ?? null;
+    } catch {
+      recordingStartedRef.current = false;
+      return null;
+    }
+  }, [recorder]);
+
+  const stopAndNavigate = useCallback(async () => {
+    await stopBgm();
+    const uri = await cleanupRecording();
+    if (uri) {
+      setLocalAudioUri(uri);
+      navigation.navigate('Preview', { recordingUri: uri, songKey });
+    }
+  }, [stopBgm, cleanupRecording, setLocalAudioUri, navigation, songKey]);
+
+  useEffect(() => {
+    stopAndNavigateRef.current = stopAndNavigate;
+  }, [stopAndNavigate]);
+
+  const handleStopPress = useCallback(async () => {
+    if (isStoppingRef.current) return;
+    isStoppingRef.current = true;
+    if (loopTimerRef.current) {
+      clearTimeout(loopTimerRef.current);
+      loopTimerRef.current = null;
+    }
+    await stopAndNavigate();
+  }, [stopAndNavigate]);
+
+  const handleCancel = useCallback(async () => {
+    await stopBgm();
+    Alert.alert('녹음을 취소할까요?', '', [
+      { text: '계속 녹음', style: 'cancel' },
+      {
+        text: '취소',
+        style: 'destructive',
+        onPress: async () => {
+          await cleanupRecording();
+          // RecordMode(S08) 폐기 (impl/13) — SongSelect로 fallback
+          navigation.navigate('SongSelect');
+        },
+      },
+    ]);
+  }, [stopBgm, cleanupRecording, navigation]);
+
+  const restartRecording = useCallback(async () => {
+    await stopBgm();
+    if (loopTimerRef.current) {
+      clearTimeout(loopTimerRef.current);
+      loopTimerRef.current = null;
+    }
+    isStoppingRef.current = false;
+    await cleanupRecording();
+    setElapsedSec(0);
+    setLevels([]);
+    setCountdown(COUNTDOWN_START);
+    silentSecRef.current = 0;
+    levelsRef.current = [];
+    setShowSilenceWarning(false);
+    setPhase('countdown');
+  }, [stopBgm, cleanupRecording]);
+
+  const startRecording = useCallback(async () => {
+    try {
+      await ExpoAudio.setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
+      });
+      await (recorder as { prepareToRecordAsync?: () => Promise<void> })
+        .prepareToRecordAsync?.();
+      recorder.record();
+      recordingStartedRef.current = true;
+      setPhase('recording');
+
+      try {
+        await startBgm();
+      } catch {
+        setShowBgmFailToast(true);
+      }
+
+      timerRef.current = setInterval(() => {
+        setElapsedSec((prev) => prev + 1);
+      }, 1000);
+
+      loopTimerRef.current = setTimeout(() => {
+        handleAutoStop();
+      }, loopDurationMs);
+    } catch {
+      Alert.alert('', '녹음을 시작할 수 없어요. 마이크 권한을 확인해주세요');
+      navigation.goBack();
+    }
+  }, [recorder, startBgm, handleAutoStop, loopDurationMs, navigation]);
 
   // ── 카운트다운 ──
   useEffect(() => {
@@ -131,8 +235,7 @@ export function RecordScreen() {
       });
     }, 1000);
     return () => clearInterval(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase]);
+  }, [phase, startRecording]);
 
   // ── BGM 로드 실패 토스트 자동 숨김 (3초) ──
   useEffect(() => {
@@ -168,113 +271,13 @@ export function RecordScreen() {
     }
   }, [recorderState]);
 
-  const startRecording = async () => {
-    try {
-      await ExpoAudio.setAudioModeAsync({
-        allowsRecording: true,
-        playsInSilentMode: true,
-      });
-      await (recorder as { prepareToRecordAsync?: () => Promise<void> })
-        .prepareToRecordAsync?.();
-      recorder.record();
-      recordingStartedRef.current = true;
-      setPhase('recording');
-
-      try {
-        await startBgm();
-      } catch {
-        setShowBgmFailToast(true);
-      }
-
-      timerRef.current = setInterval(() => {
-        setElapsedSec((prev) => prev + 1);
-      }, 1000);
-
-      loopTimerRef.current = setTimeout(() => {
-        handleAutoStop();
-      }, loopDurationMs);
-    } catch {
-      Alert.alert('', '녹음을 시작할 수 없어요. 마이크 권한을 확인해주세요');
-      navigation.goBack();
-    }
-  };
-
-  const stopAndNavigate = async () => {
-    await stopBgm();
-    const uri = await cleanupRecording();
-    if (uri) {
-      setLocalAudioUri(uri);
-      navigation.navigate('Preview', { recordingUri: uri, songKey });
-    }
-  };
-
-  const handleStopPress = async () => {
-    if (isStoppingRef.current) return;
-    isStoppingRef.current = true;
-    if (loopTimerRef.current) {
-      clearTimeout(loopTimerRef.current);
-      loopTimerRef.current = null;
-    }
-    await stopAndNavigate();
-  };
-
-  const handleCancel = async () => {
-    await stopBgm();
-    Alert.alert('녹음을 취소할까요?', '', [
-      { text: '계속 녹음', style: 'cancel' },
-      {
-        text: '취소',
-        style: 'destructive',
-        onPress: async () => {
-          await cleanupRecording();
-          // RecordMode(S08) 폐기 (impl/13) — SongSelect로 fallback
-          navigation.navigate('SongSelect');
-        },
-      },
-    ]);
-  };
-
-  const restartRecording = async () => {
-    await stopBgm();
-    if (loopTimerRef.current) {
-      clearTimeout(loopTimerRef.current);
-      loopTimerRef.current = null;
-    }
-    isStoppingRef.current = false;
-    await cleanupRecording();
-    setElapsedSec(0);
-    setLevels([]);
-    setCountdown(COUNTDOWN_START);
-    silentSecRef.current = 0;
-    levelsRef.current = [];
-    setShowSilenceWarning(false);
-    setPhase('countdown');
-  };
-
-  const cleanupRecording = async (): Promise<string | null> => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    if (!recordingStartedRef.current) return null;
-    try {
-      await recorder.stop();
-      recordingStartedRef.current = false;
-      return recorder.uri ?? null;
-    } catch {
-      recordingStartedRef.current = false;
-      return null;
-    }
-  };
-
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
       handleCancel();
       return true;
     });
     return () => sub.remove();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [elapsedSec]);
+  }, [handleCancel]);
 
   useEffect(() => {
     return () => {

@@ -6,6 +6,8 @@ export interface BgmTrackMeta {
   loopDurationMs: number;
 }
 
+// TODO(#222): loopDurationMs 는 placeholder. 실제 BGM mp3 파일 확정 후
+// `ffprobe -show_entries format=duration` 로 실측해서 교체할 것.
 export const BGM_TRACKS: Record<SongKey, BgmTrackMeta> = {
   brahms: { titleKo: '브람스 자장가', previewKey: 'brahms', loopDurationMs: 120000 },
   mozart: { titleKo: '모차르트 자장가', previewKey: 'mozart', loopDurationMs: 140000 },
