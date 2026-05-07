@@ -15,6 +15,7 @@ import type { MainStackParamList } from '../navigation/types';
 import { LyricsBox } from '../components/LyricsBox';
 import { getLyrics } from '../data/lyrics';
 import { SONG_NAMES } from '../services/songs';
+import { useAuthStore } from '@store/authSlice';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'RecordGuide'>;
 
@@ -26,13 +27,22 @@ const GUIDE_ITEMS = [
   '이어폰을 끼면 더 또렷하게 담겨요',
 ];
 
-const GUIDE_HEADLINE = '1 loop 동안 자유롭게\n따라불러도, 허밍해도, 쉬쉬 소리만 내도 좋습니다\n더 많이 녹음할수록 더 풍성해집니다';
+const FREE_GENERATION_LIMIT = 3;
+
+const GUIDE_HEADLINE = '1 loop 동안 자유롭게 — 따라불러도, 허밍해도, 쉬쉬 소리만 내도 좋습니다';
 
 export function RecordGuideScreen({ navigation, route }: Props) {
   const { songKey } = route.params;
 
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [showEarphoneModal, setShowEarphoneModal] = useState(false);
+
+  const authState = useAuthStore() as unknown as {
+    entitlement: 'free' | 'trial' | 'premium';
+    generationCount: number;
+  };
+  const { entitlement, generationCount } = authState;
+  const isFreeUser = entitlement === 'free';
 
   const lyricsAvailable = !!getLyrics(songKey) && !!SONG_NAMES[songKey];
 
@@ -82,7 +92,14 @@ export function RecordGuideScreen({ navigation, route }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{GUIDE_HEADLINE}</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>{GUIDE_HEADLINE}</Text>
+        {isFreeUser && (
+          <View style={styles.counterChip} testID="free-generation-counter">
+            <Text style={styles.counterText}>생성 {generationCount}/{FREE_GENERATION_LIMIT}</Text>
+          </View>
+        )}
+      </View>
 
       <View style={styles.guideList}>
         {GUIDE_ITEMS.map((item, i) => (
@@ -221,12 +238,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 24,
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 28,
+  },
   title: {
     color: '#EEF0F8',
     fontSize: 22,
     fontFamily: 'NotoSansKR-Regular',
-    marginBottom: 28,
+    flex: 1,
   },
+  counterChip: {
+    backgroundColor: '#21253E',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginLeft: 8,
+  },
+  counterText: { color: '#7B80A0', fontSize: 13 },
   guideList: { marginBottom: 20 },
   guideItem: {
     flexDirection: 'row',

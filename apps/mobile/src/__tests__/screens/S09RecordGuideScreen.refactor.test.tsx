@@ -16,6 +16,12 @@ import { render, fireEvent, act, waitFor } from '@testing-library/react-native';
 import { LYRICS } from '../../data/lyrics';
 import { SONG_NAMES } from '../../services/songs';
 
+// ─── Mock: @store/authSlice ───────────────────────────────────────────────────
+jest.mock('@store/authSlice', () => ({
+  __esModule: true,
+  useAuthStore: jest.fn(() => ({ entitlement: 'free', generationCount: 1 })),
+}));
+
 // ─── Mock: challengesApi (폐기됐으나 import 잔재 방어) ────────────────────────
 const mockGetRandomPhrase = jest.fn();
 jest.mock('@services/api/challenges', () => ({
