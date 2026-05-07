@@ -40,7 +40,7 @@
   - `preset: 'jest-expo'`
   - `transformIgnorePatterns`: RN 생태계 패키지 babel 변환 허용 패턴
   - `moduleNameMapper`: `@screens`, `@components`, `@store`, `@services`, `@audio`, `@navigation`, `@hooks`, `@utils`, `@types`, `@lib` 등 tsconfig paths 동기화
-  - `setupFilesAfterFramework`: `['./src/__tests__/setup.ts']`
+  - `setupFilesAfterEnv`: `['./src/__tests__/_setup.ts']`
 - [x] `tsconfig.test.json` 변경: `"types": ["vitest/globals"]` → `"types": ["jest"]`
 - [x] `vitest.config.ts` 삭제 (또는 vitest.config.ts.disabled 리네임)
 
