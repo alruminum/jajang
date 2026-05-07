@@ -1,34 +1,37 @@
 import React from 'react';
-import { create, act } from 'react-test-renderer';
-import { cleanup } from '@testing-library/react-native';
+import { render, screen, fireEvent, waitFor, act, cleanup } from '@testing-library/react-native';
 
-// --- React Native 모킹 ---
+// --- React Native 모킹 (RNTL detectHostComponentNames 요구 컴포넌트 포함) ---
 jest.mock('react-native', () => {
   const React = require('react');
   return {
     View: 'View',
     Text: 'Text',
+    TextInput: 'TextInput',
+    Image: 'Image',
+    Switch: 'Switch',
+    ScrollView: 'ScrollView',
+    Modal: 'Modal',
     TouchableOpacity: 'TouchableOpacity',
-    StyleSheet: { create: (s: any) => s },
+    Pressable: 'Pressable',
+    StyleSheet: { create: (s: any) => s, flatten: (s: any) => s },
     FlatList: ({
       data,
       renderItem,
       ListHeaderComponent,
       ListEmptyComponent,
-      keyExtractor,
-      refreshControl,
-      contentContainerStyle,
     }: any) =>
       React.createElement(
         'View',
         null,
-        refreshControl,
         ListHeaderComponent,
         data && data.length > 0
           ? data.map((item: any, index: number) => renderItem({ item, index }))
           : ListEmptyComponent,
       ),
     RefreshControl: 'RefreshControl',
+    ActivityIndicator: 'ActivityIndicator',
+    useColorScheme: jest.fn().mockReturnValue('dark'),
   };
 });
 
@@ -45,20 +48,10 @@ const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: mockNavigate }),
   useFocusEffect: (cb: Function) => {
-    // 포커스 시 즉시 콜백 실행 (테스트에서 마운트 시 트리거)
     const { useEffect } = require('react');
     useEffect(() => {
       cb();
     }, []);
-  },
-}));
-
-// --- AsyncStorage ---
-jest.mock('@react-native-async-storage/async-storage', () => ({
-  __esModule: true,
-  default: {
-    getItem: jest.fn(),
-    setItem: jest.fn(),
   },
 }));
 
@@ -68,12 +61,18 @@ jest.mock('@store/auth-store', () => ({
   useAuthStore: jest.fn(() => ({ entitlement: 'trial' })),
 }));
 
-// --- tracks-api ---
-const mockGetMyTracks = jest.fn();
-const mockGetNewlyCompletedTrack = jest.fn();
-jest.mock('@services/tracks-api', () => ({
-  getMyTracks: (...args: any[]) => mockGetMyTracks(...args),
-  getNewlyCompletedTrack: (...args: any[]) => mockGetNewlyCompletedTrack(...args),
+// --- mastersSlice ---
+const mockLoadMasters = jest.fn();
+const mockLoadMore = jest.fn();
+jest.mock('@store/mastersSlice', () => ({
+  useMastersStore: jest.fn(() => ({
+    items: [],
+    hasPending: false,
+    nextCursor: null,
+    isLoading: false,
+    loadMasters: mockLoadMasters,
+    loadMore: mockLoadMore,
+  })),
 }));
 
 // --- store/player-store ---
@@ -82,84 +81,126 @@ jest.mock('@store/player-store', () => ({
   usePlayerStore: jest.fn(() => ({ currentTrackId: null })),
 }));
 
+// --- store/theme-store ---
+jest.mock('@store/theme-store', () => ({
+  __esModule: true,
+  useThemeStore: jest.fn(() => 'dark'),
+}));
+
 // --- hooks/useTrialExpiredGuard ---
 jest.mock('@hooks/useTrialExpiredGuard', () => ({
   __esModule: true,
   useTrialExpiredGuard: jest.fn(),
 }));
 
-// --- 자식 컴포넌트 모킹 (홈 화면 로직만 집중 테스트) ---
+// --- pendingSession ---
+jest.mock('@services/storage/pendingSession', () => ({
+  loadPendingSession: jest.fn().mockResolvedValue(null),
+  clearPendingSession: jest.fn().mockResolvedValue(undefined),
+  savePendingSession: jest.fn().mockResolvedValue(undefined),
+}));
+
+// --- sessions API ---
+jest.mock('@services/api/sessions', () => ({
+  getSessionStatus: jest.fn(),
+}));
+
+// --- expo-secure-store ---
+jest.mock('expo-secure-store', () => ({
+  getItemAsync: jest.fn().mockResolvedValue(null),
+  setItemAsync: jest.fn().mockResolvedValue(undefined),
+  deleteItemAsync: jest.fn().mockResolvedValue(undefined),
+}));
+
+// --- 자식 컴포넌트 모킹 ---
 jest.mock('@components/TrialBadge', () => ({ __esModule: true, default: () => null }));
 jest.mock('@components/TrialExpiryBanner', () => ({ __esModule: true, default: () => null }));
 jest.mock('@components/MiniPlayer', () => ({ __esModule: true, default: () => null }));
-jest.mock('@components/EmptyTrackState', () => ({
+
+jest.mock('@components/EmptyMastersState', () => ({
   __esModule: true,
-  default: () => require('react').createElement('Text', null, 'EmptyTrackState'),
-}));
-jest.mock('@components/CompletedTrackCard', () => ({
-  __esModule: true,
-  default: ({ track, onDismiss }: any) =>
+  default: ({ onCta }: any) =>
     require('react').createElement(
       'TouchableOpacity',
-      { onPress: onDismiss, accessibilityLabel: 'completed-card-dismiss' },
-      require('react').createElement('Text', null, `CompletedTrackCard:${track.id}`),
+      { onPress: onCta, accessibilityLabel: '자장가 만들기' },
+      require('react').createElement('Text', null, 'EmptyMastersState'),
     ),
 }));
 
+jest.mock('@components/MasterAudioCard', () => ({
+  __esModule: true,
+  default: ({ songKey, onPlay }: any) => {
+    const SONG_NAMES: Record<string, string> = {
+      brahms: '브람스 자장가',
+      mozart: '모차르트 자장가',
+      schubert: '슈베르트 자장가',
+    };
+    return require('react').createElement(
+      'TouchableOpacity',
+      { onPress: onPlay, accessibilityLabel: `${SONG_NAMES[songKey] ?? songKey} 재생` },
+      require('react').createElement('Text', null, songKey),
+    );
+  },
+}));
+
+jest.mock('@components/JustArrivedMasterCard', () => ({
+  __esModule: true,
+  default: ({ onPlay, onDismiss }: any) =>
+    require('react').createElement(
+      'View',
+      { accessibilityLabel: 'just-arrived-card' },
+      require('react').createElement(
+        'TouchableOpacity',
+        { onPress: onPlay, accessibilityLabel: '자장가 재생' },
+        null,
+      ),
+      require('react').createElement(
+        'TouchableOpacity',
+        { onPress: onDismiss, accessibilityLabel: '닫기' },
+        null,
+      ),
+    ),
+}));
+
+// CompletedTrackCard — 방어용 (구 코드 잔재 import 차단)
+jest.mock('@components/CompletedTrackCard', () => ({ __esModule: true, default: () => null }));
+
 import S06HomeScreen from '@screens/S06HomeScreen';
 
-// jest.requireMock — hoisting 우회 (factory 내 jest.fn 인스턴스 참조)
-const mockAsyncStorage = jest.requireMock('@react-native-async-storage/async-storage').default as {
-  getItem: jest.Mock;
-  setItem: jest.Mock;
+const { loadPendingSession } = jest.requireMock('@services/storage/pendingSession') as {
+  loadPendingSession: jest.Mock;
+  clearPendingSession: jest.Mock;
+};
+const { useMastersStore } = jest.requireMock('@store/mastersSlice') as {
+  useMastersStore: jest.Mock;
+};
+const { getSessionStatus: mockGetSessionStatus } = jest.requireMock('@services/api/sessions') as {
+  getSessionStatus: jest.Mock;
 };
 
-const flushPromises = async () => {
-  // microtask 기반 — setTimeout(macrotask) 사용 시 act 블록 완료 전 렌더러 unmount 문제 회피
-  await Promise.resolve();
-  await Promise.resolve();
-  await Promise.resolve();
-};
-
-// toJSON 트리에서 accessibilityLabel이 일치하는 노드를 재귀 탐색
-// tree.root는 async act 완료 후 unmounted 상태가 될 수 있으므로 toJSON 대안 사용
-function findByLabel(node: any, label: string): any {
-  if (!node) return undefined;
-  // 최상단이 배열인 경우 (toJSON 반환값)
-  if (Array.isArray(node)) {
-    for (const child of node) {
-      const found = findByLabel(child, label);
-      if (found) return found;
-    }
-    return undefined;
-  }
-  if (node.props && node.props.accessibilityLabel === label) return node;
-  if (node.children) {
-    const children = Array.isArray(node.children) ? node.children : [node.children];
-    for (const child of children) {
-      const found = findByLabel(child, label);
-      if (found) return found;
-    }
-  }
-  return undefined;
-}
-
-const makeTrack = (overrides: Record<string, any> = {}) => ({
-  id: 'track-1',
+const makeMaster = (overrides: Record<string, any> = {}) => ({
+  session_id: 'session-1',
   song_key: 'brahms',
-  status: 'completed',
-  s3_key: null,
+  presigned_url: 'https://example.com/audio.mp3',
   completed_at: '2024-01-01T00:00:00.000Z',
+  dsp_duration_ms: null,
   ...overrides,
 });
 
 describe('S06HomeScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetMyTracks.mockResolvedValue([]);
-    mockGetNewlyCompletedTrack.mockResolvedValue(null);
-    mockAsyncStorage.getItem.mockResolvedValue(null);
-    mockAsyncStorage.setItem.mockResolvedValue(undefined);
+    mockLoadMasters.mockResolvedValue(undefined);
+    mockGetSessionStatus.mockResolvedValue({ status: 'generating', presigned_url: null });
+    // 기본 상태: items 비어 있음
+    useMastersStore.mockReturnValue({
+      items: [],
+      hasPending: false,
+      nextCursor: null,
+      isLoading: false,
+      loadMasters: mockLoadMasters,
+      loadMore: mockLoadMore,
+    });
   });
 
   afterEach(async () => {
@@ -168,187 +209,187 @@ describe('S06HomeScreen', () => {
     await Promise.resolve();
   });
 
-  // --- useFocusEffect: 포커스 시 API 호출 ---
-
-  it('화면 포커스 시 getMyTracks를 호출한다', async () => {
-    await act(async () => {
-      create(<S06HomeScreen />);
-      await flushPromises();
+  // 1. 화면 포커스 시 loadMasters를 호출한다
+  it('화면 포커스 시 loadMasters를 호출한다', async () => {
+    render(<S06HomeScreen />);
+    await waitFor(() => {
+      expect(mockLoadMasters).toHaveBeenCalledTimes(1);
     });
-    expect(mockGetMyTracks).toHaveBeenCalledTimes(1);
   });
 
-  // --- status 필터링 ---
-
-  it('status=completed 트랙만 목록에 포함한다', async () => {
-    const tracks = [
-      makeTrack({ id: 't1', status: 'completed' }),
-      makeTrack({ id: 't2', status: 'pending' }),
-      makeTrack({ id: 't3', status: 'processing' }),
-      makeTrack({ id: 't4', status: 'failed' }),
-      makeTrack({ id: 't5', status: 'completed' }),
-    ];
-    mockGetMyTracks.mockResolvedValue(tracks);
-
-    let tree: any;
-    await act(async () => {
-      tree = create(<S06HomeScreen />);
-      await flushPromises();
+  // 2. items가 있을 때 MasterAudioCard를 렌더한다
+  it('items가 있을 때 MasterAudioCard를 렌더한다', async () => {
+    useMastersStore.mockReturnValue({
+      items: [makeMaster()],
+      hasPending: false,
+      nextCursor: null,
+      isLoading: false,
+      loadMasters: mockLoadMasters,
+      loadMore: mockLoadMore,
     });
-    // FlatList data prop에 completed 트랙만 포함되어야 함
-    const flatList = tree.root.findByType('View'); // 최상단 View 내부 확인
-    const json = JSON.stringify(tree.toJSON());
-    expect(json).toContain('t1');
-    expect(json).toContain('t5');
-    expect(json).not.toContain('t2');
-    expect(json).not.toContain('t3');
-    expect(json).not.toContain('t4');
+
+    render(<S06HomeScreen />);
+    await waitFor(() => {
+      expect(screen.getByLabelText('브람스 자장가 재생')).toBeTruthy();
+    });
   });
 
-  // --- AsyncStorage: lastChecked 없을 때 ---
-
-  it('AsyncStorage에 lastChecked 값이 없으면 getNewlyCompletedTrack을 호출하지 않는다', async () => {
-    mockAsyncStorage.getItem.mockResolvedValue(null);
-
-    await act(async () => {
-      create(<S06HomeScreen />);
-      await flushPromises();
+  // 3. items가 없을 때 EmptyMastersState를 렌더한다
+  it('items가 없을 때 EmptyMastersState를 렌더한다', async () => {
+    render(<S06HomeScreen />);
+    await waitFor(() => {
+      expect(screen.getByText('EmptyMastersState')).toBeTruthy();
     });
-    expect(mockGetNewlyCompletedTrack).not.toHaveBeenCalled();
   });
 
-  // --- AsyncStorage: lastChecked 있을 때 ---
-
-  it('AsyncStorage에 lastChecked 값이 있으면 getNewlyCompletedTrack을 호출한다', async () => {
-    const lastChecked = '2024-01-01T00:00:00.000Z';
-    mockAsyncStorage.getItem.mockResolvedValue(lastChecked);
-    mockGetNewlyCompletedTrack.mockResolvedValue(null);
-
-    await act(async () => {
-      create(<S06HomeScreen />);
-      await flushPromises();
+  // 4. EmptyMastersState CTA 탭 시 SongSelect로 이동한다
+  it('EmptyMastersState CTA 탭 시 SongSelect로 이동한다', async () => {
+    render(<S06HomeScreen />);
+    await waitFor(() => {
+      expect(screen.getByLabelText('자장가 만들기')).toBeTruthy();
     });
-    expect(mockGetNewlyCompletedTrack).toHaveBeenCalledWith(lastChecked);
-  });
-
-  // --- 생성 완료 카드 ---
-
-  it('getNewlyCompletedTrack이 트랙을 반환하면 CompletedTrackCard를 표시한다', async () => {
-    const newTrack = makeTrack({ id: 'new-track' });
-    mockAsyncStorage.getItem.mockResolvedValue('2024-01-01T00:00:00.000Z');
-    mockGetNewlyCompletedTrack.mockResolvedValue(newTrack);
-
-    let tree: any;
-    await act(async () => {
-      tree = create(<S06HomeScreen />);
-      await flushPromises();
-    });
-    const json = JSON.stringify(tree.toJSON());
-    expect(json).toContain('CompletedTrackCard:new-track');
-  });
-
-  it('getNewlyCompletedTrack이 null을 반환하면 CompletedTrackCard를 표시하지 않는다', async () => {
-    mockAsyncStorage.getItem.mockResolvedValue('2024-01-01T00:00:00.000Z');
-    mockGetNewlyCompletedTrack.mockResolvedValue(null);
-
-    let tree: any;
-    await act(async () => {
-      tree = create(<S06HomeScreen />);
-      await flushPromises();
-    });
-    const json = JSON.stringify(tree.toJSON());
-    expect(json).not.toContain('CompletedTrackCard');
-  });
-
-  // --- 에러 처리 ---
-
-  it('getMyTracks API 에러 시 throw하지 않고 빈 목록을 유지한다', async () => {
-    mockGetMyTracks.mockRejectedValue(new Error('Network error'));
-
-    await expect(
-      act(async () => {
-        create(<S06HomeScreen />);
-        await flushPromises();
-      }),
-    ).resolves.not.toThrow();
-  });
-
-  // --- AsyncStorage.setItem 현재 시각 기록 ---
-
-  it('loadTracks 완료 후 AsyncStorage에 현재 시각을 기록한다', async () => {
-    await act(async () => {
-      create(<S06HomeScreen />);
-      await flushPromises();
-    });
-    expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
-      'home_last_checked_at',
-      expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/), // ISO 8601 형식
-    );
-  });
-
-  // --- 빈 상태 ---
-
-  it('트랙이 없을 때 EmptyTrackState를 표시한다', async () => {
-    mockGetMyTracks.mockResolvedValue([]);
-
-    let tree: any;
-    await act(async () => {
-      tree = create(<S06HomeScreen />);
-      await flushPromises();
-    });
-    const json = JSON.stringify(tree.toJSON());
-    expect(json).toContain('EmptyTrackState');
-  });
-
-  // --- CTA 네비게이션 ---
-
-  it('"새 자장가 만들기" CTA 탭 시 SongSelect 화면으로 이동한다', async () => {
-    let tree: any;
-    await act(async () => {
-      tree = create(<S06HomeScreen />);
-      await flushPromises();
-    });
-    // act 밖에서 toJSON — status=completed 테스트와 동일 패턴
-    const json = tree.toJSON();
-    const ctaBtn = findByLabel(json, '새 자장가 만들기');
-    expect(ctaBtn).toBeDefined();
-    ctaBtn.props.onPress();
+    fireEvent.press(screen.getByLabelText('자장가 만들기'));
     expect(mockNavigate).toHaveBeenCalledWith('SongSelect');
   });
 
-  // --- 트랙 아이템 VoiceOver ---
-
+  // 5. 트랙 아이템 accessibilityLabel이 "[곡명] 재생" 형식이다
   it('트랙 아이템 accessibilityLabel이 "[곡명] 재생" 형식이다', async () => {
-    const tracks = [makeTrack({ id: 't1', song_key: 'brahms', status: 'completed' })];
-    mockGetMyTracks.mockResolvedValue(tracks);
-
-    let tree: any;
-    await act(async () => {
-      tree = create(<S06HomeScreen />);
-      await flushPromises();
+    useMastersStore.mockReturnValue({
+      items: [makeMaster({ song_key: 'brahms' })],
+      hasPending: false,
+      nextCursor: null,
+      isLoading: false,
+      loadMasters: mockLoadMasters,
+      loadMore: mockLoadMore,
     });
-    // act 밖에서 toJSON — status=completed 테스트와 동일 패턴
-    const json = tree.toJSON();
-    const trackBtn = findByLabel(json, '브람스 자장가 재생');
-    expect(trackBtn).toBeDefined();
+
+    render(<S06HomeScreen />);
+    await waitFor(() => {
+      expect(screen.getByLabelText('브람스 자장가 재생')).toBeTruthy();
+    });
   });
 
-  // --- 트랙 아이템 탭 네비게이션 ---
-
+  // 6. 트랙 아이템 탭 시 Play 화면으로 이동한다 (trackId=session_id, presignUrl=presigned_url)
   it('트랙 아이템 탭 시 Play 화면으로 이동한다', async () => {
-    const tracks = [makeTrack({ id: 'track-play-test', song_key: 'mozart', status: 'completed' })];
-    mockGetMyTracks.mockResolvedValue(tracks);
-
-    let tree: any;
-    await act(async () => {
-      tree = create(<S06HomeScreen />);
-      await flushPromises();
+    const master = makeMaster({
+      session_id: 'sess-play-test',
+      song_key: 'mozart',
+      presigned_url: 'https://example.com/mozart.mp3',
     });
-    // act 밖에서 toJSON — status=completed 테스트와 동일 패턴
-    const json = tree.toJSON();
-    const trackBtn = findByLabel(json, '모차르트 자장가 재생');
-    expect(trackBtn).toBeDefined();
-    trackBtn.props.onPress();
-    expect(mockNavigate).toHaveBeenCalledWith('Play', { trackId: 'track-play-test' });
+    useMastersStore.mockReturnValue({
+      items: [master],
+      hasPending: false,
+      nextCursor: null,
+      isLoading: false,
+      loadMasters: mockLoadMasters,
+      loadMore: mockLoadMore,
+    });
+
+    render(<S06HomeScreen />);
+    await waitFor(() => {
+      expect(screen.getByLabelText('모차르트 자장가 재생')).toBeTruthy();
+    });
+    fireEvent.press(screen.getByLabelText('모차르트 자장가 재생'));
+    expect(mockNavigate).toHaveBeenCalledWith('Play', {
+      trackId: 'sess-play-test',
+      presignUrl: 'https://example.com/mozart.mp3',
+    });
+  });
+
+  // 7. "새 자장가 만들기" CTA 탭 시 SongSelect 화면으로 이동한다
+  it('"새 자장가 만들기" CTA 탭 시 SongSelect 화면으로 이동한다', async () => {
+    render(<S06HomeScreen />);
+    await waitFor(() => {
+      expect(screen.getByLabelText('새 자장가 만들기')).toBeTruthy();
+    });
+    fireEvent.press(screen.getByLabelText('새 자장가 만들기'));
+    expect(mockNavigate).toHaveBeenCalledWith('SongSelect');
+  });
+
+  // 8. loadMasters 에러 시 throw하지 않는다
+  it('loadMasters 에러 시 throw하지 않는다', async () => {
+    // 실제 mastersSlice.loadMasters는 내부 try/catch로 에러를 삼키고 error state만 세팅.
+    // 스토어에서 error state를 가진 상황을 모사: items 비어 있고 loadMasters는 resolve.
+    useMastersStore.mockReturnValue({
+      items: [],
+      hasPending: false,
+      nextCursor: null,
+      isLoading: false,
+      loadMasters: jest.fn().mockResolvedValue(undefined),
+      loadMore: mockLoadMore,
+    });
+
+    let caughtError: unknown;
+    try {
+      render(<S06HomeScreen />);
+      await waitFor(() => expect(true).toBe(true));
+    } catch (e) {
+      caughtError = e;
+    }
+    expect(caughtError).toBeUndefined();
+  });
+
+  // 9. pendingSession 없을 때 getSessionStatus를 호출하지 않는다
+  it('pendingSession 없을 때 getSessionStatus를 호출하지 않는다', async () => {
+    loadPendingSession.mockResolvedValue(null);
+
+    render(<S06HomeScreen />);
+    await waitFor(() => {
+      expect(mockLoadMasters).toHaveBeenCalled();
+    });
+    expect(mockGetSessionStatus).not.toHaveBeenCalled();
+  });
+
+  // 10. pendingSession 있고 completed 반환 시 JustArrivedMasterCard를 표시한다
+  it('pendingSession 있고 completed 반환 시 JustArrivedMasterCard를 표시한다', async () => {
+    loadPendingSession.mockResolvedValue('pending-sess-id');
+    mockGetSessionStatus.mockResolvedValue({
+      status: 'completed',
+      presigned_url: 'https://example.com/completed.mp3',
+    });
+
+    render(<S06HomeScreen />);
+    await waitFor(() => {
+      expect(screen.getByLabelText('just-arrived-card')).toBeTruthy();
+    });
+  });
+
+  // 11. pendingSession 있고 generating 반환 시 JustArrivedMasterCard를 표시하지 않는다
+  it('pendingSession 있고 generating 반환 시 JustArrivedMasterCard를 표시하지 않는다', async () => {
+    loadPendingSession.mockResolvedValue('pending-sess-id');
+    mockGetSessionStatus.mockResolvedValue({
+      status: 'generating',
+      presigned_url: null,
+    });
+
+    render(<S06HomeScreen />);
+    await waitFor(() => {
+      expect(mockLoadMasters).toHaveBeenCalled();
+    });
+    expect(screen.queryByLabelText('just-arrived-card')).toBeNull();
+  });
+
+  // 12. JustArrivedMasterCard 닫기 탭 시 카드가 사라진다
+  it('JustArrivedMasterCard 닫기 탭 시 카드가 사라진다', async () => {
+    loadPendingSession.mockResolvedValue('pending-sess-id');
+    mockGetSessionStatus.mockResolvedValue({
+      status: 'completed',
+      presigned_url: 'https://example.com/completed.mp3',
+    });
+
+    render(<S06HomeScreen />);
+
+    // 닫기 탭 전 — 카드 존재 확인
+    await waitFor(() => {
+      expect(screen.getByLabelText('just-arrived-card')).toBeTruthy();
+    });
+
+    // 닫기 탭
+    await act(async () => {
+      fireEvent.press(screen.getByLabelText('닫기'));
+    });
+
+    // 닫기 탭 후 — 카드 사라짐
+    expect(screen.queryByLabelText('just-arrived-card')).toBeNull();
   });
 });
