@@ -209,7 +209,7 @@ mv vitest.config.ts vitest.config.ts.disabled
 ## 수용 기준
 
 - (TEST) `npm test -- --listTests` 실행 시 에러 없이 .test.ts(x) 파일 목록 출력 (0 exit code)
-- (TEST) `npm test -- --passWithNoTests` 가 0 exit code로 종료
+- (TEST) `npm test -- --testPathPattern=infra/jest-setup` 6/6 GREEN (0 exit code) — jest 인프라 기동 확인용. 전체 suite GREEN은 Story 3(#153) 수용 기준.
 - (MANUAL) `npm install` 후 peerDep 경고 0건 (react-test-renderer ^19.2.0 + @types/react ^19.0.0 정합)
 - (MANUAL) `ls apps/mobile/vitest.config.ts` → No such file (이미 존재하지 않음, 확인만)
 

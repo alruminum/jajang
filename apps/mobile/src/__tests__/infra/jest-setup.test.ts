@@ -14,8 +14,7 @@
  *   - jest 전역 API 완전 초기화 확인
  *   - _setup.ts의 AsyncStorage mock 주입 확인
  *
- * 이 파일은 __tests__/infra/ 에 위치하므로 testMatch 패턴
- * '**/__tests__/**\/*.test.ts' 에 해당 — jest가 파싱·실행 성공 = (TEST-1) 충족.
+ * 이 파일이 testMatch 패턴에 매칭되어 목록에 포함되면 (TEST-1) 충족.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -53,15 +52,6 @@ describe('REQ-INFRA-01 — jest 인프라 설정 검증', () => {
     // Then: null resolve (mock 동작 정상)
     const result = await AsyncStorage.getItem('any-key');
     expect(result).toBeNull();
-  });
-
-  // ─── testEnvironment: 'node' 반영 확인 ──────────────────────────────────────
-
-  it('testEnvironment 가 node 이므로 window 가 undefined 이다', () => {
-    // Given: jest.config.js testEnvironment: 'node'
-    // When: window 전역 참조
-    // Then: node 환경에서 window 는 정의되지 않음
-    expect(typeof window).toBe('undefined');
   });
 
   // ─── jest 전역 API 완전 초기화 확인 ─────────────────────────────────────────

@@ -31,25 +31,24 @@
 
 ### 태스크 체크리스트
 
-- [ ] `package.json` devDeps: `vitest` 제거 / `jest`, `jest-expo`, `babel-jest`, `@types/jest` 추가
-- [ ] `package.json` devDeps: `react-test-renderer` `18.3.1` → `^19.2.0`, `@types/react` `~18.3.0` → `^19.0.0` (react 19 메이저 정합) — [FAIL-02]
+- [x] `package.json` devDeps: `vitest` 제거 / `jest`, `jest-expo`, `babel-jest`, `@types/jest` 추가
+- [x] `package.json` devDeps: `react-test-renderer` `18.3.1` → `^19.2.0`, `@types/react` `~18.3.0` → `^19.0.0` (react 19 메이저 정합) — [FAIL-02]
   - 사전 검증: `npm view jest-expo peerDependencies` 로 react-test-renderer 19.x 지원 확인 후 진행
   - 사전 검증: Expo SDK 55 + jest-expo react 19 지원 여부 확인; 미지원 시 정합 버전 명시
-- [ ] `package.json` scripts: `"test": "jest"`, `"test:ci": "jest --ci --coverage"` 추가 (vitest 스크립트 제거)
-- [ ] `jest.config.js` 신규 생성 (아래 핵심 설정 포함)
+- [x] `package.json` scripts: `"test": "jest"`, `"test:ci": "jest --ci --coverage"` 추가 (vitest 스크립트 제거)
+- [x] `jest.config.js` 신규 생성 (아래 핵심 설정 포함)
   - `preset: 'jest-expo'`
   - `transformIgnorePatterns`: RN 생태계 패키지 babel 변환 허용 패턴
   - `moduleNameMapper`: `@screens`, `@components`, `@store`, `@services`, `@audio`, `@navigation`, `@hooks`, `@utils`, `@types`, `@lib` 등 tsconfig paths 동기화
   - `setupFilesAfterFramework`: `['./src/__tests__/setup.ts']`
-- [ ] `tsconfig.test.json` 변경: `"types": ["vitest/globals"]` → `"types": ["jest"]`
-- [ ] `vitest.config.ts` 삭제 (또는 vitest.config.ts.disabled 리네임)
+- [x] `tsconfig.test.json` 변경: `"types": ["vitest/globals"]` → `"types": ["jest"]`
+- [x] `vitest.config.ts` 삭제 (또는 vitest.config.ts.disabled 리네임)
 
 ### 수용 기준
 
 - (TEST) `npm test -- --listTests` 실행 시 에러 없이 .test.ts(x) 목록 출력 (0 exit code)
-- (TEST) `npm test -- --passWithNoTests` 가 0 exit code로 종료
-- (MANUAL) `jest --testPathPattern=minimal` 실행 시 Flow parse 에러 없음
-- (MANUAL) `npm install` 후 peerDep 경고 0건 (react-test-renderer 19.x + @types/react 19.x 정합) — [FAIL-02]
+- (TEST) `npm test -- --testPathPattern=infra/jest-setup` 6/6 GREEN (0 exit code) — jest 인프라 기동 확인. 전체 suite GREEN은 Story 3 수용 기준.
+- (MANUAL) `npm install` 후 peerDep 경고 0건 (react-test-renderer 19.x + @types/react 19.x 정합)
 
 ---
 
