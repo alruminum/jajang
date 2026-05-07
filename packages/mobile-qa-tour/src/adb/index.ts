@@ -1,4 +1,4 @@
-import { execa } from 'execa';
+import execa = require('execa');
 
 export interface AdbExecOptions {
   serial?: string;

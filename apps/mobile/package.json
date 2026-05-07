@@ -10,7 +10,7 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
     "qa:init": "mobile-qa-tour init --out .",
-    "qa:monkey": "mobile-qa-tour monkey --package com.jajang.app --events 1000 --output ../../docs/qa",
+    "qa:monkey": "mobile-qa-tour monkey --package com.jajang.app --events 1000 --output ../../docs/qa --pct-syskeys 0 --pct-nav 0",
     "qa:tour": "mobile-qa-tour tour --config ./qa.config.json"
   },
   "dependencies": {

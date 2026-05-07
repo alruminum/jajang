@@ -1,5 +1,4 @@
-import { execa } from 'execa';
-import type { ExecaReturnValue } from 'execa';
+import execa = require('execa');
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
 import { listDevices, adbLogcat } from '../adb';
@@ -21,6 +20,8 @@ export interface MonkeyOptions {
   pcts: MonkeyPercentages;
   output: string;
   seed?: number;
+  mainActivity?: string;
+  launchWaitMs?: number;
 }
 
 export interface MonkeyResult {
@@ -40,6 +41,11 @@ export async function runMonkey(opts: MonkeyOptions): Promise<MonkeyResult> {
   }
 
   await fs.mkdir(opts.output, { recursive: true });
+
+  const activity = opts.mainActivity ?? '.MainActivity';
+  await execa('adb', ['shell', 'am', 'start', '-S', '-n', `${opts.appPackage}/${activity}`]);
+  await new Promise(r => setTimeout(r, opts.launchWaitMs ?? 2000));
+
   await execa('adb', ['logcat', '-c']);
 
   const t0 = Date.now();
@@ -59,7 +65,7 @@ export async function runMonkey(opts: MonkeyOptions): Promise<MonkeyResult> {
     args.splice(2, 0, '-s', String(opts.seed));
   }
 
-  const monkey: ExecaReturnValue<string> = await execa('adb', args, { reject: false });
+  const monkey: execa.ExecaReturnValue<string> = await execa('adb', args, { reject: false });
   const durationMs = Date.now() - t0;
 
   const logcat = await adbLogcat(['-d']);

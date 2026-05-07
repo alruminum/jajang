@@ -1,6 +1,6 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { adbExecOut } from '../adb';
+import { adbExecOut, adbShell } from '../adb';
 import { executeSteps } from './entry-steps';
 import { dumpUi, parseUi, flattenUi } from './uiautomator';
 import { runHeuristics } from '../heuristics';
@@ -56,6 +56,8 @@ export async function runTour(opts: TourOptions): Promise<TourResult> {
 
   const results: TourScreenResult[] = [];
   for (const screen of screens) {
+    await adbShell(`am start -S -n ${config.appPackage}/.MainActivity`);
+    await new Promise(r => setTimeout(r, 5000));
     await executeSteps(screen.entrySteps, { appPackage: config.appPackage });
     if (screen.settleMs > 0) {
       await new Promise((r) => setTimeout(r, screen.settleMs));
