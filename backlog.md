@@ -63,7 +63,7 @@
 - [x] Epic 04 — 재생 & 백그라운드 (v1.3.1 갱신: Story 2 RepeatMode.Queue 전환 확인 필요)
 - [x] Epic 05 — 수익화
 - [x] Epic 06 — 개인정보 & 데이터 관리
-- [ ] Epic 07 — 디자인 시스템 (Issue #87)
+- [x] Epic 07 — 디자인 시스템 (Issue #87 완료 — 색상 교체·폰트 로딩 2026-04-26)
 - [ ] Epic 08 — Mobile Test Infra (Issue #150)
 - [ ] Epic 09 — Mobile Test Triage (Issue #157)
 - [ ] Epic 10 — Mobile Test Finalize + PR #149 Merge (Issue #166)
