@@ -26,6 +26,8 @@ const GUIDE_ITEMS = [
   '이어폰을 끼면 더 또렷하게 담겨요',
 ];
 
+const GUIDE_HEADLINE = '1 loop 동안 자유롭게\n따라불러도, 허밍해도, 쉬쉬 소리만 내도 좋습니다\n더 많이 녹음할수록 더 풍성해집니다';
+
 export function RecordGuideScreen({ navigation, route }: Props) {
   const { songKey } = route.params;
 
@@ -81,7 +83,7 @@ export function RecordGuideScreen({ navigation, route }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>이렇게 해주세요</Text>
+      <Text style={styles.title}>{GUIDE_HEADLINE}</Text>
 
       <View style={styles.guideList}>
         {GUIDE_ITEMS.map((item, i) => (
