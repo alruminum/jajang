@@ -1,0 +1,17 @@
+[
+  {
+    "id": "Home",
+    "label": "Home Screen",
+    "entrySteps": [],
+    "settleMs": 2000
+  },
+  {
+    "id": "Settings",
+    "label": "Settings Screen",
+    "entrySteps": [
+      { "type": "tap", "x": 540, "y": 1800, "label": "Settings tab" },
+      { "type": "wait", "ms": 500 }
+    ],
+    "settleMs": 1500
+  }
+]

@@ -67,7 +67,7 @@
 - [ ] Epic 08 — Mobile Test Infra (Issue #150)
 - [ ] Epic 09 — Mobile Test Triage (Issue #157)
 - [ ] Epic 10 — Mobile Test Finalize + PR #149 Merge (Issue #166)
-- [x] Epic 11 — Mobile QA Tour Package + Jajang Integration (#181)
+- [x] Epic 11 — Mobile QA Tour Package + Jajang Integration (#181, Story 3 #185 완료)
 - [ ] Epic 12 — Theme drift fix (직접 hex → theme token 마이그레이션) — Epic 11 종료 후 등록
 - [ ] Epic 13 — `mobile-qa-tour` 별도 레포 분리 + npm publish — semver 1.0.0 안정화 후
 - [ ] Epic 14 — QA tour CI 자동화 (GitHub Actions) — PR merge 전 자동 실행
