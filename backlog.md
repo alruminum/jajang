@@ -13,15 +13,15 @@
 - [ ] 경쟁사 리뷰 빈번 pain point 3가지 추출 → V1 포지셔닝 reconfirm
 
 ### DSP self-test (M0 병행, v1.3.1 대체)
-- [ ] ffmpeg DSP 파이프라인 프로토타입 실행 (afftdn/equalizer/aecho/acrossfade)
-- [ ] 합격 기준 3항목: 단조로움(셔플 효과) / 이음새(crossfade 무음 없음) / 노이즈(SNR 15dB 이상)
-- [ ] cold start 포함 end-to-end latency 30초 이내 실측
-- [ ] 실패 contingency: 단조로움→셔플 재설계 / 이음새→crossfade 길이 조정 / 노이즈→필터 파라미터 재조정
+- [x] ffmpeg DSP 파이프라인 프로토타입 실행 (afftdn/equalizer/aecho/acrossfade) — 2026-05-08 검증, [report](docs/m0-dsp-self-test.md)
+- [x] 합격 기준 3항목: 단조로움(셔플 40% dominance ≤50%) / 이음새(mid-track 무음 0) / 노이즈(SNR 21.64dB ≥15)
+- [x] cold start 포함 end-to-end latency 30초 이내 실측 — 0.94s 실측 (>30x 여유)
+- [x] 실패 contingency: 모든 항목 첫 실행 PASS, contingency 발화 X
 
 > ~~보이스 모델 벤치마크~~ / ~~AI 모델 라이선스 확인~~ — v1.3.0 피벗으로 삭제 (GPU/AI 모델 불필요)
 
 ### M0 게이트
-- [ ] 모든 체크리스트 통과 → 개발 단계 진입
+- [x] 모든 체크리스트 통과 → 개발 단계 진입 (DSP 항목 PASS, 경쟁 리서치는 별도 트랙)
 - [ ] 실패 항목 발생 → 대안 결정 후 진입
 
 ---
