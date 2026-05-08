@@ -80,13 +80,13 @@ jest.mock('@store', () => ({
 
 ### 태스크 체크리스트
 
-- [ ] `npm test 2>&1 | grep "is not a function"` 로 전체 영향 파일 목록 확인
-- [ ] 위 grep 명령으로 78 fails 의 `@store/authSlice` / `@store/auth-store` / `@store` 경로 분포 확인 후 진행
-- [ ] 공통 mock 패턴 결정 (option 1: `__esModule: true` 직접 / option 2: `jest.requireActual` 혼합) + `__mocks__/` 공통화 가능 여부 검토
-- [ ] 영향 파일별 mock factory `__esModule: true` 첫 번째 키 추가 또는 공통 mock으로 교체
-- [ ] `useTrackStore` — `grep -rl "useTrackStore" apps/mobile/src/__tests__` 로 영향 파일 확인 + 동일 패턴 적용
-- [ ] `useSubscriptionStore` — 동일하게 grep 확인 + 적용
-- [ ] 수정 후 카테고리 A 해당 파일 각각 `npm test <파일>` GREEN 확인
+- [x] `npm test 2>&1 | grep "is not a function"` 로 전체 영향 파일 목록 확인
+- [x] 위 grep 명령으로 78 fails 의 `@store/authSlice` / `@store/auth-store` / `@store` 경로 분포 확인 후 진행
+- [x] 공통 mock 패턴 결정 (option 1: `__esModule: true` 직접 / option 2: `jest.requireActual` 혼합) + `__mocks__/` 공통화 가능 여부 검토
+- [x] 영향 파일별 mock factory `__esModule: true` 첫 번째 키 추가 또는 공통 mock으로 교체
+- [x] `useTrackStore` — `grep -rl "useTrackStore" apps/mobile/src/__tests__` 로 영향 파일 확인 + 동일 패턴 적용
+- [x] `useSubscriptionStore` — 동일하게 grep 확인 + 적용
+- [x] 수정 후 카테고리 A 해당 파일 각각 `npm test <파일>` GREEN 확인
 
 ### 수용 기준
 
@@ -128,10 +128,10 @@ fireEvent.press(element, {
 
 ### 태스크 체크리스트
 
-- [ ] `npm test 2>&1 | grep "stopPropagation"` 로 전체 영향 파일 목록 확인
-- [ ] 각 파일별 원인 분류: (a) 테스트 fireEvent 호출 시 event 객체 누락 → mock event 전달 / (b) 컴포넌트가 불필요하게 `event.stopPropagation()` 호출 → 핸들러 단순화
-- [ ] `@testing-library/react-native` v12 `fireEvent` 공식 시그니처 확인 후 올바른 mock event 구조 적용
-- [ ] 영향 파일 전체 수정 + 각 파일 GREEN 확인
+- [x] `npm test 2>&1 | grep "stopPropagation"` 로 전체 영향 파일 목록 확인
+- [x] 각 파일별 원인 분류: (a) 테스트 fireEvent 호출 시 event 객체 누락 → mock event 전달 / (b) 컴포넌트가 불필요하게 `event.stopPropagation()` 호출 → 핸들러 단순화
+- [x] `@testing-library/react-native` v12 `fireEvent` 공식 시그니처 확인 후 올바른 mock event 구조 적용
+- [x] 영향 파일 전체 수정 + 각 파일 GREEN 확인
 
 ### 수용 기준
 
@@ -176,11 +176,11 @@ afterEach(() => {
 
 ### 태스크 체크리스트
 
-- [ ] `npm test 2>&1 | grep "torn down"` 로 전체 영향 파일 목록 확인
-- [ ] 각 파일별 원인 분류: (a) unmount 미호출 → `unmount()` 명시 추가 / (b) fake timer + async Promise 충돌 → `jest.runAllTimers()` + `await Promise.resolve()` / (c) afterEach cleanup 누락 → `cleanup()` 추가
-- [ ] S09RecordGuideScreen.test.tsx 수정 + GREEN 확인
-- [ ] 영향 전체 파일 수정 + 각 파일 GREEN 확인
-- [ ] `jest.useFakeTimers` 사용 파일에 `afterEach(() => jest.useRealTimers())` 보강
+- [x] `npm test 2>&1 | grep "torn down"` 로 전체 영향 파일 목록 확인
+- [x] 각 파일별 원인 분류: (a) unmount 미호출 → `unmount()` 명시 추가 / (b) fake timer + async Promise 충돌 → `jest.runAllTimers()` + `await Promise.resolve()` / (c) afterEach cleanup 누락 → `cleanup()` 추가
+- [x] S09RecordGuideScreen.test.tsx 수정 + GREEN 확인
+- [x] 영향 전체 파일 수정 + 각 파일 GREEN 확인
+- [x] `jest.useFakeTimers` 사용 파일에 `afterEach(() => jest.useRealTimers())` 보강
 
 ### 수용 기준
 
@@ -242,14 +242,14 @@ Epic 09 모든 story main merge 완료 시:
 
 ### 태스크 체크리스트
 
-- [ ] Story 1~3 완료 후 `npm test` 실행하여 카테고리 D 잔여 fails 목록 확인
-- [ ] D-1: S10RecordScreen.bgm stopBgm 3건 triage + fix
-- [ ] D-2: S01SplashScreen async clearAuth 1건 triage + fix
-- [ ] D-3: 기타 잔여 fails 개별 triage + fix
-- [ ] PR #149 브랜치를 최신 main 으로 rebase (옵션 a)
-- [ ] PR #149 이어폰 모달 12 it 전체 GREEN 확인 (rebase 후 `npm test` 실행)
-- [ ] `npm test` 최종 0 failures 확인
-- [ ] PR #149 merge 가능 상태 선언
+- [x] Story 1~3 완료 후 `npm test` 실행하여 카테고리 D 잔여 fails 목록 확인
+- [x] D-1: S10RecordScreen.bgm stopBgm 3건 triage + fix
+- [x] D-2: S01SplashScreen async clearAuth 1건 triage + fix
+- [x] D-3: 기타 잔여 fails 개별 triage + fix
+- [x] PR #149 브랜치를 최신 main 으로 rebase (옵션 a)
+- [x] PR #149 이어폰 모달 12 it 전체 GREEN 확인 (rebase 후 `npm test` 실행)
+- [x] `npm test` 최종 0 failures 확인
+- [x] PR #149 merge 가능 상태 선언
 
 ### 수용 기준
 

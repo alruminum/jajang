@@ -84,14 +84,14 @@
 
 ### 태스크 체크리스트
 
-- [ ] PR #149 브랜치 (`feat/149-batch4-record-guide-pivot`) 체크아웃 후 작업
-- [ ] 공통 mock 위치 결정: `src/__tests__/_setup.ts` 에 `jest.mock('expo-audio', ...)` 추가 또는 `__mocks__/expo-audio.ts` 신설
-- [ ] mock factory 에 `getRecordingPermissionsAsync`, `requestRecordingPermissionsAsync`, `setAudioModeAsync`, `RecordingOptionsPresets`, `useAudioRecorder` 등 named exports 모두 jest.fn() 으로 export
-- [ ] S09 main 의 6 fails GREEN
-- [ ] PR #149 의 S09 mode-removal 8 fails (`mode 파라미터 없음`, `impl/13`) GREEN
-- [ ] PR #149 의 S07 mode-removal 1 fail (`AC-04/AC-08: RecordMode 경유 제거`) GREEN
-- [ ] PR #149 의 S10 1 fail (`shush 모드`) — mode 폐기 후에도 shush 분기는 살아있는지 확인 필요. impl/13 검토.
-- [ ] PR 브랜치 `npx jest src/__tests__/screens/S09*.tsx S07*.tsx S10*.tsx` 0 failures
+- [x] PR #149 브랜치 (`feat/149-batch4-record-guide-pivot`) 체크아웃 후 작업
+- [x] 공통 mock 위치 결정: `src/__tests__/_setup.ts` 에 `jest.mock('expo-audio', ...)` 추가 또는 `__mocks__/expo-audio.ts` 신설
+- [x] mock factory 에 `getRecordingPermissionsAsync`, `requestRecordingPermissionsAsync`, `setAudioModeAsync`, `RecordingOptionsPresets`, `useAudioRecorder` 등 named exports 모두 jest.fn() 으로 export
+- [x] S09 main 의 6 fails GREEN
+- [x] PR #149 의 S09 mode-removal 8 fails (`mode 파라미터 없음`, `impl/13`) GREEN
+- [x] PR #149 의 S07 mode-removal 1 fail (`AC-04/AC-08: RecordMode 경유 제거`) GREEN
+- [x] PR #149 의 S10 1 fail (`shush 모드`) — mode 폐기 후에도 shush 분기는 살아있는지 확인 필요. impl/13 검토.
+- [x] PR 브랜치 `npx jest src/__tests__/screens/S09*.tsx S07*.tsx S10*.tsx` 0 failures
 
 ### 수용 기준
 
@@ -180,12 +180,12 @@
 
 ### 태스크 체크리스트
 
-- [ ] 각 describe `.skip` → 일반 describe 로 복원
-- [ ] 첫 실행 fail 메시지 캡처 후 query 패턴 확인
-- [ ] `within(getByTestId('earphone-modal'))` 등 scope 좁힘 도입
-- [ ] 다중 매칭 시 `getAllByText` + index 사용
-- [ ] AsyncStorage `@jajang:earphone_warning_dismissed` mock 시나리오 검증
-- [ ] 14 it 전체 GREEN
+- [x] 각 describe `.skip` → 일반 describe 로 복원
+- [x] 첫 실행 fail 메시지 캡처 후 query 패턴 확인
+- [x] `within(getByTestId('earphone-modal'))` 등 scope 좁힘 도입
+- [x] 다중 매칭 시 `getAllByText` + index 사용
+- [x] AsyncStorage `@jajang:earphone_warning_dismissed` mock 시나리오 검증
+- [x] 14 it 전체 GREEN
 
 ### 수용 기준
 
@@ -210,12 +210,12 @@
 
 ### 태스크 체크리스트
 
-- [ ] Story 1~5 모두 main / PR 에 적용 완료
-- [ ] PR #149 rebase + push
-- [ ] PR #149 CI GREEN
-- [ ] `npx jest` 0 failures 확인
-- [ ] `gh pr merge 149 --squash`
-- [ ] backlog.md / CLAUDE.md Epic 10 완료 체크
+- [x] Story 1~5 모두 main / PR 에 적용 완료
+- [x] PR #149 rebase + push
+- [x] PR #149 CI GREEN
+- [x] `npx jest` 0 failures 확인
+- [x] `gh pr merge 149 --squash`
+- [x] backlog.md / CLAUDE.md Epic 10 완료 체크
 
 ### 수용 기준
 
