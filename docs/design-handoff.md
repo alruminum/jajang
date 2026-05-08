@@ -21,8 +21,10 @@
 ### v1.3.1 핵심 변경 (v1.2.1 대비)
 - 쉬/허밍 모드 분기 완전 제거 → 단일 흐름
 - BGM chip + 가사박스 항상 표시 (조건부 렌더 없음)
-- "30초 채워주세요" hint 제거 → encourage text "더 많이 녹음할수록 더 풍성해집니다"
+- "30초 채워주세요" hint 제거 → encourage text "더 많이 녹음할수록 더 풍성해집니다" (accent 색, 가사박스 인라인 변형 — variant-C visual)
 - 타이머: elapsed 단독 (`00:18`, `/MM:SS` 상한 표시 제거)
+- "녹음 중" 상태 라벨 헤더에 추가 (variant-C visual)
+- 정지버튼: 아웃링(outline ring) 스타일 — 외부 96dp + 내부 72dp (variant-C visual)
 - 1 loop 자동종료: `bgmTracks.ts`의 `loopDurationMs` 기준
 - production navigator 정리: `S10RecordScreen.tsx` (impl/10 BGM 미반영 dead 파일) 삭제, `RecordScreen.tsx` 로 wire-up
 
@@ -31,6 +33,8 @@
 - `loopDurationMs = BGM_TRACKS[songKey]?.loopDurationMs ?? 120000` — setTimeout 기준 자동종료
 - `isStoppingRef` 중복 stop 가드 필수 (onPlaybackEnd + loopTimer 동시 트리거 방지)
 - expo-audio: `player.loop = false`, `addListener('playbackStatusUpdate')` 로 isFinished 감지
+- waveform accent: 코드 SSOT `#5A7AA8` 사용 (Pencil 프레임의 `#82B090` 은 drift — 무시)
+- 타이머 사이즈: variant-C 28px (`Typography.timerMono` 의 `FontSize.xl=22` 으로는 부족 — variant-C 적용 시 inline override 또는 토큰 추가)
 
 ---
 
