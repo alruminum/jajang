@@ -8,6 +8,10 @@ import { StyleSheet } from 'react-native'
 
 // ─── mock 설정 (S10RecordScreen.bgm.test.tsx 패턴 동일) ─────────────────────
 
+jest.mock('@store/authSlice', () => ({
+  useAuthStore: jest.fn(),
+}))
+
 jest.mock('../../hooks/useBgmPlayer', () => ({
   useBgmPlayer: jest.fn(),
 }))
@@ -62,6 +66,10 @@ const navigateMock = jest.fn()
 const useRouteMock = jest.fn()
 
 // ─── mock 구현 획득 ───────────────────────────────────────────────────────────
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { useAuthStore } = require('@store/authSlice') as {
+  useAuthStore: jest.Mock
+}
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { useBgmPlayer } = require('../../hooks/useBgmPlayer') as {
   useBgmPlayer: jest.Mock
@@ -124,6 +132,8 @@ beforeEach(() => {
 
   mockBgmState = { isPlaying: false, loadFailed: false }
   applyBgmImpl()
+
+  useAuthStore.mockReturnValue({ entitlement: 'free', generationCount: 0 })
 
   LyricsBox.mockImplementation(
     ({ songKey }: { songKey: string }) => {
@@ -445,5 +455,39 @@ describe('RecordScreen — variant-C 시각 정제 (impl/15 §9)', () => {
     await waitFor(async () => {
       await findByText('녹음 중')
     })
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+describe('S10 — free generation counter chip (issue #235)', () => {
+  // REQ-235-1: free entitlement → chip 렌더 + 텍스트 일치
+  it('free entitlement → testID="free-generation-counter" 렌더 + "생성 N/3" 텍스트', async () => {
+    useAuthStore.mockReturnValue({ entitlement: 'free', generationCount: 1 })
+    setRoute({ songKey: 'twinkle' })
+    const { findByTestId, getByText } = render(<RecordScreen />)
+    await advanceCountdown()
+
+    expect(await findByTestId('free-generation-counter')).toBeTruthy()
+    expect(getByText('생성 1/3')).toBeTruthy()
+  })
+
+  // REQ-235-2: trial entitlement → chip 미렌더
+  it('trial entitlement → chip 미렌더', async () => {
+    useAuthStore.mockReturnValue({ entitlement: 'trial', generationCount: 5 })
+    setRoute({ songKey: 'twinkle' })
+    const { queryByTestId } = render(<RecordScreen />)
+    await advanceCountdown()
+
+    expect(queryByTestId('free-generation-counter')).toBeNull()
+  })
+
+  // REQ-235-2: premium entitlement → chip 미렌더
+  it('premium entitlement → chip 미렌더', async () => {
+    useAuthStore.mockReturnValue({ entitlement: 'premium', generationCount: 99 })
+    setRoute({ songKey: 'twinkle' })
+    const { queryByTestId } = render(<RecordScreen />)
+    await advanceCountdown()
+
+    expect(queryByTestId('free-generation-counter')).toBeNull()
   })
 })
