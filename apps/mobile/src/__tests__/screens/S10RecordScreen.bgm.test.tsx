@@ -9,6 +9,10 @@ import { act, fireEvent, render, waitFor } from '@testing-library/react-native'
 // 모든 mock factory 를 jest.fn() 으로 선언하고
 // 각 테스트 beforeEach 에서 mockImplementation 으로 동작을 주입한다.
 
+jest.mock('@store/authSlice', () => ({
+  useAuthStore: jest.fn(() => ({ entitlement: 'free', generationCount: 0 })),
+}))
+
 jest.mock('../../hooks/useBgmPlayer', () => ({
   useBgmPlayer: jest.fn(),
 }))

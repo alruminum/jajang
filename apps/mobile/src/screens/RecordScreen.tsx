@@ -16,6 +16,7 @@ import { IOSOutputFormat, AudioQuality } from 'expo-audio';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NavigationProp, RouteProp } from '@react-navigation/native';
 
+import { useAuthStore } from '@store/authSlice';
 import { WaveformVisualizer } from '../components/WaveformVisualizer';
 import { LyricsBox } from '../components/LyricsBox';
 import { useBgmPlayer } from '../hooks/useBgmPlayer';
@@ -26,6 +27,7 @@ import { darkColors, FontSize } from '../theme/tokens';
 import type { MainStackParamList } from '../navigation/types';
 
 const COUNTDOWN_START = 3;
+const FREE_GENERATION_LIMIT = 3;
 const SILENCE_THRESHOLD = 0.02;
 const SILENCE_WARN_SEC = 10;
 const BGM_FAIL_TOAST_MS = 3000;
@@ -75,6 +77,13 @@ export function RecordScreen() {
   const route = useRoute<RouteProp<MainStackParamList, 'Record'>>();
   const { setLocalAudioUri } = useRecordingStore();
   const { songKey } = route.params;
+
+  const authState = useAuthStore() as unknown as {
+    entitlement: 'free' | 'trial' | 'premium';
+    generationCount: number;
+  };
+  const { entitlement, generationCount } = authState;
+  const isFreeUser = entitlement === 'free';
   const bgmTitle = BGM_TRACKS[songKey as keyof typeof BGM_TRACKS]?.titleKo;
   const loopDurationMs =
     BGM_TRACKS[songKey as keyof typeof BGM_TRACKS]?.loopDurationMs ??
@@ -325,6 +334,14 @@ export function RecordScreen() {
         <Text style={styles.timer} testID="recording-timer">{formatTime(elapsedSec)}</Text>
       </View>
 
+      {isFreeUser && (
+        <View style={styles.counterRow}>
+          <View style={styles.counterChip} testID="free-generation-counter">
+            <Text style={styles.counterText}>생성 {generationCount}/{FREE_GENERATION_LIMIT}</Text>
+          </View>
+        </View>
+      )}
+
       {showBgmFailToast && (
         <Text style={styles.bgmFailToast}>음악 없이 녹음할게요</Text>
       )}
@@ -459,6 +476,19 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
   spacer: { width: 80 },
+  counterRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingTop: 4,
+    paddingBottom: 4,
+  },
+  counterChip: {
+    backgroundColor: '#21253E',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  counterText: { color: '#7B80A0', fontSize: 13 },
   stopRing: {
     width: 96,
     height: 96,
