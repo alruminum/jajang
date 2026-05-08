@@ -64,15 +64,15 @@
 
 #### vi.* → jest.* 기본 변환
 
-- [ ] `src/__tests__/setup.ts` 전면 재작성: `vi` import 제거, `jest.mock()` / `jest.fn()` 교체
+- [x] `src/__tests__/setup.ts` 전면 재작성: `vi` import 제거, `jest.mock()` / `jest.fn()` 교체
   - `vi.mock('react-native', ...)` → `jest.mock('react-native', ...)`
   - `vi.fn()` 전체 → `jest.fn()`
   - `vi.mock(...)` factory 패턴 → `jest.mock(...)` 동일 패턴 (문법 동일)
-- [ ] `src/__mocks__/react-native-track-player.js` — jest-expo transformIgnorePatterns 반영 여부 확인 (이미 모듈 해상도가 babel.config.js alias로 처리 중)
-- [ ] `src/__mocks__/react-native-google-mobile-ads.js` 동일 검토
-- [ ] `stubs/react-native-purchases.js` 동일 검토
-- [ ] `vi.mock()` / `vi.fn()` / `vi.spyOn()` 잔류 파일 일괄 변환 (sed: `s/vi\./jest./g`)
-- [ ] `from 'vitest'` import 잔류 제거
+- [x] `src/__mocks__/react-native-track-player.js` — jest-expo transformIgnorePatterns 반영 여부 확인 (이미 모듈 해상도가 babel.config.js alias로 처리 중)
+- [x] `src/__mocks__/react-native-google-mobile-ads.js` 동일 검토
+- [x] `stubs/react-native-purchases.js` 동일 검토
+- [x] `vi.mock()` / `vi.fn()` / `vi.spyOn()` 잔류 파일 일괄 변환 (sed: `s/vi\./jest./g`)
+- [x] `from 'vitest'` import 잔류 제거
 
 #### vi.advanceTimersByTimeAsync 변환 — 4파일 32곳 수동 처리 필수 (sed 불가) [FAIL-01]
 
@@ -91,10 +91,10 @@ await Promise.resolve();  // microtask flush
 > 참고: `flushPromises = () => new Promise(setImmediate)` 패턴 B는 fake timer 환경에서 setImmediate 가 fake 처리되어 hang 위험. 대상 4파일 모두 useFakeTimers 환경이므로 패턴 A 만 사용.
 
 대상 파일 (총 32곳):
-- [ ] `src/__tests__/audio/AudioEngine-timer.test.ts` — 변환 + GREEN 확인
-- [ ] `src/__tests__/hooks/useBgmPlayer.test.ts` — 변환 + GREEN 확인 (경로 실존 확인 후 진행)
-- [ ] `src/__tests__/screens/S01SplashScreen.test.tsx` — 변환 + GREEN 확인
-- [ ] `src/__tests__/screens/S10RecordScreen.bgm.test.tsx` — 변환 + GREEN 확인
+- [x] `src/__tests__/audio/AudioEngine-timer.test.ts` — 변환 + GREEN 확인
+- [x] `src/__tests__/hooks/useBgmPlayer.test.ts` — 변환 + GREEN 확인 (경로 실존 확인 후 진행)
+- [x] `src/__tests__/screens/S01SplashScreen.test.tsx` — 변환 + GREEN 확인
+- [x] `src/__tests__/screens/S10RecordScreen.bgm.test.tsx` — 변환 + GREEN 확인
 
 완료 기준: 32곳 모두 패턴 변환 완료, 해당 파일 각각 `npm test <파일경로>` GREEN
 
@@ -102,13 +102,13 @@ await Promise.resolve();  // microtask flush
 
 > jest-expo 자동 mock 과 setup.ts 수동 mock 중복 시 silent conflict 발생 가능.
 
-- [ ] jest-expo 공식 README 기준 auto-mock 제공 모듈 목록 확인
+- [x] jest-expo 공식 README 기준 auto-mock 제공 모듈 목록 확인
   - 공식 기준 포함: `expo-asset`, `expo-constants`, `expo-modules-core`, `expo-font`, `expo-localization`
-- [ ] 현재 setup.ts 수동 mock 항목 중 auto-mock 중복 여부 개별 확인:
-  - [ ] `expo-secure-store` — jest-expo auto-mock 제공 여부 확인; 제공 시 setup.ts 항목 제거
-  - [ ] `expo-audio` — jest-expo auto-mock 제공 여부 확인; 제공 시 setup.ts 항목 제거
-- [ ] RN 외부 라이브러리 mock (`react-native-safe-area-context`, `@invertase/react-native-apple-authentication` 등) — jest-expo 무관, setup.ts 유지
-- [ ] 정리 후 `npm test` 실행하여 mock override 충돌 없음 확인
+- [x] 현재 setup.ts 수동 mock 항목 중 auto-mock 중복 여부 개별 확인:
+  - [x] `expo-secure-store` — jest-expo auto-mock 제공 여부 확인; 제공 시 setup.ts 항목 제거
+  - [x] `expo-audio` — jest-expo auto-mock 제공 여부 확인; 제공 시 setup.ts 항목 제거
+- [x] RN 외부 라이브러리 mock (`react-native-safe-area-context`, `@invertase/react-native-apple-authentication` 등) — jest-expo 무관, setup.ts 유지
+- [x] 정리 후 `npm test` 실행하여 mock override 충돌 없음 확인
 
 ### 수용 기준
 
@@ -132,14 +132,14 @@ await Promise.resolve();  // microtask flush
 
 ### 태스크 체크리스트
 
-- [ ] `npm test` 전체 실행 후 실패 목록 확인
-- [ ] 실패 원인별 분류 및 픽스:
+- [x] `npm test` 전체 실행 후 실패 목록 확인
+- [x] 실패 원인별 분류 및 픽스:
   - (a) vi.* 잔류 → 일괄 변환
   - (b) moduleNameMapper 누락 alias → jest.config.js 추가
   - (c) 추가 RN 네이티브 모듈 mock 누락 → `__mocks__` 또는 setup 추가
   - (d) `@testing-library/react-native` v12 + jest-expo 호환 이슈 → render/fireEvent/waitFor 확인
-- [ ] PR #149 (이어폰 모달 12 it) 포함 batch 4/5 테스트 모두 통과 확인
-- [ ] CLAUDE.md `npx vitest run` → `npm test` 업데이트
+- [x] PR #149 (이어폰 모달 12 it) 포함 batch 4/5 테스트 모두 통과 확인
+- [x] CLAUDE.md `npx vitest run` → `npm test` 업데이트
 
 ### 수용 기준
 
