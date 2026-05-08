@@ -34,6 +34,12 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   },
 }))
 
+// ─── Mock: @store/authSlice ───────────────────────────────────────────────────
+jest.mock('@store/authSlice', () => ({
+  __esModule: true,
+  useAuthStore: jest.fn(),
+}))
+
 // ─── Mock: challengesApi (폐기됐으나 import 잔재 방어) ────────────────────────
 jest.mock('@services/api/challenges', () => ({
   challengesApi: {
@@ -51,10 +57,17 @@ const expoAudioMock = require('expo-audio') as {
 const asyncStorageMock = (require('@react-native-async-storage/async-storage') as {
   default: { getItem: jest.Mock; setItem: jest.Mock }
 }).default
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { useAuthStore } = require('@store/authSlice') as { useAuthStore: jest.Mock }
 
 // ─── Mock: navigation ─────────────────────────────────────────────────────────
 const mockNavigate = jest.fn()
 const mockNavigation = { navigate: mockNavigate } as any
+
+// useAuthStore 기본값 설정 — 각 describe beforeEach 에서 덮어쓰기 가능
+beforeEach(() => {
+  useAuthStore.mockReturnValue({ entitlement: 'free', generationCount: 1 })
+})
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 function renderScreen(songKey = 'brahms') {
@@ -211,5 +224,16 @@ describe('RecordGuideScreen (S09) — 가이드 렌더링 (impl/13 단일 흐름
     // GUIDE_ITEMS와 HeadphoneChip 컴포넌트 두 곳에 같은 텍스트가 있으므로 getAllByText 사용
     const { getAllByText } = renderScreen()
     expect(getAllByText('이어폰을 끼면 더 또렷하게 담겨요').length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('REQ-08: free 유저 진입 시 "생성 N/3" 카운터 chip이 노출된다', () => {
+    const { getByText } = renderScreen()
+    expect(getByText('생성 1/3')).toBeTruthy()
+  })
+
+  it('REQ-09: trial/premium 유저 진입 시 카운터 chip이 노출되지 않는다', () => {
+    useAuthStore.mockReturnValueOnce({ entitlement: 'premium', generationCount: 5 })
+    const { queryByText } = renderScreen()
+    expect(queryByText(/생성 \d+\/3/)).toBeNull()
   })
 })
