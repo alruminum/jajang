@@ -16,7 +16,7 @@
  * - S14 → navigation: goBack() (S13 복귀), navigate('Subscribe')
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -36,6 +36,8 @@ import {
   getMidnightTimestamp,
 } from '@services/rewardedAdService';
 import { resumePlayback } from '@audio/AudioEngine';
+import { useTheme } from '@hooks/useTheme';
+import { ColorTokens } from '../theme/tokens';
 
 // ─── 타입 ─────────────────────────────────────────────────────────────────────
 
@@ -60,6 +62,7 @@ interface VariantBackgroundProps {
   onRewardedPress: () => void;
   onSubscribePress: () => void;
   onDismiss: () => void;
+  styles: ReturnType<typeof makeStyles>;
 }
 
 function VariantBackground({
@@ -69,6 +72,7 @@ function VariantBackground({
   onRewardedPress,
   onSubscribePress,
   onDismiss,
+  styles,
 }: VariantBackgroundProps) {
   return (
     <>
@@ -83,7 +87,7 @@ function VariantBackground({
           accessibilityLabel="광고 보고 오늘 밤 무료로 쓸게요"
         >
           {isLoadingAd ? (
-            <ActivityIndicator color="#12152B" size="small" />
+            <ActivityIndicator color={styles.rewardedBtnText.color} size="small" />
           ) : (
             <Text style={styles.rewardedBtnText}>광고 보고 오늘 밤 무료로 쓸게요</Text>
           )}
@@ -114,11 +118,13 @@ function VariantBackground({
 interface VariantGenerationExhaustedProps {
   onSubscribePress: () => void;
   onDismiss: () => void;
+  styles: ReturnType<typeof makeStyles>;
 }
 
 function VariantGenerationExhausted({
   onSubscribePress,
   onDismiss,
+  styles,
 }: VariantGenerationExhaustedProps) {
   return (
     <>
@@ -152,6 +158,9 @@ export default function S14UpgradeSheet({ route, navigation }: UpgradeSheetProps
   const [adLoadFailed, setAdLoadFailed] = useState(false);
   const [toast, setToast] = useState<ToastState>({ message: '', visible: false });
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   // ─── 월 전환 시 카운터 리셋 ─────────────────────────────────────────────────
 
@@ -289,11 +298,13 @@ export default function S14UpgradeSheet({ route, navigation }: UpgradeSheetProps
               onRewardedPress={handleRewardedAd}
               onSubscribePress={goToSubscribe}
               onDismiss={() => navigation.goBack()}
+              styles={styles}
             />
           ) : (
             <VariantGenerationExhausted
               onSubscribePress={goToSubscribe}
               onDismiss={handleExhaustedDismiss}
+              styles={styles}
             />
           )}
 
@@ -311,105 +322,106 @@ export default function S14UpgradeSheet({ route, navigation }: UpgradeSheetProps
 
 // ─── 스타일 ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  sheet: {
-    backgroundColor: '#1A1D35',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 40,
-    minHeight: 280,
-  },
-  closeBtn: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  closeBtnText: {
-    color: '#7B80A0',
-    fontSize: 18,
-  },
-  headline: {
-    color: '#F5F5F5',
-    fontSize: 18,
-    fontWeight: '700',
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  body: {
-    color: '#A0A5C0',
-    fontSize: 14,
-    marginBottom: 24,
-    lineHeight: 20,
-  },
-  rewardedBtn: {
-    backgroundColor: '#5A7AA8',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginBottom: 12,
-    minHeight: 48,
-    justifyContent: 'center',
-  },
-  btnDisabled: {
-    opacity: 0.6,
-  },
-  rewardedBtnText: {
-    color: '#12152B',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  exhaustedMsg: {
-    color: '#7B80A0',
-    fontSize: 13,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  subscribeBtn: {
-    backgroundColor: '#4A6FFF',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  subscribeBtnText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  dismissText: {
-    color: '#7B80A0',
-    fontSize: 14,
-    textAlign: 'center',
-    paddingVertical: 8,
-  },
-  toast: {
-    position: 'absolute',
-    bottom: 48,
-    left: 24,
-    right: 24,
-    backgroundColor: 'rgba(30, 34, 60, 0.95)',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  toastText: {
-    color: '#F5F5F5',
-    fontSize: 13,
-  },
-});
+const makeStyles = (colors: ColorTokens) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: 'transparent',
+    },
+    overlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      backgroundColor: colors.overlay,
+    },
+    sheet: {
+      backgroundColor: colors.surface,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      paddingHorizontal: 24,
+      paddingTop: 24,
+      paddingBottom: 40,
+      minHeight: 280,
+    },
+    closeBtn: {
+      position: 'absolute',
+      top: 16,
+      right: 16,
+      width: 32,
+      height: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    closeBtnText: {
+      color: colors.textSecondary,
+      fontSize: 18,
+    },
+    headline: {
+      color: '#F5F5F5', // TODO(task 04): textHighlight 토큰으로 교체
+      fontSize: 18,
+      fontWeight: '700',
+      marginTop: 8,
+      marginBottom: 8,
+    },
+    body: {
+      color: '#A0A5C0', // TODO(task 04): textBody 토큰으로 교체
+      fontSize: 14,
+      marginBottom: 24,
+      lineHeight: 20,
+    },
+    rewardedBtn: {
+      backgroundColor: colors.accentPrimary,
+      borderRadius: 12,
+      paddingVertical: 14,
+      alignItems: 'center',
+      marginBottom: 12,
+      minHeight: 48,
+      justifyContent: 'center',
+    },
+    btnDisabled: {
+      opacity: 0.6,
+    },
+    rewardedBtnText: {
+      color: colors.bgDeep,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    exhaustedMsg: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      textAlign: 'center',
+      marginBottom: 16,
+    },
+    subscribeBtn: {
+      backgroundColor: '#4A6FFF', // TODO(task 04): subscribeCta 토큰으로 교체
+      borderRadius: 12,
+      paddingVertical: 14,
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    subscribeBtnText: {
+      color: '#FFFFFF', // TODO(task 04): onSubscribeCta 토큰으로 교체
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    dismissText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      textAlign: 'center',
+      paddingVertical: 8,
+    },
+    toast: {
+      position: 'absolute',
+      bottom: 48,
+      left: 24,
+      right: 24,
+      backgroundColor: 'rgba(30, 34, 60, 0.95)', // TODO(task 04): toastBg 토큰으로 교체
+      borderRadius: 8,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      alignItems: 'center',
+    },
+    toastText: {
+      color: '#F5F5F5', // TODO(task 04): textHighlight 토큰으로 교체
+      fontSize: 13,
+    },
+  });
