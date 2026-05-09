@@ -40,7 +40,7 @@ export default function S02PrivacyScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
       <View style={styles.container} testID="s02-container">
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>목소리 수집 동의</Text>
@@ -118,6 +118,7 @@ const CONSENT_ITEMS = [
 
 const makeStyles = (colors: ColorTokens) =>
   StyleSheet.create({
+    safeArea: { flex: 1 },
     container: { flex: 1, backgroundColor: colors.bgPrimary },
     scroll: { padding: 24, paddingBottom: 8 },
     title: { fontSize: 22, fontWeight: '600', color: colors.accentPrimary, marginBottom: 8 },
