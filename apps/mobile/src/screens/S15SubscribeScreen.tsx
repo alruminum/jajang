@@ -307,7 +307,7 @@ export default function S15SubscribeScreen({ navigation }: SubscribeScreenProps)
           accessibilityLabel="구독 시작하기"
         >
           {isLoading ? (
-            <ActivityIndicator color="#FFF" />
+            <ActivityIndicator color={styles.subscribeBtnText.color} />
           ) : (
             <Text style={styles.subscribeBtnText}>구독 시작하기</Text>
           )}
