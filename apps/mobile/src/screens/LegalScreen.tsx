@@ -10,7 +10,7 @@
  * - 앱 버전 표시 (expo-constants)
  */
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   Text,
   TouchableOpacity,
@@ -20,6 +20,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
 import { LEGAL_URLS } from '../config/legalUrls';
+import { useTheme } from '@hooks/useTheme';
+import { ColorTokens } from '../theme/tokens';
 
 // ─── 타입 ──────────────────────────────────────────────────────────────────────
 
@@ -44,12 +46,6 @@ const LEGAL_ITEMS: LegalItem[] = [
   },
 ];
 
-const BROWSER_OPTIONS = {
-  presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
-  toolbarColor: '#0D0F1A',
-  controlsColor: '#5A7AA8',
-} as const;
-
 function getAppVersion(): string {
   return Constants.expoConfig?.version ?? '1.0.0';
 }
@@ -57,14 +53,22 @@ function getAppVersion(): string {
 // ─── LegalScreen ───────────────────────────────────────────────────────────────
 
 export function LegalScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const browserOptions = useMemo(() => ({
+    presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
+    toolbarColor: colors.bgPrimary,
+    controlsColor: colors.accentPrimary,
+  }), [colors]);
+
   const handleOpenUrl = useCallback(async (url: string) => {
     try {
-      await WebBrowser.openBrowserAsync(url, BROWSER_OPTIONS);
+      await WebBrowser.openBrowserAsync(url, browserOptions);
     } catch {
       // openBrowserAsync는 네트워크 오류를 throw하지 않음
       // 브라우저 자체 오프라인 안내로 충분 — 앱 크래시 방지 목적
     }
-  }, []);
+  }, [browserOptions]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -92,40 +96,41 @@ export default LegalScreen;
 
 // ─── 스타일 ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0D0F1A',
-    paddingTop: 16,
-  },
-  header: {
-    color: '#EEF0F8',
-    fontSize: 20,
-    fontWeight: '600',
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: '#2A2E48',
-  },
-  label: {
-    flex: 1,
-    color: '#EEF0F8',
-    fontSize: 16,
-  },
-  arrow: {
-    color: '#7B80A0',
-    fontSize: 20,
-  },
-  appVersion: {
-    color: '#7B80A0',
-    fontSize: 13,
-    paddingHorizontal: 20,
-    paddingTop: 24,
-  },
-});
+const makeStyles = (colors: ColorTokens) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bgPrimary,
+      paddingTop: 16,
+    },
+    header: {
+      color: colors.textPrimary,
+      fontSize: 20,
+      fontWeight: '600',
+      paddingHorizontal: 20,
+      paddingBottom: 16,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 18,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    label: {
+      flex: 1,
+      color: colors.textPrimary,
+      fontSize: 16,
+    },
+    arrow: {
+      color: colors.textSecondary,
+      fontSize: 20,
+    },
+    appVersion: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      paddingHorizontal: 20,
+      paddingTop: 24,
+    },
+  });

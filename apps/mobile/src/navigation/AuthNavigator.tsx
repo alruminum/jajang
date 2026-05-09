@@ -1,6 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthStackParamList } from './types';
+import { useTheme } from '@hooks/useTheme';
 
 import S02PrivacyScreen from '@screens/S02PrivacyScreen';
 import S03OnboardingScreen from '@screens/S03OnboardingScreen';
@@ -10,11 +11,12 @@ import S05LoginScreen from '@screens/S05LoginScreen';
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 export default function AuthNavigator() {
+  const { colors } = useTheme();
   return (
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#0D0F1A' }, // 다크 미드나이트
+        contentStyle: { backgroundColor: colors.bgPrimary },
         animation: 'slide_from_right',
       }}
     >

@@ -18,14 +18,6 @@
 
 // ─── Module Mocks (import 전 선언) ───────────────────────────────────────────
 
-jest.mock('react-native', () => {
-  const RN = jest.requireActual('react-native');
-  return {
-    ...RN,
-    useColorScheme: jest.fn().mockReturnValue('dark'),
-  };
-});
-
 jest.mock('@store/theme-store', () => ({
   useThemeStore: jest.fn(),
 }));

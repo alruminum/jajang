@@ -38,7 +38,7 @@ import * as path from 'path';
  * 대상 파일 위치: apps/mobile/src/screens/, apps/mobile/src/components/, apps/mobile/src/navigation/
  * 상대 경로 기준: __dirname 에서 ../../.. = apps/mobile/src
  */
-const SRC_ROOT = path.resolve(__dirname, '..', '..', '..');
+const SRC_ROOT = path.resolve(__dirname, '..', '..');
 
 const TARGET_FILES: Array<{ label: string; relativePath: string }> = [
   {

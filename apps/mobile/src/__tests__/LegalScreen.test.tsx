@@ -5,6 +5,13 @@ import * as WebBrowser from 'expo-web-browser'
 // ---------------------------------------------------------------------------
 // Mocks
 // ---------------------------------------------------------------------------
+
+jest.mock('@store/theme-store', () => ({
+  useThemeStore: jest.fn((selector: (s: { pref: string; setPref: jest.Mock }) => unknown) =>
+    selector({ pref: 'dark', setPref: jest.fn() }),
+  ),
+}));
+
 jest.mock('expo-web-browser', () => ({
   openBrowserAsync: jest.fn().mockResolvedValue({ type: 'opened' }),
   WebBrowserPresentationStyle: {

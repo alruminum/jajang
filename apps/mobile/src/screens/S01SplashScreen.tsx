@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, Image, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -8,12 +8,16 @@ import { RootStackParamList } from '@navigation/types';
 import { getConsentFlag } from '@hooks/useConsentFlag';
 import { useAuthStore } from '@store/auth-store';
 import { api } from '@services/api';
+import { useTheme } from '@hooks/useTheme';
+import { ColorTokens } from '../theme/tokens';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList, 'Splash'>;
 
 export default function S01SplashScreen() {
   const navigation = useNavigation<NavProp>();
   const { clearAuth } = useAuthStore();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -73,16 +77,17 @@ function isTokenValid(token: string): boolean {
   }
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0D0F1A',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logo: {
-    width: 120,
-    height: 120,
-    resizeMode: 'contain',
-  },
-});
+const makeStyles = (colors: ColorTokens) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bgPrimary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    logo: {
+      width: 120,
+      height: 120,
+      resizeMode: 'contain',
+    },
+  });

@@ -15,6 +15,12 @@ import { act, render, waitFor } from '@testing-library/react-native';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
+jest.mock('@store/theme-store', () => ({
+  useThemeStore: jest.fn((selector: (s: { pref: string; setPref: jest.Mock }) => unknown) =>
+    selector({ pref: 'dark', setPref: jest.fn() }),
+  ),
+}));
+
 const mockNavigationReplace = jest.fn();
 
 jest.mock('@react-navigation/native', () => ({
