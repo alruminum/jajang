@@ -14,6 +14,13 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { AxiosError } from 'axios';
 
 // ─── 의존 모듈 Mock ──────────────────────────────────────────────────────────
+
+jest.mock('@store/theme-store', () => ({
+  useThemeStore: jest.fn((selector: (s: { pref: string; setPref: jest.Mock }) => unknown) =>
+    selector({ pref: 'dark', setPref: jest.fn() }),
+  ),
+}));
+
 const mockReplace = jest.fn();
 const mockNavigate = jest.fn();
 

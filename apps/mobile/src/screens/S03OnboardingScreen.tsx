@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import {
   View, Text, TouchableOpacity, FlatList, StyleSheet,
   useWindowDimensions,
@@ -7,6 +7,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '@navigation/types';
+import { useTheme } from '@hooks/useTheme';
+import { ColorTokens } from '../theme/tokens';
 
 type NavProp = NativeStackNavigationProp<AuthStackParamList, 'Onboarding'>;
 
@@ -36,6 +38,8 @@ export default function S03OnboardingScreen() {
   const navigation = useNavigation<NavProp>();
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const goNext = () => {
     if (currentIndex < SLIDES.length - 1) {
@@ -116,35 +120,36 @@ export default function S03OnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0D0F1A' },
-  slide: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 40,
-  },
-  emoji: { fontSize: 64, marginBottom: 32 },
-  slideTitle: {
-    fontSize: 24, fontWeight: '600', color: '#5A7AA8',
-    textAlign: 'center', marginBottom: 16,
-  },
-  slideBody: {
-    fontSize: 15, color: '#7B80A0', textAlign: 'center', lineHeight: 22,
-  },
-  dots: { flexDirection: 'row', justifyContent: 'center', paddingBottom: 16 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#2A2E48', marginHorizontal: 4 },
-  dotActive: { backgroundColor: '#5A7AA8', width: 18 },
-  footer: { padding: 24 },
-  primaryBtn: {
-    backgroundColor: '#5A7AA8', height: 56, borderRadius: 28,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
-  },
-  primaryBtnText: { color: '#0D0F1A', fontSize: 16, fontWeight: '600' },
-  nextBtn: {
-    backgroundColor: '#1A1D30', height: 56, borderRadius: 28,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
-  },
-  nextBtnText: { color: '#EEF0F8', fontSize: 16, fontWeight: '500' },
-  secondaryLink: { color: '#7B80A0', textAlign: 'center', fontSize: 14, padding: 12 },
-});
+const makeStyles = (colors: ColorTokens) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.bgPrimary },
+    slide: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 40,
+    },
+    emoji: { fontSize: 64, marginBottom: 32 },
+    slideTitle: {
+      fontSize: 24, fontWeight: '600', color: colors.accentPrimary,
+      textAlign: 'center', marginBottom: 16,
+    },
+    slideBody: {
+      fontSize: 15, color: colors.textSecondary, textAlign: 'center', lineHeight: 22,
+    },
+    dots: { flexDirection: 'row', justifyContent: 'center', paddingBottom: 16 },
+    dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.border, marginHorizontal: 4 },
+    dotActive: { backgroundColor: colors.accentPrimary, width: 18 },
+    footer: { padding: 24 },
+    primaryBtn: {
+      backgroundColor: colors.accentPrimary, height: 56, borderRadius: 28,
+      alignItems: 'center', justifyContent: 'center', marginBottom: 12,
+    },
+    primaryBtnText: { color: colors.bgPrimary, fontSize: 16, fontWeight: '600' },
+    nextBtn: {
+      backgroundColor: colors.surface, height: 56, borderRadius: 28,
+      alignItems: 'center', justifyContent: 'center', marginBottom: 12,
+    },
+    nextBtnText: { color: colors.textPrimary, fontSize: 16, fontWeight: '500' },
+    secondaryLink: { color: colors.textSecondary, textAlign: 'center', fontSize: 14, padding: 12 },
+  });

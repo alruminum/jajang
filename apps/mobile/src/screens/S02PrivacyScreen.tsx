@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View, Text, TouchableOpacity, Alert, ScrollView,
   StyleSheet, Linking, Platform, BackHandler,
@@ -8,6 +8,8 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '@navigation/types';
 import { setConsentFlag } from '@hooks/useConsentFlag';
+import { useTheme } from '@hooks/useTheme';
+import { ColorTokens } from '../theme/tokens';
 
 type NavProp = NativeStackNavigationProp<AuthStackParamList, 'Privacy'>;
 
@@ -16,6 +18,8 @@ const PRIVACY_URL = 'https://jajang.app/privacy';  // 실제 URL로 교체 필�
 export default function S02PrivacyScreen() {
   const navigation = useNavigation<NavProp>();
   const [agreed, setAgreed] = useState(false);
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const handleAgree = async () => {
     await setConsentFlag();
@@ -36,7 +40,8 @@ export default function S02PrivacyScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container} testID="s02-container">
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>목소리 수집 동의</Text>
         <Text style={styles.subtitle}>자장가를 만들기 위해 아래 내용을 확인해주세요</Text>
@@ -98,6 +103,7 @@ export default function S02PrivacyScreen() {
           <Text style={styles.secondaryBtnText}>동의하지 않을게요</Text>
         </TouchableOpacity>
       </View>
+      </View>
     </SafeAreaView>
   );
 }
@@ -110,34 +116,36 @@ const CONSENT_ITEMS = [
   { title: '목소리 주의', desc: '본인 목소리만 녹음해주세요. 제3자 목소리 업로드는 금지돼요' },
 ];
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0D0F1A' },
-  scroll: { padding: 24, paddingBottom: 8 },
-  title: { fontSize: 22, fontWeight: '600', color: '#5A7AA8', marginBottom: 8 },
-  subtitle: { fontSize: 14, color: '#7B80A0', marginBottom: 24, lineHeight: 20 },
-  card: { backgroundColor: '#1A1D30', borderRadius: 16, padding: 20, marginBottom: 16 },
-  row: { flexDirection: 'row', marginBottom: 14 },
-  bullet: { color: '#5A7AA8', marginRight: 8, marginTop: 2 },
-  rowContent: { flex: 1 },
-  itemTitle: { color: '#EEF0F8', fontSize: 14, fontWeight: '500', marginBottom: 2 },
-  itemDesc: { color: '#7B80A0', fontSize: 13, lineHeight: 18 },
-  link: { color: '#C49A8A', fontSize: 13, marginBottom: 24 },
-  checkRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  checkbox: {
-    width: 22, height: 22, borderRadius: 6, borderWidth: 1.5,
-    borderColor: '#7B80A0', marginRight: 12, alignItems: 'center', justifyContent: 'center',
-  },
-  checkboxChecked: { backgroundColor: '#5A7AA8', borderColor: '#5A7AA8' },
-  checkmark: { color: '#0D0F1A', fontSize: 13, fontWeight: '700' },
-  checkLabel: { color: '#EEF0F8', fontSize: 14, flex: 1 },
-  footer: { padding: 24, paddingTop: 8 },
-  primaryBtn: {
-    backgroundColor: '#5A7AA8', height: 56, borderRadius: 28,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
-  },
-  primaryBtnDisabled: { backgroundColor: '#2A2E48' },
-  primaryBtnText: { color: '#0D0F1A', fontSize: 16, fontWeight: '600' },
-  primaryBtnTextDisabled: { color: '#7B80A0' },
-  secondaryBtn: { alignItems: 'center', padding: 12 },
-  secondaryBtnText: { color: '#7B80A0', fontSize: 14 },
-});
+const makeStyles = (colors: ColorTokens) =>
+  StyleSheet.create({
+    safeArea: { flex: 1 },
+    container: { flex: 1, backgroundColor: colors.bgPrimary },
+    scroll: { padding: 24, paddingBottom: 8 },
+    title: { fontSize: 22, fontWeight: '600', color: colors.accentPrimary, marginBottom: 8 },
+    subtitle: { fontSize: 14, color: colors.textSecondary, marginBottom: 24, lineHeight: 20 },
+    card: { backgroundColor: colors.surface, borderRadius: 16, padding: 20, marginBottom: 16 },
+    row: { flexDirection: 'row', marginBottom: 14 },
+    bullet: { color: colors.accentPrimary, marginRight: 8, marginTop: 2 },
+    rowContent: { flex: 1 },
+    itemTitle: { color: colors.textPrimary, fontSize: 14, fontWeight: '500', marginBottom: 2 },
+    itemDesc: { color: colors.textSecondary, fontSize: 13, lineHeight: 18 },
+    link: { color: colors.accentSecondary, fontSize: 13, marginBottom: 24 },
+    checkRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+    checkbox: {
+      width: 22, height: 22, borderRadius: 6, borderWidth: 1.5,
+      borderColor: colors.textSecondary, marginRight: 12, alignItems: 'center', justifyContent: 'center',
+    },
+    checkboxChecked: { backgroundColor: colors.accentPrimary, borderColor: colors.accentPrimary },
+    checkmark: { color: colors.bgPrimary, fontSize: 13, fontWeight: '700' },
+    checkLabel: { color: colors.textPrimary, fontSize: 14, flex: 1 },
+    footer: { padding: 24, paddingTop: 8 },
+    primaryBtn: {
+      backgroundColor: colors.accentPrimary, height: 56, borderRadius: 28,
+      alignItems: 'center', justifyContent: 'center', marginBottom: 12,
+    },
+    primaryBtnDisabled: { backgroundColor: colors.border },
+    primaryBtnText: { color: colors.bgPrimary, fontSize: 16, fontWeight: '600' },
+    primaryBtnTextDisabled: { color: colors.textSecondary },
+    secondaryBtn: { alignItems: 'center', padding: 12 },
+    secondaryBtnText: { color: colors.textSecondary, fontSize: 14 },
+  });

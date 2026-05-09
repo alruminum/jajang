@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, Platform, Alert } from 'react-native';
 import appleAuth from '@invertase/react-native-apple-authentication';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { useTheme } from '@hooks/useTheme';
+import { ColorTokens } from '../theme/tokens';
 
 interface Props {
   onSuccess: (provider: 'apple' | 'google', idToken: string) => void;
@@ -10,6 +12,8 @@ interface Props {
 
 export default function SocialAuthButtons({ onSuccess, onError }: Props) {
   const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '';
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const handleApple = async () => {
     try {
@@ -69,6 +73,7 @@ export default function SocialAuthButtons({ onSuccess, onError }: Props) {
         onPress={handleGoogle}
         accessibilityRole="button"
         accessibilityLabel="Google로 계속하기"
+        testID="google-btn"
       >
         <Text style={styles.googleBtnText}>  Google로 계속하기</Text>
       </TouchableOpacity>
@@ -76,17 +81,18 @@ export default function SocialAuthButtons({ onSuccess, onError }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { gap: 12 },
-  socialBtn: {
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  appleBtn: { backgroundColor: '#EEF0F8' },
-  appleBtnText: { color: '#0D0F1A', fontSize: 15, fontWeight: '600' },
-  googleBtn: { backgroundColor: '#1A1D30', borderWidth: 1, borderColor: '#2A2E48' },
-  googleBtnText: { color: '#EEF0F8', fontSize: 15, fontWeight: '500' },
-});
+const makeStyles = (colors: ColorTokens) =>
+  StyleSheet.create({
+    container: { gap: 12 },
+    socialBtn: {
+      height: 56,
+      borderRadius: 28,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'row',
+    },
+    appleBtn: { backgroundColor: colors.textPrimary },
+    appleBtnText: { color: colors.bgPrimary, fontSize: 15, fontWeight: '600' },
+    googleBtn: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
+    googleBtnText: { color: colors.textPrimary, fontSize: 15, fontWeight: '500' },
+  });

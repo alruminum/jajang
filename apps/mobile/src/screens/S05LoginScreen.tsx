@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -20,12 +20,16 @@ import { emailLogin, socialAuth } from '@services/auth-api';
 import { useAuth } from '@hooks/useAuth';
 import SocialAuthButtons from '@components/SocialAuthButtons';
 import { syncEntitlementAfterLogin } from '@services/revenue-cat';
+import { useTheme } from '@hooks/useTheme';
+import { ColorTokens } from '../theme/tokens';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function S05LoginScreen() {
   const navigation = useNavigation<NavProp>();
   const { saveSession } = useAuth();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -91,7 +95,7 @@ export default function S05LoginScreen() {
             <TextInput
               style={styles.input}
               placeholder="이메일"
-              placeholderTextColor="#7B80A0"
+              placeholderTextColor={colors.textSecondary}
               value={email}
               onChangeText={(t) => {
                 setEmail(t);
@@ -108,7 +112,7 @@ export default function S05LoginScreen() {
             <TextInput
               style={styles.input}
               placeholder="비밀번호"
-              placeholderTextColor="#7B80A0"
+              placeholderTextColor={colors.textSecondary}
               value={password}
               onChangeText={(t) => {
                 setPassword(t);
@@ -165,37 +169,38 @@ export default function S05LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0D0F1A' },
-  scroll: { padding: 24, flexGrow: 1 },
-  title: { fontSize: 26, fontWeight: '700', color: '#EEF0F8', marginBottom: 8 },
-  subtitle: { fontSize: 14, color: '#7B80A0', marginBottom: 32 },
-  inputGroup: { marginBottom: 16 },
-  input: {
-    height: 52,
-    backgroundColor: '#1A1D30',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    color: '#EEF0F8',
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: '#2A2E48',
-  },
-  errorText: { color: '#E05F5F', fontSize: 13, marginBottom: 12, marginLeft: 4 },
-  forgotBtn: { alignSelf: 'flex-end', marginBottom: 20 },
-  forgotText: { color: '#7B80A0', fontSize: 13 },
-  primaryBtn: {
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#5A7AA8',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryBtnDisabled: { opacity: 0.6 },
-  primaryBtnText: { color: '#0D0F1A', fontSize: 16, fontWeight: '600' },
-  divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 24 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: '#2A2E48' },
-  dividerText: { color: '#7B80A0', marginHorizontal: 12, fontSize: 13 },
-  signupLink: { alignItems: 'center', marginTop: 24 },
-  signupLinkText: { color: '#7B80A0', fontSize: 14 },
-});
+const makeStyles = (colors: ColorTokens) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.bgPrimary },
+    scroll: { padding: 24, flexGrow: 1 },
+    title: { fontSize: 26, fontWeight: '700', color: colors.textPrimary, marginBottom: 8 },
+    subtitle: { fontSize: 14, color: colors.textSecondary, marginBottom: 32 },
+    inputGroup: { marginBottom: 16 },
+    input: {
+      height: 52,
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      color: colors.textPrimary,
+      fontSize: 15,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    errorText: { color: colors.destructive, fontSize: 13, marginBottom: 12, marginLeft: 4 },
+    forgotBtn: { alignSelf: 'flex-end', marginBottom: 20 },
+    forgotText: { color: colors.textSecondary, fontSize: 13 },
+    primaryBtn: {
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: colors.accentPrimary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    primaryBtnDisabled: { opacity: 0.6 },
+    primaryBtnText: { color: colors.bgPrimary, fontSize: 16, fontWeight: '600' },
+    divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 24 },
+    dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
+    dividerText: { color: colors.textSecondary, marginHorizontal: 12, fontSize: 13 },
+    signupLink: { alignItems: 'center', marginTop: 24 },
+    signupLinkText: { color: colors.textSecondary, fontSize: 14 },
+  });
