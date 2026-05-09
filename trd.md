@@ -15,6 +15,7 @@
 | v1.5 | 2026-04-26 | Epic 07: §1 @expo-google-fonts 3종 추가, §2 src/theme/ + src/hooks/useFonts.ts 신설, §7 디자인 토큰 시스템 추가 |
 | v1.6 | 2026-04-26 | Epic 07 impl-02: §7 토큰 값 확정 — Colors(12종+파생3), FontFamily(6종), FontSize(7단계), Radius(4단계), Spacing(6단계), Typography 프리셋(8종). |
 | v1.7 | 2026-04-30 | PRD v1.3.1 반영: §1 GPU 인프라 삭제 + ffmpeg/librosa 추가, §2 서버 구조 갱신(DSP 서비스 / recording 모델), §3 생성 시퀀스 갱신(DSP 방식) + crossfade 상태머신 갱신, §4 DB 테이블 재정의(recording_sessions/recordings/master_audios), §5 SDK 갱신(보이스 클로닝 삭제), §8 환경변수 갱신(GPU 관련 삭제) |
+| v1.8 | 2026-05-09 | Epic 12: §7 화면 컴포넌트 스타일 패턴 추가 (createStyles factory / inline style 선택 기준), ColorTokens 토큰 수 15종으로 정정 |
 
 ---
 
@@ -297,7 +298,14 @@ interface SubscriptionSlice {
 > S08 (녹음 모드 선택) 폐기 (PRD v1.3.0). 총 17 → 16 screens.
 
 **디자인 토큰 시스템** (`src/theme/`) — impl-02에서 파일·값 확정:
-- `tokens.ts` — Colors(12종 + 파생 투명도 3종), FontFamily(6종), FontSize(7단계), Radius(4단계), pure constants
+- `tokens.ts` — Colors(15종 — bgPrimary/bgDeep/surface/surfaceHigh/accentPrimary/accentSecondary/textPrimary/textSecondary/border/destructive/success/overlay + 파생 투명도 3종), FontFamily(6종), FontSize(7단계), Radius(4단계), pure constants
+
+**화면 스타일 패턴** (Epic 12 — createStyles factory):
+
+`StyleSheet.create`는 정적이라 `useTheme()` 훅 내부 직접 사용 불가. 화면/컴포넌트는 다음 패턴 중 하나 사용:
+- `makeStyles(colors: ColorTokens)` factory — `StyleSheet.create({ ... colors.xxx ... })` 반환, 스타일 속성 4개 이상 or 재사용 컴포넌트
+- inline style — `<View style={{ backgroundColor: colors.bgPrimary }} />`, 스타일 속성 3개 이하 단순 뷰
+- `Colors = darkColors` 별칭 (하위 호환) — tokens.ts에서 유지하지만 신규 코드에서는 `useTheme().colors` 사용
 - `typography.ts` — Typography 프리셋 8종
 - `spacing.ts` — Spacing 6단계 (xs=4 ~ xxl=48)
 - `index.ts` — 배럴 export
