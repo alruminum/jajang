@@ -89,7 +89,10 @@ function setupAuthStore(overrides: {
     email: 'test@example.com',
     ...overrides,
   }
-  jest.mocked(useAuthStore).mockReturnValue(state as any)
+  jest.mocked(useAuthStore).mockImplementation(
+    (selector?: (s: typeof state & { clearSession: typeof mockClearSession }) => unknown) =>
+      (selector ? selector({ ...state, clearSession: mockClearSession }) : state) as ReturnType<typeof useAuthStore>
+  )
   ;(useAuthStore as any).getState = jest.fn().mockReturnValue({
     ...state,
     clearSession: mockClearSession,

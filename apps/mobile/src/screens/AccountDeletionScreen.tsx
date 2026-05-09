@@ -12,7 +12,7 @@
  * - navigation.dispatch(CommonActions.reset) → 'Auth' 루트로 스택 초기화
  */
 
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
 import {
   View,
   Text,
@@ -34,6 +34,8 @@ import { deleteMyAccount, ActiveSubscriptionError } from '@services/accountApi'
 import { useAuthStore } from '@store'
 import { useGenerationStore } from '@store/generationSlice'
 import { stopPlayback } from '@audio/AudioEngine'
+import { useTheme } from '@hooks/useTheme'
+import type { ColorTokens } from '../theme/tokens'
 
 // ─── 탈퇴 사유 타입 ───────────────────────────────────────────────────────────
 
@@ -84,6 +86,213 @@ const SUBSCRIPTION_MANAGE_URL =
     ? 'https://apps.apple.com/account/subscriptions'
     : 'https://play.google.com/store/account/subscriptions'
 
+// ─── makeStyles factory ───────────────────────────────────────────────────────
+
+const makeStyles = (colors: ColorTokens) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.bgPrimary,
+    },
+    container: {
+      flex: 1,
+      backgroundColor: colors.bgPrimary,
+    },
+
+    // 헤더
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surface,
+    },
+    backBtn: {
+      marginRight: 12,
+      padding: 4,
+    },
+    backIcon: {
+      color: '#F5F5F5', // TODO(task 04 token-define): textHighlight 토큰으로 교체
+      fontSize: 20,
+    },
+    headerTitle: {
+      color: '#F5F5F5', // TODO(task 04 token-define): textHighlight 토큰으로 교체
+      fontSize: 18,
+      fontWeight: '700',
+    },
+
+    // 스크롤
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: 20,
+      paddingTop: 20,
+      paddingBottom: 40,
+    },
+
+    // 구독 활성 배너
+    subscriptionBanner: {
+      backgroundColor: '#2A1A0F', // TODO(task 04 token-define): destructiveBg 토큰으로 교체
+      borderWidth: 1,
+      borderColor: colors.accentPrimary,
+      borderRadius: 10,
+      padding: 14,
+      marginBottom: 24,
+    },
+    subscriptionBannerText: {
+      color: colors.accentPrimary,
+      fontSize: 14,
+      fontWeight: '600',
+      marginBottom: 6,
+    },
+    subscriptionBannerLink: {
+      color: colors.accentPrimary,
+      fontSize: 13,
+      textDecorationLine: 'underline',
+    },
+
+    // 섹션
+    section: {
+      marginBottom: 24,
+    },
+    sectionTitle: {
+      color: '#F5F5F5', // TODO(task 04 token-define): textHighlight 토큰으로 교체
+      fontSize: 16,
+      fontWeight: '600',
+      marginBottom: 4,
+    },
+    sectionSubtitle: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      marginBottom: 16,
+    },
+
+    // 탈퇴 사유 라디오
+    reasonRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+    },
+    radio: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      borderWidth: 2,
+      borderColor: '#4A4E68', // TODO(task 04 token-define): textMuted 토큰으로 교체
+      marginRight: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    radioSelected: {
+      borderColor: colors.accentPrimary,
+    },
+    radioDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: colors.accentPrimary,
+    },
+    reasonLabel: {
+      color: '#E0E2F0', // TODO(task 04 token-define): textBodyHigh 토큰으로 교체
+      fontSize: 15,
+    },
+
+    // 하단 버튼
+    footer: {
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderTopWidth: 1,
+      borderTopColor: colors.surface,
+    },
+    nextBtn: {
+      backgroundColor: '#4A6FFF', // TODO(task 04 token-define): interactive 토큰으로 교체
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: 'center',
+    },
+    nextBtnText: {
+      color: '#FFFFFF', // TODO(task 04 token-define): textOnAccent 토큰으로 교체
+      fontSize: 16,
+      fontWeight: '700',
+    },
+
+    // 모달 오버레이
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: colors.overlay,
+      justifyContent: 'flex-end',
+    },
+    modalSheet: {
+      backgroundColor: colors.bgDeep,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      paddingHorizontal: 24,
+      paddingTop: 28,
+      paddingBottom: 40,
+    },
+    modalTitle: {
+      color: '#F5F5F5', // TODO(task 04 token-define): textHighlight 토큰으로 교체
+      fontSize: 20,
+      fontWeight: '700',
+      textAlign: 'center',
+      marginBottom: 12,
+    },
+    modalSubtitle: {
+      color: '#B0B4CC', // TODO(task 04 token-define): textBodyMuted 토큰으로 교체
+      fontSize: 14,
+      textAlign: 'center',
+      lineHeight: 20,
+      marginBottom: 20,
+    },
+    deleteItemList: {
+      backgroundColor: colors.surface,
+      borderRadius: 10,
+      padding: 16,
+      marginBottom: 16,
+      gap: 8,
+    },
+    deleteItem: {
+      color: '#E0E2F0', // TODO(task 04 token-define): textBodyHigh 토큰으로 교체
+      fontSize: 14,
+      lineHeight: 22,
+    },
+    irreversibleText: {
+      color: colors.destructive,
+      fontSize: 13,
+      textAlign: 'center',
+      marginBottom: 24,
+    },
+
+    // 탈퇴 확인 버튼
+    confirmDeleteBtn: {
+      backgroundColor: colors.destructive,
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: 'center',
+      marginBottom: 14,
+    },
+    confirmDeleteBtnDisabled: {
+      opacity: 0.6,
+    },
+    confirmDeleteText: {
+      color: '#FFFFFF', // TODO(task 04 token-define): textOnAccent 토큰으로 교체
+      fontSize: 16,
+      fontWeight: '700',
+    },
+
+    // 취소 버튼
+    cancelBtn: {
+      paddingVertical: 12,
+      alignItems: 'center',
+    },
+    cancelText: {
+      color: colors.textSecondary,
+      fontSize: 15,
+    },
+  })
+
 // ─── AccountDeletionScreen ────────────────────────────────────────────────────
 
 export default function AccountDeletionScreen() {
@@ -93,8 +302,13 @@ export default function AccountDeletionScreen() {
   const [isConfirmVisible, setIsConfirmVisible] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const { entitlement, clearAuthState } = useAuthStore()
-  const { clearAllTracks } = useGenerationStore()
+  const entitlement = useAuthStore((s) => s.entitlement)
+  const clearAuthState = useAuthStore((s) => s.clearAuthState)
+  const clearAllTracks = useGenerationStore((s) => s.clearAllTracks)
+
+  // useTheme — 색상 토큰 (§3.5 AccountDeletion 직접 적용)
+  const { colors } = useTheme()
+  const styles = useMemo(() => makeStyles(colors), [colors])
 
   // 구독 활성 여부 (클라이언트 사전 경고 — 서버 422도 반드시 처리)
   const hasActiveSubscription = entitlement === 'premium' || entitlement === 'trial'
@@ -155,332 +369,133 @@ export default function AccountDeletionScreen() {
   // ─── 렌더 ─────────────────────────────────────────────────────────────────
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* 헤더 */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backBtn}
-          onPress={() => navigation.goBack()}
-          accessibilityLabel="뒤로가기"
+    <SafeAreaView style={styles.safeArea}>
+      <View testID="account-deletion-container" style={styles.container}>
+        {/* 헤더 */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+            accessibilityLabel="뒤로가기"
+          >
+            <Text style={styles.backIcon}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>계정 탈퇴</Text>
+        </View>
+
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>계정 탈퇴</Text>
-      </View>
-
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* 구독 활성 배너 */}
-        {hasActiveSubscription && (
-          <View style={styles.subscriptionBanner}>
-            <Text style={styles.subscriptionBannerText}>
-              구독 취소 후 탈퇴 가능해요
-            </Text>
-            <TouchableOpacity
-              onPress={() => Linking.openURL(SUBSCRIPTION_MANAGE_URL)}
-              accessibilityLabel="앱스토어에서 구독 취소하기"
-            >
-              <Text style={styles.subscriptionBannerLink}>앱스토어에서 취소하기 →</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* 탈퇴 사유 선택 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>탈퇴 사유를 알려주세요</Text>
-          <Text style={styles.sectionSubtitle}>(선택사항이에요)</Text>
-
-          {DELETION_REASONS.map((reason) => (
-            <TouchableOpacity
-              key={reason.key}
-              style={styles.reasonRow}
-              onPress={() =>
-                setSelectedReason(selectedReason === reason.key ? null : reason.key)
-              }
-              accessibilityLabel={reason.label}
-              accessibilityState={{ selected: selectedReason === reason.key }}
-            >
-              <View
-                style={[
-                  styles.radio,
-                  selectedReason === reason.key && styles.radioSelected,
-                ]}
+          {/* 구독 활성 배너 */}
+          {hasActiveSubscription && (
+            <View style={styles.subscriptionBanner}>
+              <Text style={styles.subscriptionBannerText}>
+                구독 취소 후 탈퇴 가능해요
+              </Text>
+              <TouchableOpacity
+                onPress={() => Linking.openURL(SUBSCRIPTION_MANAGE_URL)}
+                accessibilityLabel="앱스토어에서 구독 취소하기"
               >
-                {selectedReason === reason.key && (
-                  <View style={styles.radioDot} />
-                )}
-              </View>
-              <Text style={styles.reasonLabel}>{reason.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </ScrollView>
-
-      {/* 다음으로 버튼 — 항상 활성 */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.nextBtn}
-          onPress={() => setIsConfirmVisible(true)}
-          accessibilityLabel="다음으로"
-        >
-          <Text style={styles.nextBtnText}>다음으로</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Step 2 — 최종 확인 바텀 시트 */}
-      <Modal
-        visible={isConfirmVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setIsConfirmVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalSheet}>
-            <Text style={styles.modalTitle}>정말 탈퇴하시겠어요?</Text>
-            <Text style={styles.modalSubtitle}>
-              탈퇴하면 아래 데이터가{'\n'}모두 삭제돼요
-            </Text>
-
-            <View style={styles.deleteItemList}>
-              <Text style={styles.deleteItem}>• 내 목소리 샘플</Text>
-              <Text style={styles.deleteItem}>• 자장가 음원 전체</Text>
-              <Text style={styles.deleteItem}>• 계정 정보</Text>
+                <Text style={styles.subscriptionBannerLink}>앱스토어에서 취소하기 →</Text>
+              </TouchableOpacity>
             </View>
+          )}
 
-            <Text style={styles.irreversibleText}>되돌릴 수 없어요</Text>
+          {/* 탈퇴 사유 선택 */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>탈퇴 사유를 알려주세요</Text>
+            <Text style={styles.sectionSubtitle}>(선택사항이에요)</Text>
 
-            {/* 탈퇴 확인 버튼 */}
-            <TouchableOpacity
-              style={[styles.confirmDeleteBtn, isDeleting && styles.confirmDeleteBtnDisabled]}
-              onPress={handleConfirmDeletion}
-              disabled={isDeleting}
-              accessibilityLabel="계정 탈퇴 확인"
-              accessibilityState={{ disabled: isDeleting }}
-            >
-              {isDeleting ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Text style={styles.confirmDeleteText}>네, 탈퇴할게요</Text>
-              )}
-            </TouchableOpacity>
-
-            {/* 취소 버튼 */}
-            <TouchableOpacity
-              style={styles.cancelBtn}
-              onPress={() => setIsConfirmVisible(false)}
-              disabled={isDeleting}
-              accessibilityLabel="탈퇴 취소"
-            >
-              <Text style={styles.cancelText}>아니요, 유지할게요</Text>
-            </TouchableOpacity>
+            {DELETION_REASONS.map((reason) => (
+              <TouchableOpacity
+                key={reason.key}
+                style={styles.reasonRow}
+                onPress={() =>
+                  setSelectedReason(selectedReason === reason.key ? null : reason.key)
+                }
+                accessibilityLabel={reason.label}
+                accessibilityState={{ selected: selectedReason === reason.key }}
+              >
+                <View
+                  style={[
+                    styles.radio,
+                    selectedReason === reason.key && styles.radioSelected,
+                  ]}
+                >
+                  {selectedReason === reason.key && (
+                    <View style={styles.radioDot} />
+                  )}
+                </View>
+                <Text style={styles.reasonLabel}>{reason.label}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
+        </ScrollView>
+
+        {/* 다음으로 버튼 — 항상 활성 */}
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={styles.nextBtn}
+            onPress={() => setIsConfirmVisible(true)}
+            accessibilityLabel="다음으로"
+          >
+            <Text style={styles.nextBtnText}>다음으로</Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
+
+        {/* Step 2 — 최종 확인 바텀 시트 */}
+        <Modal
+          visible={isConfirmVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setIsConfirmVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalSheet}>
+              <Text style={styles.modalTitle}>정말 탈퇴하시겠어요?</Text>
+              <Text style={styles.modalSubtitle}>
+                탈퇴하면 아래 데이터가{'\n'}모두 삭제돼요
+              </Text>
+
+              <View style={styles.deleteItemList}>
+                <Text style={styles.deleteItem}>• 내 목소리 샘플</Text>
+                <Text style={styles.deleteItem}>• 자장가 음원 전체</Text>
+                <Text style={styles.deleteItem}>• 계정 정보</Text>
+              </View>
+
+              <Text style={styles.irreversibleText}>되돌릴 수 없어요</Text>
+
+              {/* 탈퇴 확인 버튼 */}
+              <TouchableOpacity
+                testID="confirm-delete-btn"
+                style={[styles.confirmDeleteBtn, isDeleting && styles.confirmDeleteBtnDisabled]}
+                onPress={handleConfirmDeletion}
+                disabled={isDeleting}
+                accessibilityLabel="계정 탈퇴 확인"
+                accessibilityState={{ disabled: isDeleting }}
+              >
+                {isDeleting ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" /* TODO(task 04): textOnAccent */ />
+                ) : (
+                  <Text style={styles.confirmDeleteText}>네, 탈퇴할게요</Text>
+                )}
+              </TouchableOpacity>
+
+              {/* 취소 버튼 */}
+              <TouchableOpacity
+                style={styles.cancelBtn}
+                onPress={() => setIsConfirmVisible(false)}
+                disabled={isDeleting}
+                accessibilityLabel="탈퇴 취소"
+              >
+                <Text style={styles.cancelText}>아니요, 유지할게요</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </View>
     </SafeAreaView>
   )
 }
-
-// ─── 스타일 ───────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0D0F1A',
-  },
-
-  // 헤더
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1A1D35',
-  },
-  backBtn: {
-    marginRight: 12,
-    padding: 4,
-  },
-  backIcon: {
-    color: '#F5F5F5',
-    fontSize: 20,
-  },
-  headerTitle: {
-    color: '#F5F5F5',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-
-  // 스크롤
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 40,
-  },
-
-  // 구독 활성 배너
-  subscriptionBanner: {
-    backgroundColor: '#2A1A0F',
-    borderWidth: 1,
-    borderColor: '#5A7AA8',
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 24,
-  },
-  subscriptionBannerText: {
-    color: '#5A7AA8',
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 6,
-  },
-  subscriptionBannerLink: {
-    color: '#5A7AA8',
-    fontSize: 13,
-    textDecorationLine: 'underline',
-  },
-
-  // 섹션
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    color: '#F5F5F5',
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  sectionSubtitle: {
-    color: '#7B80A0',
-    fontSize: 13,
-    marginBottom: 16,
-  },
-
-  // 탈퇴 사유 라디오
-  reasonRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  radio: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#4A4E68',
-    marginRight: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioSelected: {
-    borderColor: '#5A7AA8',
-  },
-  radioDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#5A7AA8',
-  },
-  reasonLabel: {
-    color: '#E0E2F0',
-    fontSize: 15,
-  },
-
-  // 하단 버튼
-  footer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#1A1D35',
-  },
-  nextBtn: {
-    backgroundColor: '#4A6FFF',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  nextBtnText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-
-  // 모달 오버레이
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'flex-end',
-  },
-  modalSheet: {
-    backgroundColor: '#12152B',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingHorizontal: 24,
-    paddingTop: 28,
-    paddingBottom: 40,
-  },
-  modalTitle: {
-    color: '#F5F5F5',
-    fontSize: 20,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  modalSubtitle: {
-    color: '#B0B4CC',
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 20,
-  },
-  deleteItemList: {
-    backgroundColor: '#1A1D35',
-    borderRadius: 10,
-    padding: 16,
-    marginBottom: 16,
-    gap: 8,
-  },
-  deleteItem: {
-    color: '#E0E2F0',
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  irreversibleText: {
-    color: '#FF6B6B',
-    fontSize: 13,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-
-  // 탈퇴 확인 버튼
-  confirmDeleteBtn: {
-    backgroundColor: '#FF6B6B',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginBottom: 14,
-  },
-  confirmDeleteBtnDisabled: {
-    opacity: 0.6,
-  },
-  confirmDeleteText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-
-  // 취소 버튼
-  cancelBtn: {
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  cancelText: {
-    color: '#7B80A0',
-    fontSize: 15,
-  },
-})

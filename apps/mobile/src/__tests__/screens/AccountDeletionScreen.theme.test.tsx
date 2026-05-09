@@ -200,17 +200,17 @@ describe('REQ-008 — AccountDeletionScreen destructive 색상 (confirmDeleteBtn
     });
 
     it('confirm-delete-btn testID 를 가진 뷰가 렌더된다 — 모달 열기 후 (engineer 가 testID 추가해야 통과)', () => {
-      const { getByAccessibilityLabel, getByTestId } = render(<AccountDeletionScreen />);
+      const { getByLabelText, getByTestId } = render(<AccountDeletionScreen />);
       // "다음으로" 버튼 press → Modal visible=true → confirmDeleteBtn 노출
-      fireEvent.press(getByAccessibilityLabel('다음으로'));
+      fireEvent.press(getByLabelText('다음으로'));
       // engineer impl 전: testID 없어 ElementNotFoundError → RED
       // engineer impl 후: confirmDeleteBtn 에 testID="confirm-delete-btn" 추가 → GREEN
       expect(getByTestId('confirm-delete-btn')).toBeTruthy();
     });
 
     it('다크 모드에서 confirm-delete-btn backgroundColor 가 darkColors.destructive 와 같다', () => {
-      const { getByAccessibilityLabel, getByTestId } = render(<AccountDeletionScreen />);
-      fireEvent.press(getByAccessibilityLabel('다음으로'));
+      const { getByLabelText, getByTestId } = render(<AccountDeletionScreen />);
+      fireEvent.press(getByLabelText('다음으로'));
       const btnStyle = flattenStyle(getByTestId('confirm-delete-btn').props.style);
       // engineer impl 전: '#FF6B6B' 직박 → darkColors.destructive('#E85A5A') 아님 → RED
       // engineer impl 후: colors.destructive → darkColors.destructive === '#E85A5A' → GREEN
@@ -218,15 +218,15 @@ describe('REQ-008 — AccountDeletionScreen destructive 색상 (confirmDeleteBtn
     });
 
     it('다크 모드에서 confirm-delete-btn backgroundColor 값이 "#E85A5A" 이다', () => {
-      const { getByAccessibilityLabel, getByTestId } = render(<AccountDeletionScreen />);
-      fireEvent.press(getByAccessibilityLabel('다음으로'));
+      const { getByLabelText, getByTestId } = render(<AccountDeletionScreen />);
+      fireEvent.press(getByLabelText('다음으로'));
       const btnStyle = flattenStyle(getByTestId('confirm-delete-btn').props.style);
       expect(btnStyle.backgroundColor).toBe('#E85A5A');
     });
 
     it('다크 모드에서 "되돌릴 수 없어요" 텍스트의 color 가 darkColors.destructive 와 같다', () => {
-      const { getByAccessibilityLabel, getByText } = render(<AccountDeletionScreen />);
-      fireEvent.press(getByAccessibilityLabel('다음으로'));
+      const { getByLabelText, getByText } = render(<AccountDeletionScreen />);
+      fireEvent.press(getByLabelText('다음으로'));
       const textStyle = flattenStyle(getByText('되돌릴 수 없어요').props.style);
       // engineer impl 전: '#FF6B6B' 직박 → darkColors.destructive('#E85A5A') 아님 → RED
       // engineer impl 후: colors.destructive → darkColors.destructive === '#E85A5A' → GREEN
@@ -240,8 +240,8 @@ describe('REQ-008 — AccountDeletionScreen destructive 색상 (confirmDeleteBtn
     });
 
     it('라이트 모드에서 confirm-delete-btn backgroundColor 가 lightColors.destructive 와 같다', () => {
-      const { getByAccessibilityLabel, getByTestId } = render(<AccountDeletionScreen />);
-      fireEvent.press(getByAccessibilityLabel('다음으로'));
+      const { getByLabelText, getByTestId } = render(<AccountDeletionScreen />);
+      fireEvent.press(getByLabelText('다음으로'));
       const btnStyle = flattenStyle(getByTestId('confirm-delete-btn').props.style);
       // engineer impl 전: '#FF6B6B' 고정 → lightColors.destructive('#C0392B') 아님 → RED (핵심 RED)
       // engineer impl 후: colors.destructive → lightColors.destructive === '#C0392B' → GREEN
@@ -249,15 +249,15 @@ describe('REQ-008 — AccountDeletionScreen destructive 색상 (confirmDeleteBtn
     });
 
     it('라이트 모드에서 confirm-delete-btn backgroundColor 값이 "#C0392B" 이다', () => {
-      const { getByAccessibilityLabel, getByTestId } = render(<AccountDeletionScreen />);
-      fireEvent.press(getByAccessibilityLabel('다음으로'));
+      const { getByLabelText, getByTestId } = render(<AccountDeletionScreen />);
+      fireEvent.press(getByLabelText('다음으로'));
       const btnStyle = flattenStyle(getByTestId('confirm-delete-btn').props.style);
       expect(btnStyle.backgroundColor).toBe('#C0392B');
     });
 
     it('라이트 모드에서 "되돌릴 수 없어요" 텍스트 color 가 lightColors.destructive 와 같다', () => {
-      const { getByAccessibilityLabel, getByText } = render(<AccountDeletionScreen />);
-      fireEvent.press(getByAccessibilityLabel('다음으로'));
+      const { getByLabelText, getByText } = render(<AccountDeletionScreen />);
+      fireEvent.press(getByLabelText('다음으로'));
       const textStyle = flattenStyle(getByText('되돌릴 수 없어요').props.style);
       // engineer impl 전: '#FF6B6B' 고정 → lightColors.destructive('#C0392B') 아님 → RED
       // engineer impl 후: colors.destructive → lightColors.destructive === '#C0392B' → GREEN
@@ -265,8 +265,8 @@ describe('REQ-008 — AccountDeletionScreen destructive 색상 (confirmDeleteBtn
     });
 
     it('라이트 모드 confirm-delete-btn backgroundColor 가 다크 destructive 와 다르다 (hex 고정 회귀 방지)', () => {
-      const { getByAccessibilityLabel, getByTestId } = render(<AccountDeletionScreen />);
-      fireEvent.press(getByAccessibilityLabel('다음으로'));
+      const { getByLabelText, getByTestId } = render(<AccountDeletionScreen />);
+      fireEvent.press(getByLabelText('다음으로'));
       const btnStyle = flattenStyle(getByTestId('confirm-delete-btn').props.style);
       expect(btnStyle.backgroundColor).not.toBe(darkColors.destructive);
     });
