@@ -133,13 +133,16 @@ const mockClearAllTracks = jest.fn()
 function setupMocks({
   entitlement = 'free' as 'free' | 'trial' | 'premium' | null,
 } = {}) {
-  jest.mocked(useAuthStore).mockReturnValue({
-    entitlement,
-    clearAuthState: mockClearAuthState,
-  } as any)
-  jest.mocked(useGenerationStore).mockReturnValue({
-    clearAllTracks: mockClearAllTracks,
-  } as any)
+  const authState = { entitlement, clearAuthState: mockClearAuthState }
+  jest.mocked(useAuthStore).mockImplementation(
+    (selector?: (s: typeof authState) => unknown) =>
+      (selector ? selector(authState) : authState) as ReturnType<typeof useAuthStore>
+  )
+  const genState = { clearAllTracks: mockClearAllTracks }
+  jest.mocked(useGenerationStore).mockImplementation(
+    (selector?: (s: typeof genState) => unknown) =>
+      (selector ? selector(genState) : genState) as ReturnType<typeof useGenerationStore>
+  )
 }
 
 // ──────────────────────────────────────────────────────────────────────────────

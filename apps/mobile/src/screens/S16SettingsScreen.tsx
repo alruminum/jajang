@@ -18,7 +18,7 @@
  * - navigation.navigate('AccountDeletionFlow') — 계정 탈퇴 (impl/04)
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -32,8 +32,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 
-import { useAuthStore, useThemeStore } from '@store';
-import type { ThemePref } from '@store';
+import { useAuthStore } from '@store';
+import { useThemeStore } from '@store/theme-store';
+import type { ThemePref } from '@store/theme-store';
 import { getManagementURL, revenueCatLogout } from '@services/revenue-cat';
 import {
   getVoiceSampleStatus,
@@ -44,10 +45,197 @@ import { useGenerationStore } from '@store/generationSlice';
 import { DeleteTracksSheet } from '@components/DeleteTracksSheet';
 import { showConfirmDialog } from '@utils/dialog';
 import { showToast } from '@utils/toast';
+import { useTheme } from '@hooks/useTheme';
+import type { ColorTokens } from '../theme/tokens';
 
 // ─── 상수 ─────────────────────────────────────────────────────────────────────
 
 const APP_VERSION = '1.0.0';
+
+// ─── makeStyles factory ───────────────────────────────────────────────────────
+
+const makeStyles = (colors: ColorTokens) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.bgPrimary,
+    },
+    container: {
+      flex: 1,
+      backgroundColor: colors.bgPrimary,
+    },
+
+    // 헤더
+    header: {
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.surface,
+    },
+    headerTitle: {
+      color: '#F5F5F5', // TODO(task 04 token-define): textHighlight 토큰으로 교체
+      fontSize: 18,
+      fontWeight: '700',
+    },
+
+    // 스크롤
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingBottom: 40,
+    },
+
+    // 계정 행
+    accountRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+    },
+    accountIcon: {
+      fontSize: 20,
+      marginRight: 10,
+    },
+    accountId: {
+      flex: 1,
+      color: '#F5F5F5', // TODO(task 04 token-define): textHighlight 토큰으로 교체
+      fontSize: 14,
+      marginRight: 8,
+    },
+
+    // 배지
+    badge: {
+      borderRadius: 10,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    badgePremium: {
+      backgroundColor: '#4A6FFF', // TODO(task 04 token-define): interactive 토큰으로 교체
+    },
+    badgeTrial: {
+      backgroundColor: colors.accentPrimary,
+    },
+    badgeText: {
+      fontSize: 11,
+      fontWeight: '700',
+    },
+    badgeTextLight: {
+      color: '#FFFFFF', // TODO(task 04 token-define): textOnAccent 토큰으로 교체
+    },
+    badgeTextDark: {
+      color: colors.bgDeep,
+    },
+
+    // 구분선
+    divider: {
+      height: 1,
+      backgroundColor: colors.surface,
+      marginVertical: 4,
+    },
+
+    // 설정 행
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      minHeight: 52,
+    },
+    rowDisabled: {
+      opacity: 0.4,
+    },
+    rowLabel: {
+      color: '#E0E2F0', // TODO(task 04 token-define): textBodyHigh 토큰으로 교체
+      fontSize: 15,
+    },
+    rowLabelHighlighted: {
+      color: colors.accentPrimary,
+      fontWeight: '600',
+    },
+    rowLabelDestructive: {
+      color: colors.destructive,
+    },
+    rowLabelMuted: {
+      color: '#4A4E68', // TODO(task 04 token-define): textMuted 토큰으로 교체
+    },
+    rowSubLabel: {
+      color: '#4A4E68', // TODO(task 04 token-define): textMuted 토큰으로 교체
+      fontSize: 13,
+    },
+    rowChevron: {
+      color: '#4A4E68', // TODO(task 04 token-define): textMuted 토큰으로 교체
+      fontSize: 18,
+    },
+
+    // 버전
+    version: {
+      color: '#4A4E68', // TODO(task 04 token-define): textMuted 토큰으로 교체
+      fontSize: 12,
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+    },
+
+    // 테마 섹션
+    themeSectionHeader: {
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      paddingBottom: 8,
+    },
+    themeSectionTitle: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    themeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 14,
+      gap: 12,
+      minHeight: 48,
+    },
+    themeRowLabel: {
+      color: '#E0E2F0', // TODO(task 04 token-define): textBodyHigh 토큰으로 교체
+      fontSize: 15,
+    },
+    radioOuter: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      borderWidth: 2,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    radioOuterSelected: {
+      borderColor: colors.accentPrimary,
+    },
+    radioInner: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: colors.accentPrimary,
+    },
+
+    // 로그아웃 버튼
+    logoutBtn: {
+      marginHorizontal: 20,
+      marginTop: 8,
+      paddingVertical: 14,
+      alignItems: 'center',
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    logoutText: {
+      color: colors.textSecondary,
+      fontSize: 15,
+    },
+  });
 
 // ─── SettingsRow 컴포넌트 ─────────────────────────────────────────────────────
 
@@ -59,6 +247,8 @@ interface SettingsRowProps {
   destructive?: boolean;   // 빨간 텍스트 (계정 탈퇴)
   isLoading?: boolean;     // 인라인 스피너 (삭제 진행 중)
   disabled?: boolean;
+  styles: ReturnType<typeof makeStyles>;
+  colors: ColorTokens;
 }
 
 function SettingsRow({
@@ -69,6 +259,8 @@ function SettingsRow({
   destructive = false,
   isLoading = false,
   disabled = false,
+  styles,
+  colors,
 }: SettingsRowProps) {
   const isDisabled = disabled || isLoading;
 
@@ -90,7 +282,7 @@ function SettingsRow({
         {label}
       </Text>
       {isLoading ? (
-        <ActivityIndicator size="small" color="#7B80A0" />
+        <ActivityIndicator size="small" color={colors.textSecondary} />
       ) : (
         <Text style={styles.rowChevron}>›</Text>
       )}
@@ -100,7 +292,7 @@ function SettingsRow({
 
 // ─── Divider ──────────────────────────────────────────────────────────────────
 
-function Divider() {
+function Divider({ styles }: { styles: ReturnType<typeof makeStyles> }) {
   return <View style={styles.divider} />;
 }
 
@@ -108,10 +300,14 @@ function Divider() {
 
 interface SubscriptionSectionProps {
   navigation: NavigationProp<ParamListBase>;
+  styles: ReturnType<typeof makeStyles>;
+  colors: ColorTokens;
 }
 
-function SubscriptionSection({ navigation }: SubscriptionSectionProps) {
-  const { entitlement, trialExpiresAt, email } = useAuthStore();
+function SubscriptionSection({ navigation, styles, colors }: SubscriptionSectionProps) {
+  const email = useAuthStore((s) => s.email);
+  const entitlement = useAuthStore((s) => s.entitlement);
+  const trialExpiresAt = useAuthStore((s) => s.trialExpiresAt);
 
   // 배지 텍스트 결정
   const badgeText = (() => {
@@ -161,7 +357,7 @@ function SubscriptionSection({ navigation }: SubscriptionSectionProps) {
         )}
       </View>
 
-      <Divider />
+      <Divider styles={styles} />
 
       {/* 구독 관리: Premium/Trial 유저에게만 노출 */}
       {entitlement !== 'free' && entitlement !== null && (
@@ -169,6 +365,8 @@ function SubscriptionSection({ navigation }: SubscriptionSectionProps) {
           label="구독 관리"
           onPress={handleManageSubscription}
           accessibilityLabel="구독 관리 — 앱스토어에서 변경"
+          styles={styles}
+          colors={colors}
         />
       )}
 
@@ -179,6 +377,8 @@ function SubscriptionSection({ navigation }: SubscriptionSectionProps) {
           onPress={() => navigation.navigate('Subscribe', { source: 'settings' })}
           highlighted={entitlement === 'free' || entitlement === null}
           accessibilityLabel="플랜 업그레이드"
+          styles={styles}
+          colors={colors}
         />
       )}
     </View>
@@ -193,7 +393,11 @@ const THEME_OPTIONS: { label: string; value: ThemePref }[] = [
   { label: '라이트 모드', value: 'light' },
 ];
 
-function ThemeSection() {
+interface ThemeSectionProps {
+  styles: ReturnType<typeof makeStyles>;
+}
+
+function ThemeSection({ styles }: ThemeSectionProps) {
   const pref = useThemeStore((s) => s.pref);
   const setPref = useThemeStore((s) => s.setPref);
 
@@ -217,7 +421,9 @@ function ThemeSection() {
               pref === opt.value && styles.radioOuterSelected,
             ]}
           >
-            {pref === opt.value && <View style={styles.radioInner} />}
+            {pref === opt.value && (
+              <View testID="s16-radio-inner" style={styles.radioInner} />
+            )}
           </View>
           <Text style={styles.themeRowLabel}>{opt.label}</Text>
         </TouchableOpacity>
@@ -237,6 +443,10 @@ export default function S16SettingsScreen({ navigation }: S16SettingsScreenProps
   const [isSampleDeleting, setIsSampleDeleting] = useState(false);
   const [isTracksSheetOpen, setIsTracksSheetOpen] = useState(false);
   const tracks = useGenerationStore((s) => s.tracks);
+
+  // useTheme — 색상 토큰 (기존 useThemeStore 와 별도, §3.5)
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   // ─── 진입 시 샘플 상태 조회 ───────────────────────────────────────────────
 
@@ -302,281 +512,115 @@ export default function S16SettingsScreen({ navigation }: S16SettingsScreenProps
   const hasSampleDeleted = sampleStatus !== null && sampleStatus.hasSample === false;
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* 헤더 */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>설정</Text>
-      </View>
+    <SafeAreaView style={styles.safeArea}>
+      <View testID="s16-container" style={styles.container}>
+        {/* 헤더 */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>설정</Text>
+        </View>
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* 계정 + 구독 섹션 */}
-        <SubscriptionSection navigation={navigation} />
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* 계정 + 구독 섹션 */}
+          <SubscriptionSection navigation={navigation} styles={styles} colors={colors} />
 
-        <Divider />
+          <Divider styles={styles} />
 
-        {/* 알림 */}
-        <SettingsRow
-          label="알림 설정"
-          onPress={() => Linking.openSettings()}
-          accessibilityLabel="알림 설정"
-        />
-
-        <Divider />
-
-        {/* 테마 */}
-        <ThemeSection />
-
-        <Divider />
-
-        {/* 데이터 관리 */}
-        {hasSampleDeleted ? (
-          /* 이미 삭제됨 — 비활성 상태 */
-          <View style={styles.row}>
-            <Text style={[styles.rowLabel, styles.rowLabelMuted]}>목소리 샘플 삭제</Text>
-            <Text style={styles.rowSubLabel}>이미 삭제되었어요</Text>
-          </View>
-        ) : (
+          {/* 알림 */}
           <SettingsRow
-            label="목소리 샘플 삭제"
-            onPress={handleDeleteVoiceSample}
-            isLoading={isSampleDeleting}
-            accessibilityLabel="목소리 샘플 삭제"
+            label="알림 설정"
+            onPress={() => Linking.openSettings()}
+            accessibilityLabel="알림 설정"
+            styles={styles}
+            colors={colors}
+          />
+
+          <Divider styles={styles} />
+
+          {/* 테마 */}
+          <ThemeSection styles={styles} />
+
+          <Divider styles={styles} />
+
+          {/* 데이터 관리 */}
+          {hasSampleDeleted ? (
+            /* 이미 삭제됨 — 비활성 상태 */
+            <View style={styles.row}>
+              <Text style={[styles.rowLabel, styles.rowLabelMuted]}>목소리 샘플 삭제</Text>
+              <Text style={styles.rowSubLabel}>이미 삭제되었어요</Text>
+            </View>
+          ) : (
+            <SettingsRow
+              label="목소리 샘플 삭제"
+              onPress={handleDeleteVoiceSample}
+              isLoading={isSampleDeleting}
+              accessibilityLabel="목소리 샘플 삭제"
+              styles={styles}
+              colors={colors}
+            />
+          )}
+
+          <SettingsRow
+            label="생성 음원 삭제"
+            onPress={() => setIsTracksSheetOpen(true)}
+            disabled={tracks.length === 0}
+            accessibilityLabel="생성 음원 삭제"
+            styles={styles}
+            colors={colors}
+          />
+
+          <SettingsRow
+            label="계정 탈퇴"
+            onPress={handleDeleteAccount}
+            destructive
+            accessibilityLabel="계정 탈퇴"
+            styles={styles}
+            colors={colors}
+          />
+
+          <Divider styles={styles} />
+
+          {/* 법적 */}
+          <SettingsRow
+            label="개인정보처리방침"
+            onPress={() => navigation.navigate('Legal')}
+            accessibilityLabel="개인정보처리방침"
+            styles={styles}
+            colors={colors}
+          />
+          <SettingsRow
+            label="이용약관"
+            onPress={() => navigation.navigate('Legal')}
+            accessibilityLabel="이용약관"
+            styles={styles}
+            colors={colors}
+          />
+
+          <Text style={styles.version}>버전 {APP_VERSION}</Text>
+
+          <Divider styles={styles} />
+
+          {/* 로그아웃 */}
+          <TouchableOpacity
+            style={styles.logoutBtn}
+            onPress={handleLogout}
+            accessibilityLabel="로그아웃"
+          >
+            <Text style={styles.logoutText}>로그아웃</Text>
+          </TouchableOpacity>
+        </ScrollView>
+
+        {/* 생성 음원 삭제 시트 */}
+        {isTracksSheetOpen && (
+          <DeleteTracksSheet
+            tracks={tracks}
+            onClose={() => setIsTracksSheetOpen(false)}
           />
         )}
-
-        <SettingsRow
-          label="생성 음원 삭제"
-          onPress={() => setIsTracksSheetOpen(true)}
-          disabled={tracks.length === 0}
-          accessibilityLabel="생성 음원 삭제"
-        />
-
-        <SettingsRow
-          label="계정 탈퇴"
-          onPress={handleDeleteAccount}
-          destructive
-          accessibilityLabel="계정 탈퇴"
-        />
-
-        <Divider />
-
-        {/* 법적 */}
-        <SettingsRow
-          label="개인정보처리방침"
-          onPress={() => navigation.navigate('Legal')}
-          accessibilityLabel="개인정보처리방침"
-        />
-        <SettingsRow
-          label="이용약관"
-          onPress={() => navigation.navigate('Legal')}
-          accessibilityLabel="이용약관"
-        />
-
-        <Text style={styles.version}>버전 {APP_VERSION}</Text>
-
-        <Divider />
-
-        {/* 로그아웃 */}
-        <TouchableOpacity
-          style={styles.logoutBtn}
-          onPress={handleLogout}
-          accessibilityLabel="로그아웃"
-        >
-          <Text style={styles.logoutText}>로그아웃</Text>
-        </TouchableOpacity>
-      </ScrollView>
-
-      {/* 생성 음원 삭제 시트 */}
-      {isTracksSheetOpen && (
-        <DeleteTracksSheet
-          tracks={tracks}
-          onClose={() => setIsTracksSheetOpen(false)}
-        />
-      )}
+      </View>
     </SafeAreaView>
   );
 }
-
-// ─── 스타일 ───────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0D0F1A',
-  },
-
-  // 헤더
-  header: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1A1D35',
-  },
-  headerTitle: {
-    color: '#F5F5F5',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-
-  // 스크롤
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 40,
-  },
-
-  // 계정 행
-  accountRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  accountIcon: {
-    fontSize: 20,
-    marginRight: 10,
-  },
-  accountId: {
-    flex: 1,
-    color: '#F5F5F5',
-    fontSize: 14,
-    marginRight: 8,
-  },
-
-  // 배지
-  badge: {
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  badgePremium: {
-    backgroundColor: '#4A6FFF',
-  },
-  badgeTrial: {
-    backgroundColor: '#5A7AA8',
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  badgeTextLight: {
-    color: '#FFFFFF',
-  },
-  badgeTextDark: {
-    color: '#12152B',
-  },
-
-  // 구분선
-  divider: {
-    height: 1,
-    backgroundColor: '#1A1D35',
-    marginVertical: 4,
-  },
-
-  // 설정 행
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    minHeight: 52,
-  },
-  rowDisabled: {
-    opacity: 0.4,
-  },
-  rowLabel: {
-    color: '#E0E2F0',
-    fontSize: 15,
-  },
-  rowLabelHighlighted: {
-    color: '#5A7AA8',
-    fontWeight: '600',
-  },
-  rowLabelDestructive: {
-    color: '#FF5C5C',
-  },
-  rowLabelMuted: {
-    color: '#4A4E68',
-  },
-  rowSubLabel: {
-    color: '#4A4E68',
-    fontSize: 13,
-  },
-  rowChevron: {
-    color: '#4A4E68',
-    fontSize: 18,
-  },
-
-  // 버전
-  version: {
-    color: '#4A4E68',
-    fontSize: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-
-  // 테마 섹션
-  themeSectionHeader: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  themeSectionTitle: {
-    color: '#7B80A0',
-    fontSize: 13,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  themeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    gap: 12,
-    minHeight: 48,
-  },
-  themeRowLabel: {
-    color: '#E0E2F0',
-    fontSize: 15,
-  },
-  radioOuter: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#2A2E48',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioOuterSelected: {
-    borderColor: '#5A7AA8',
-  },
-  radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#5A7AA8',
-  },
-
-  // 로그아웃 버튼
-  logoutBtn: {
-    marginHorizontal: 20,
-    marginTop: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#2A2E48',
-  },
-  logoutText: {
-    color: '#7B80A0',
-    fontSize: 15,
-  },
-});
