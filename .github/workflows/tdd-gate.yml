@@ -12,3 +12,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: alruminum/dcNess/.github/actions/tdd-gate@main
+        with:
+          ignore_scripts: true
