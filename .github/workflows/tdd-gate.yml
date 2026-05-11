@@ -1,0 +1,14 @@
+name: tdd-gate
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+permissions:
+  contents: read
+jobs:
+  test:
+    name: TDD gate (full test suite)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: alruminum/dcNess/.github/actions/tdd-gate@main
