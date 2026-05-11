@@ -10,7 +10,7 @@ REQ-ML-05 — masters_service 단위 테스트 (TDD RED 단계)
   AC-5  cursor 깨진 ISO 문자열 → 422
   AC-7  다른 유저 master → 본 응답에 미포함
 
-의존성 패턴 (docs/architecture.md ERD 기반):
+의존성 패턴 (docs/ARCHITECTURE.md ERD 기반):
   - list_completed_masters: DB(AsyncSession) 의존.
       mock 정상 응답 / 빈 응답 / cursor 있을 때 3 케이스
   - has_pending_masters: DB(AsyncSession) 의존.
