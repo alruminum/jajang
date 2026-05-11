@@ -1,7 +1,7 @@
 // apps/mobile/src/screens/RecordScreen.tsx
 // S10 — 녹음 화면 (카운트다운 → 실시간 파형 → 1 loop 자동/수동 종료 → S11 이동)
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -23,7 +23,9 @@ import { useBgmPlayer } from '../hooks/useBgmPlayer';
 import { useRecordingStore } from '../store/recordingSlice';
 import { BGM_TRACKS } from '../data/bgmTracks';
 import { Typography } from '../theme/typography';
-import { darkColors, FontSize } from '../theme/tokens';
+import { FontSize } from '../theme/tokens';
+import type { ColorTokens } from '../theme/tokens';
+import { useTheme } from '@hooks/useTheme';
 import type { MainStackParamList } from '../navigation/types';
 
 const COUNTDOWN_START = 3;
@@ -72,11 +74,140 @@ const useAudioRecorderStateSafe =
     metering: undefined,
   }));
 
+const makeStyles = (colors: ColorTokens) =>
+  StyleSheet.create({
+    countdownContainer: {
+      flex: 1,
+      backgroundColor: colors.bgPrimary,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    countdownNumber: {
+      color: colors.accentPrimary,
+      fontSize: 96,
+      fontVariant: ['tabular-nums'],
+      fontFamily: 'NotoSansKR-Regular',
+    },
+    countdownLabel: { color: colors.textSecondary, fontSize: 16, marginTop: 12 },
+    cancelBtn: { position: 'absolute', top: 48, left: 20 },
+    container: {
+      flex: 1,
+      backgroundColor: colors.bgPrimary,
+      paddingHorizontal: 20,
+    },
+    topBar: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingTop: 20,
+      paddingBottom: 12,
+    },
+    cancelText: { color: colors.textSecondary, fontSize: 15 },
+    timer: {
+      ...Typography.timerMono,
+      fontSize: FontSize.xxl,
+      lineHeight: FontSize.xxl * 1.2,
+    },
+    recordingStatusLabel: {
+      ...Typography.caption,
+      textAlign: 'center',
+    },
+    bgmChip: {
+      color: colors.textBody, // §3.2.2 흡수 위험 등재 — A9B0D0 → textBody
+      fontSize: 13,
+      textAlign: 'center',
+      marginTop: 4,
+      marginBottom: 8,
+    },
+    bgmFailToast: {
+      color: '#E0B070', // TODO(task 09): #E0B070 → warning 토큰 정의 후 교체
+      fontSize: 13,
+      textAlign: 'center',
+      marginTop: 4,
+      marginBottom: 8,
+    },
+    encourageText: {
+      color: colors.accentSecondary,
+      fontSize: 13,
+      textAlign: 'center',
+      marginTop: 8,
+      marginBottom: 8,
+    },
+    waveformContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginVertical: 24,
+    },
+    silenceWarning: {
+      color: '#5A8A6A', // TODO(task 09): #5A8A6A → successMuted 토큰 정의 후 교체
+      fontSize: 14,
+      textAlign: 'center',
+      marginBottom: 8,
+    },
+    bottomRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 48,
+      paddingHorizontal: 20,
+    },
+    restartBtn: {
+      width: 80,
+      paddingVertical: 8,
+    },
+    restartText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      textAlign: 'left',
+    },
+    spacer: { width: 80 },
+    counterRow: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      paddingTop: 4,
+      paddingBottom: 4,
+    },
+    counterChip: {
+      backgroundColor: colors.surfaceHigh,
+      borderRadius: 20,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+    counterText: { color: colors.textSecondary, fontSize: 13 },
+    stopRing: {
+      width: 96,
+      height: 96,
+      borderRadius: 48,
+      borderWidth: 2,
+      borderColor: '#FF4444', // TODO(task 09): #FF4444 → recordStop 토큰 정의 후 교체
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    stopBtn: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      backgroundColor: '#FF4444', // TODO(task 09): 동일
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    stopIcon: {
+      width: 26,
+      height: 26,
+      backgroundColor: colors.textOnAccent, // task 04 신규 토큰 즉시 활용 (#fff → textOnAccent)
+      borderRadius: 4,
+    },
+  });
+
 export function RecordScreen() {
   const navigation = useNavigation<NavigationProp<MainStackParamList>>();
   const route = useRoute<RouteProp<MainStackParamList, 'Record'>>();
   const { setLocalAudioUri } = useRecordingStore();
   const { songKey } = route.params;
+
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const authState = useAuthStore() as unknown as {
     entitlement: 'free' | 'trial' | 'premium';
@@ -355,7 +486,7 @@ export function RecordScreen() {
       <Text style={styles.encourageText}>더 많이 녹음할수록 더 풍성해집니다</Text>
 
       <View style={styles.waveformContainer}>
-        <WaveformVisualizer mode="realtime" levels={levels} />
+        <WaveformVisualizer mode="realtime" levels={levels} color={colors.accentPrimary} />
       </View>
 
       {showSilenceWarning && (
@@ -388,128 +519,3 @@ export function RecordScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  countdownContainer: {
-    flex: 1,
-    backgroundColor: '#0D0F1A',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  countdownNumber: {
-    color: '#5A7AA8',
-    fontSize: 96,
-    fontVariant: ['tabular-nums'],
-    fontFamily: 'NotoSansKR-Regular',
-  },
-  countdownLabel: { color: '#7B80A0', fontSize: 16, marginTop: 12 },
-  cancelBtn: { position: 'absolute', top: 48, left: 20 },
-  container: {
-    flex: 1,
-    backgroundColor: '#0D0F1A',
-    paddingHorizontal: 20,
-  },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 20,
-    paddingBottom: 12,
-  },
-  cancelText: { color: '#7B80A0', fontSize: 15 },
-  timer: {
-    ...Typography.timerMono,
-    fontSize: FontSize.xxl,
-    lineHeight: FontSize.xxl * 1.2,
-  },
-  recordingStatusLabel: {
-    ...Typography.caption,
-    textAlign: 'center',
-  },
-  bgmChip: {
-    color: '#A9B0D0',
-    fontSize: 13,
-    textAlign: 'center',
-    marginTop: 4,
-    marginBottom: 8,
-  },
-  bgmFailToast: {
-    color: '#E0B070',
-    fontSize: 13,
-    textAlign: 'center',
-    marginTop: 4,
-    marginBottom: 8,
-  },
-  encourageText: {
-    color: darkColors.accentSecondary,
-    fontSize: 13,
-    textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  waveformContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 24,
-  },
-  silenceWarning: {
-    color: '#5A8A6A',
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  bottomRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 48,
-    paddingHorizontal: 20,
-  },
-  restartBtn: {
-    width: 80,
-    paddingVertical: 8,
-  },
-  restartText: {
-    color: '#7B80A0',
-    fontSize: 14,
-    textAlign: 'left',
-  },
-  spacer: { width: 80 },
-  counterRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingTop: 4,
-    paddingBottom: 4,
-  },
-  counterChip: {
-    backgroundColor: '#21253E',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  counterText: { color: '#7B80A0', fontSize: 13 },
-  stopRing: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    borderWidth: 2,
-    borderColor: '#FF4444',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stopBtn: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: '#FF4444',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stopIcon: {
-    width: 26,
-    height: 26,
-    backgroundColor: '#fff',
-    borderRadius: 4,
-  },
-});

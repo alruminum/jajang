@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -25,13 +25,87 @@ import { useTrialExpiredGuard } from '@hooks/useTrialExpiredGuard';
 import type { MasterItem } from '@services/api/masters';
 import { loadPendingSession, clearPendingSession } from '@services/storage/pendingSession';
 import { getSessionStatus } from '@services/api/sessions';
+import { useTheme } from '@hooks/useTheme';
+import type { ColorTokens } from '../theme/tokens';
 
 type NavProp = NativeStackNavigationProp<MainStackParamList>;
+
+const makeStyles = (colors: ColorTokens) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.bgPrimary },
+
+    header: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingTop: 20,
+      paddingBottom: 16,
+    },
+    greeting:    { color: colors.textSecondary, fontSize: 13, marginBottom: 4 },
+    headerTitle: { color: colors.textPrimary, fontSize: 24, fontWeight: '700' },
+
+    counterBadge: {
+      marginHorizontal: 20,
+      marginBottom: 8,
+      backgroundColor: colors.surface,
+      borderRadius: 8,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      alignSelf: 'flex-start',
+    },
+    counterText: { color: colors.textSecondary, fontSize: 13 },
+
+    pendingCard: {
+      marginHorizontal: 20,
+      marginBottom: 12,
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    pendingText: { color: colors.textSecondary, fontSize: 14 },
+
+    loadingWrap: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 60,
+    },
+
+    listContent: { flexGrow: 1, paddingBottom: 100 },
+    listContentWithMiniPlayer: { paddingBottom: 172 },
+
+    miniPlayerWrapper: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+    },
+
+    fab: {
+      position: 'absolute',
+      bottom: 32,
+      right: 24,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: colors.accentPrimary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      elevation: 4,
+    },
+    fabIcon: { color: colors.bgPrimary, fontSize: 28, lineHeight: 32 },
+  });
 
 export default function S06HomeScreen() {
   const navigation = useNavigation<NavProp>();
   const { entitlement } = useAuthStore();
   const { currentTrackId } = usePlayerStore();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   // 트라이얼 만료 감지 → S17 자동 진입
   useTrialExpiredGuard(navigation);
@@ -98,7 +172,7 @@ export default function S06HomeScreen() {
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>안녕하세요</Text>
-          <Text style={styles.headerTitle}>내 자장가</Text>
+          <Text testID="s06-header-title" style={styles.headerTitle}>내 자장가</Text>
         </View>
         <TrialBadge />
       </View>
@@ -136,14 +210,14 @@ export default function S06HomeScreen() {
   const ListEmptyComponent =
     isLoading && items.length === 0 ? (
       <View style={styles.loadingWrap}>
-        <ActivityIndicator color="#5A7AA8" />
+        <ActivityIndicator color={colors.accentPrimary} />
       </View>
     ) : (
       <EmptyMastersState onCta={() => navigation.navigate('SongSelect')} />
     );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView testID="s06-container" style={styles.container} edges={['top', 'left', 'right']}>
       {/* D-1 배너 (최상단) */}
       <TrialExpiryBanner />
 
@@ -164,6 +238,7 @@ export default function S06HomeScreen() {
 
       {/* FAB — 새 자장가 만들기 (항상 노출) */}
       <TouchableOpacity
+        testID="s06-fab"
         style={styles.fab}
         onPress={() => navigation.navigate('SongSelect')}
         accessibilityLabel="새 자장가 만들기"
@@ -180,72 +255,3 @@ export default function S06HomeScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0D0F1A' },
-
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 16,
-  },
-  greeting:    { color: '#7B80A0', fontSize: 13, marginBottom: 4 },
-  headerTitle: { color: '#EEF0F8', fontSize: 24, fontWeight: '700' },
-
-  counterBadge: {
-    marginHorizontal: 20,
-    marginBottom: 8,
-    backgroundColor: '#1A1D30',
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    alignSelf: 'flex-start',
-  },
-  counterText: { color: '#7B80A0', fontSize: 13 },
-
-  pendingCard: {
-    marginHorizontal: 20,
-    marginBottom: 12,
-    backgroundColor: '#1A1D30',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderWidth: 1,
-    borderColor: '#2A2E50',
-  },
-  pendingText: { color: '#7B80A0', fontSize: 14 },
-
-  loadingWrap: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-  },
-
-  listContent: { flexGrow: 1, paddingBottom: 100 },
-  listContentWithMiniPlayer: { paddingBottom: 172 },
-
-  miniPlayerWrapper: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-
-  fab: {
-    position: 'absolute',
-    bottom: 32,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#5A7AA8',
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 4,
-  },
-  fabIcon: { color: '#0D0F1A', fontSize: 28, lineHeight: 32 },
-});
