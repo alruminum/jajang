@@ -356,14 +356,14 @@ const makeStyles = (colors: ColorTokens) =>
       fontSize: 18,
     },
     headline: {
-      color: '#F5F5F5', // TODO(task 04): textHighlight 토큰으로 교체
+      color: colors.textHighlight,
       fontSize: 18,
       fontWeight: '700',
       marginTop: 8,
       marginBottom: 8,
     },
     body: {
-      color: '#A0A5C0', // TODO(task 04): textBody 토큰으로 교체
+      color: colors.textBody,
       fontSize: 14,
       marginBottom: 24,
       lineHeight: 20,
@@ -392,14 +392,14 @@ const makeStyles = (colors: ColorTokens) =>
       marginBottom: 16,
     },
     subscribeBtn: {
-      backgroundColor: '#4A6FFF', // TODO(task 04): subscribeCta 토큰으로 교체
+      backgroundColor: colors.interactive,
       borderRadius: 12,
       paddingVertical: 14,
       alignItems: 'center',
       marginBottom: 12,
     },
     subscribeBtnText: {
-      color: '#FFFFFF', // TODO(task 04): onSubscribeCta 토큰으로 교체
+      color: colors.textOnAccent,
       fontSize: 15,
       fontWeight: '600',
     },
@@ -414,14 +414,14 @@ const makeStyles = (colors: ColorTokens) =>
       bottom: 48,
       left: 24,
       right: 24,
-      backgroundColor: 'rgba(30, 34, 60, 0.95)', // TODO(task 04): toastBg 토큰으로 교체
+      backgroundColor: colors.toastBg,
       borderRadius: 8,
       paddingVertical: 10,
       paddingHorizontal: 16,
       alignItems: 'center',
     },
     toastText: {
-      color: '#F5F5F5', // TODO(task 04): textHighlight 토큰으로 교체
+      color: colors.textHighlight,
       fontSize: 13,
     },
   });

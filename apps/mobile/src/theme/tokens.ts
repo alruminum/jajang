@@ -16,6 +16,16 @@ export type ColorTokens = {
   accentPrimary14:  string;
   accentPrimary20:  string;
   accentPrimary33:  string;
+  // ─── 신규 9 (task 04 epic-12) ───
+  textHighlight:    string;  // 헤드라인·toastText·고대비 텍스트
+  textBody:         string;  // 결제 본문
+  textBodyHigh:     string;  // S16/AccDel 본문 강조
+  textBodyMuted:    string;  // AccDel modalSubtitle
+  textOnAccent:     string;  // accent 위 영구 화이트 텍스트
+  textMuted:        string;  // 약관 dim / chevron / version
+  interactive:      string;  // 결제 CTA / Premium 배지 / 강조 링크
+  destructiveBg:    string;  // 위험 영역 배경
+  toastBg:          string;  // toast bg (rgba 포함 가능)
 };
 
 // ─── Dark Colors (Midnight Indigo) ───────────────────────────────────────────
@@ -36,6 +46,16 @@ export const darkColors: ColorTokens = {
   accentPrimary14:  '#5A7AA824',   // 약 14% (0x24 = 36/255)
   accentPrimary20:  '#5A7AA833',   // 약 20% (0x33 = 51/255)
   accentPrimary33:  '#5A7AA855',   // 약 33% (0x55 = 85/255)
+  // ─── 신규 9 (task 04 epic-12) — 다크 = task 02/03 발견 hex 그대로 (회귀 0) ───
+  textHighlight:    '#F5F5F5',
+  textBody:         '#A0A5C0',
+  textBodyHigh:     '#E0E2F0',
+  textBodyMuted:    '#B0B4CC',
+  textOnAccent:     '#FFFFFF',
+  textMuted:        '#4A4E68',
+  interactive:      '#4A6FFF',
+  destructiveBg:    '#2A1A0F',
+  toastBg:          'rgba(30, 34, 60, 0.95)',
 };
 
 // ─── Light Colors ─────────────────────────────────────────────────────────────
@@ -56,6 +76,16 @@ export const lightColors: ColorTokens = {
   accentPrimary14:  '#3A5A8824',   // 약 14% (0x24 = 36/255)
   accentPrimary20:  '#3A5A8833',   // 약 20% (0x33 = 51/255)
   accentPrimary33:  '#3A5A8855',   // 약 33% (0x55 = 85/255)
+  // ─── 신규 9 (task 04 epic-12) — 라이트 = architect 1차 결정값 (plan §3.1.1) ───
+  textHighlight:    '#0F0E0D',
+  textBody:         '#3D352E',
+  textBodyHigh:     '#2C2A26',
+  textBodyMuted:    '#5A4F45',
+  textOnAccent:     '#FFFFFF',
+  textMuted:        '#8A8278',
+  interactive:      '#3A5FE0',
+  destructiveBg:    '#F4E8DC',
+  toastBg:          'rgba(220, 212, 200, 0.95)',
 };
 
 // ─── 하위 호환 별칭 ────────────────────────────────────────────────────────────

@@ -73,7 +73,7 @@ const makeStyles = (colors: ColorTokens) =>
       borderBottomColor: colors.surface,
     },
     headerTitle: {
-      color: '#F5F5F5', // TODO(task 04 token-define): textHighlight 토큰으로 교체
+      color: colors.textHighlight,
       fontSize: 18,
       fontWeight: '700',
     },
@@ -99,7 +99,7 @@ const makeStyles = (colors: ColorTokens) =>
     },
     accountId: {
       flex: 1,
-      color: '#F5F5F5', // TODO(task 04 token-define): textHighlight 토큰으로 교체
+      color: colors.textHighlight,
       fontSize: 14,
       marginRight: 8,
     },
@@ -111,7 +111,7 @@ const makeStyles = (colors: ColorTokens) =>
       paddingVertical: 3,
     },
     badgePremium: {
-      backgroundColor: '#4A6FFF', // TODO(task 04 token-define): interactive 토큰으로 교체
+      backgroundColor: colors.interactive,
     },
     badgeTrial: {
       backgroundColor: colors.accentPrimary,
@@ -121,7 +121,7 @@ const makeStyles = (colors: ColorTokens) =>
       fontWeight: '700',
     },
     badgeTextLight: {
-      color: '#FFFFFF', // TODO(task 04 token-define): textOnAccent 토큰으로 교체
+      color: colors.textOnAccent,
     },
     badgeTextDark: {
       color: colors.bgDeep,
@@ -147,7 +147,7 @@ const makeStyles = (colors: ColorTokens) =>
       opacity: 0.4,
     },
     rowLabel: {
-      color: '#E0E2F0', // TODO(task 04 token-define): textBodyHigh 토큰으로 교체
+      color: colors.textBodyHigh,
       fontSize: 15,
     },
     rowLabelHighlighted: {
@@ -158,20 +158,20 @@ const makeStyles = (colors: ColorTokens) =>
       color: colors.destructive,
     },
     rowLabelMuted: {
-      color: '#4A4E68', // TODO(task 04 token-define): textMuted 토큰으로 교체
+      color: colors.textMuted,
     },
     rowSubLabel: {
-      color: '#4A4E68', // TODO(task 04 token-define): textMuted 토큰으로 교체
+      color: colors.textMuted,
       fontSize: 13,
     },
     rowChevron: {
-      color: '#4A4E68', // TODO(task 04 token-define): textMuted 토큰으로 교체
+      color: colors.textMuted,
       fontSize: 18,
     },
 
     // 버전
     version: {
-      color: '#4A4E68', // TODO(task 04 token-define): textMuted 토큰으로 교체
+      color: colors.textMuted,
       fontSize: 12,
       paddingHorizontal: 20,
       paddingVertical: 12,
@@ -199,7 +199,7 @@ const makeStyles = (colors: ColorTokens) =>
       minHeight: 48,
     },
     themeRowLabel: {
-      color: '#E0E2F0', // TODO(task 04 token-define): textBodyHigh 토큰으로 교체
+      color: colors.textBodyHigh,
       fontSize: 15,
     },
     radioOuter: {
