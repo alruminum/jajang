@@ -29,7 +29,7 @@ impl/03 — 세션 API 라우터 단위 테스트 (TDD RED 단계)
   GET|POST /api/v1/generations/*
     AC-GD-01  모든 경로 → 410 Gone
 
-의존성 패턴 (docs/architecture.md 기반):
+의존성 패턴 (docs/ARCHITECTURE.md 기반):
   - sessions.py: DB(AsyncSession) + require_auth_with_entitlement + storage_service + dsp_process_task.delay
   - session_service.init_session: GenerationCounter(SELECT FOR UPDATE) + RecordingSession + MasterAudio + storage_service
   - masters.py: DB + require_auth_with_entitlement + storage_service

@@ -46,7 +46,7 @@ class VoiceInferenceClient(abc.ABC):
     - 구현체 교체 시 이 인터페이스를 변경하지 않는다 — factory.py에서 구현체만 교체.
     """
 
-    TIMEOUT_SECONDS = 90  # NFR: 90초 이내 반환 (trd.md §9)
+    TIMEOUT_SECONDS = 90  # NFR: 90초 이내 반환 (docs/ARCHITECTURE.md NFR 달성 전략)
 
     @abc.abstractmethod
     def generate(self, input: InferenceInput) -> InferenceResult:

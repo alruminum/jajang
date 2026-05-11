@@ -9,7 +9,7 @@ from app.core.config import STATIC_ROOT, settings
 logger = structlog.get_logger()
 
 TRACK_S3_PREFIX = "tracks"      # mp3 결과물 저장 위치
-TRACK_PRESIGN_EXPIRY = 3600     # presigned URL 만료: 1시간 (trd.md §1 보안)
+TRACK_PRESIGN_EXPIRY = 3600     # presigned URL 만료: 1시간 (docs/ARCHITECTURE.md 보안 설계)
 UPLOAD_PRESIGN_EXPIRY = 900     # presigned PUT URL 만료: 15분 (클립 업로드 시간 여유)
 
 _MOCK_BASE_URL = "http://localhost:8000"

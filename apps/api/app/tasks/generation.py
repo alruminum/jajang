@@ -19,7 +19,7 @@ logger = structlog.get_logger()
 task_logger = get_task_logger(__name__)
 
 SAMPLE_DELETE_DELAY_HOURS = 24     # Story 4: 샘플 삭제 예약 시간
-GENERATION_TIMEOUT_SECONDS = 90    # NFR: 90초 이내 (trd.md §9)
+GENERATION_TIMEOUT_SECONDS = 90    # NFR: 90초 이내 (docs/ARCHITECTURE.md NFR 달성 전략)
 
 
 @shared_task(
