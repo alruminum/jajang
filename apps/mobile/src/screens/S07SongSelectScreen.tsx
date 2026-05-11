@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { View, FlatList, Text, Pressable, StyleSheet, Alert } from 'react-native';
 import { createAudioPlayer } from 'expo-audio';
 import type { AudioPlayer, AudioStatus } from 'expo-audio';
@@ -10,14 +10,32 @@ import { useRecordingStore } from '@store/recordingSlice';
 import { useAuthStore } from '@store/authSlice';
 import { SongListItem } from '@components/SongListItem';
 import { MainStackParamList } from '@navigation/types';
+import { useTheme } from '@hooks/useTheme';
+import type { ColorTokens } from '../theme/tokens';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'SongSelect'>;
 
 const FREE_GENERATION_LIMIT = 3;
 
+const makeStyles = (colors: ColorTokens) =>
+  StyleSheet.create({
+    container:   { flex: 1, backgroundColor: colors.bgPrimary, paddingHorizontal: 20 },
+    header:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 24, paddingBottom: 20 },
+    title:       { color: colors.textPrimary, fontSize: 22, fontFamily: 'NotoSansKR-Regular', lineHeight: 32 },
+    counterChip: { backgroundColor: colors.surfaceHigh, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
+    counterText: { color: colors.textSecondary, fontSize: 13 },
+    list:        { paddingBottom: 100 },
+    cta:         { position: 'absolute', bottom: 32, left: 20, right: 20, height: 56, backgroundColor: colors.accentPrimary, borderRadius: 28, justifyContent: 'center', alignItems: 'center' },
+    ctaDisabled: { opacity: 0.4 },
+    ctaText:     { color: colors.bgPrimary, fontSize: 17, fontFamily: 'NotoSansKR-Regular' },
+  });
+
 export function SongSelectScreen({ navigation }: Props) {
   const [songs, setSongs] = useState<Song[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   // 미리듣기 상태
   const [previewingKey, setPreviewingKey] = useState<string | null>(null);
@@ -177,15 +195,3 @@ export function SongSelectScreen({ navigation }: Props) {
 
 // Default export for MainNavigator compatibility
 export default SongSelectScreen;
-
-const styles = StyleSheet.create({
-  container:   { flex: 1, backgroundColor: '#0D0F1A', paddingHorizontal: 20 },
-  header:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 24, paddingBottom: 20 },
-  title:       { color: '#EEF0F8', fontSize: 22, fontFamily: 'NotoSansKR-Regular', lineHeight: 32 },
-  counterChip: { backgroundColor: '#21253E', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
-  counterText: { color: '#7B80A0', fontSize: 13 },
-  list:        { paddingBottom: 100 },
-  cta:         { position: 'absolute', bottom: 32, left: 20, right: 20, height: 56, backgroundColor: '#5A7AA8', borderRadius: 28, justifyContent: 'center', alignItems: 'center' },
-  ctaDisabled: { opacity: 0.4 },
-  ctaText:     { color: '#0D0F1A', fontSize: 17, fontFamily: 'NotoSansKR-Regular' },
-});
