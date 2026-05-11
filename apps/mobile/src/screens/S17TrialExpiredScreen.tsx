@@ -187,7 +187,7 @@ const makeStyles = (colors: ColorTokens) =>
       textAlign: 'center',
     },
     body: {
-      color: '#A0A5C0', // TODO(task 04): textBody 토큰으로 교체
+      color: colors.textBody,
       fontSize: 16,
       lineHeight: 24,
       textAlign: 'center',
@@ -212,7 +212,7 @@ const makeStyles = (colors: ColorTokens) =>
       width: 16,
     },
     benefitText: {
-      color: '#A0A5C0', // TODO(task 04): textBody 토큰으로 교체
+      color: colors.textBody,
       fontSize: 15,
       lineHeight: 22,
     },
@@ -220,14 +220,14 @@ const makeStyles = (colors: ColorTokens) =>
     // CTA 버튼
     subscribeBtn: {
       width: '100%',
-      backgroundColor: '#4A6FFF', // TODO(task 04): subscribeCta 토큰으로 교체
+      backgroundColor: colors.interactive,
       borderRadius: 12,
       paddingVertical: 16,
       alignItems: 'center',
       marginBottom: 16,
     },
     subscribeBtnText: {
-      color: '#FFFFFF', // TODO(task 04): onSubscribeCta 토큰으로 교체
+      color: colors.textOnAccent,
       fontSize: 16,
       fontWeight: '700',
     },

@@ -113,11 +113,11 @@ const makeStyles = (colors: ColorTokens) =>
       padding: 4,
     },
     backIcon: {
-      color: '#F5F5F5', // TODO(task 04 token-define): textHighlight 토큰으로 교체
+      color: colors.textHighlight,
       fontSize: 20,
     },
     headerTitle: {
-      color: '#F5F5F5', // TODO(task 04 token-define): textHighlight 토큰으로 교체
+      color: colors.textHighlight,
       fontSize: 18,
       fontWeight: '700',
     },
@@ -134,7 +134,7 @@ const makeStyles = (colors: ColorTokens) =>
 
     // 구독 활성 배너
     subscriptionBanner: {
-      backgroundColor: '#2A1A0F', // TODO(task 04 token-define): destructiveBg 토큰으로 교체
+      backgroundColor: colors.destructiveBg,
       borderWidth: 1,
       borderColor: colors.accentPrimary,
       borderRadius: 10,
@@ -158,7 +158,7 @@ const makeStyles = (colors: ColorTokens) =>
       marginBottom: 24,
     },
     sectionTitle: {
-      color: '#F5F5F5', // TODO(task 04 token-define): textHighlight 토큰으로 교체
+      color: colors.textHighlight,
       fontSize: 16,
       fontWeight: '600',
       marginBottom: 4,
@@ -180,7 +180,7 @@ const makeStyles = (colors: ColorTokens) =>
       height: 20,
       borderRadius: 10,
       borderWidth: 2,
-      borderColor: '#4A4E68', // TODO(task 04 token-define): textMuted 토큰으로 교체
+      borderColor: colors.textMuted,
       marginRight: 12,
       alignItems: 'center',
       justifyContent: 'center',
@@ -195,7 +195,7 @@ const makeStyles = (colors: ColorTokens) =>
       backgroundColor: colors.accentPrimary,
     },
     reasonLabel: {
-      color: '#E0E2F0', // TODO(task 04 token-define): textBodyHigh 토큰으로 교체
+      color: colors.textBodyHigh,
       fontSize: 15,
     },
 
@@ -207,13 +207,13 @@ const makeStyles = (colors: ColorTokens) =>
       borderTopColor: colors.surface,
     },
     nextBtn: {
-      backgroundColor: '#4A6FFF', // TODO(task 04 token-define): interactive 토큰으로 교체
+      backgroundColor: colors.interactive,
       borderRadius: 12,
       paddingVertical: 16,
       alignItems: 'center',
     },
     nextBtnText: {
-      color: '#FFFFFF', // TODO(task 04 token-define): textOnAccent 토큰으로 교체
+      color: colors.textOnAccent,
       fontSize: 16,
       fontWeight: '700',
     },
@@ -233,14 +233,14 @@ const makeStyles = (colors: ColorTokens) =>
       paddingBottom: 40,
     },
     modalTitle: {
-      color: '#F5F5F5', // TODO(task 04 token-define): textHighlight 토큰으로 교체
+      color: colors.textHighlight,
       fontSize: 20,
       fontWeight: '700',
       textAlign: 'center',
       marginBottom: 12,
     },
     modalSubtitle: {
-      color: '#B0B4CC', // TODO(task 04 token-define): textBodyMuted 토큰으로 교체
+      color: colors.textBodyMuted,
       fontSize: 14,
       textAlign: 'center',
       lineHeight: 20,
@@ -254,7 +254,7 @@ const makeStyles = (colors: ColorTokens) =>
       gap: 8,
     },
     deleteItem: {
-      color: '#E0E2F0', // TODO(task 04 token-define): textBodyHigh 토큰으로 교체
+      color: colors.textBodyHigh,
       fontSize: 14,
       lineHeight: 22,
     },
@@ -277,7 +277,7 @@ const makeStyles = (colors: ColorTokens) =>
       opacity: 0.6,
     },
     confirmDeleteText: {
-      color: '#FFFFFF', // TODO(task 04 token-define): textOnAccent 토큰으로 교체
+      color: colors.textOnAccent,
       fontSize: 16,
       fontWeight: '700',
     },
@@ -477,7 +477,7 @@ export default function AccountDeletionScreen() {
                 accessibilityState={{ disabled: isDeleting }}
               >
                 {isDeleting ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" /* TODO(task 04): textOnAccent */ />
+                  <ActivityIndicator size="small" color={colors.textOnAccent} />
                 ) : (
                   <Text style={styles.confirmDeleteText}>네, 탈퇴할게요</Text>
                 )}
