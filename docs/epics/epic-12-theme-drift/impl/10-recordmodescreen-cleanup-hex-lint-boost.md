@@ -159,6 +159,7 @@ cd apps/mobile && npm run type-check && npm test -- --testPathPattern="__tests__
 - **S07 / RecordScreen / m1b 주석 삭제 금지**: 이들은 폐기 완료 기록이 아닌 *로직 flow 설명* 주석. 제거 시 컨텍스트 손실.
 - **tokens.ts 건드리지 X**: 이미 task 09 가 신규 2 토큰 정의 완료. 본 task 범위 외.
 - **no-raw-hex.test.ts HEX_REGEX 파일 두 곳 모두 변경**: 상단 정의 (`const HEX_REGEX`) 와 파일 헤더 주석 설명 (`패턴: ...`) 을 동기화. 이유: 헤더 주석이 old regex 설명 그대로면 문서 drift.
+- **Phase 2 MainNavigator.tsx 주석 2줄 = 본 PR out-of-scope (tdd-guard false positive)**: dcness tdd-guard 가 navigation 파일에 대해 *동명 테스트 파일* 부재를 이유로 Edit 차단 (memory `feedback_dcness_tdd_guard_theme_infix_false_positive` 룰 정확 발동 — 우회 stub 작성 = anti-pattern 재발). 영향 0 인 주석 2줄 (`L13 RecordModeScreen import 제거 주석` + `L72 Stack.Screen 제거 주석`) 제거를 위해 anti-pattern 우회 비용 > 가치 → **본 PR 잔존 받아들이기 + 후속 처리**. 후속 = (a) dcness 본 레포 issue 등록 (`navigation/**` 파일에 대한 tdd-guard 룰 완화 또는 ALLOWED_FILES 패턴), (b) navigation 통합 테스트 추가 후 별도 cleanup PR. 본 PR 잔존 영향 = 0 (런타임 / 타입 / 테스트 모두 영향 없음).
 
 ## DB 영향도
 
