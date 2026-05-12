@@ -12,6 +12,11 @@
  * REQ-002: darkColors 신규 9 토큰 hex = task 02/03 발견 hex 그대로 (다크 회귀 0)
  * REQ-003: lightColors 신규 9 토큰 hex = §3.1.1 architect 결정값
  * REQ-004: 기존 15 토큰 dark/light hex 변경 X (회귀 0)
+ *
+ * [task 08 epic-12 추가]
+ * REQ-001: ColorTokens 신규 3 토큰 키셋 포함 (총 27개)
+ * REQ-002: darkColors 신규 3 토큰 hex = task 05/06/본 task 발견 hex 그대로 (다크 회귀 0)
+ * REQ-003: lightColors 신규 3 토큰 hex = §3.3.1 architect 결정값 (errorText = destructive 흡수)
  */
 
 import { darkColors, lightColors, Colors } from '../../theme/tokens';
@@ -47,13 +52,17 @@ const REQUIRED_KEYS: (keyof ColorTokens)[] = [
   'interactive',
   'destructiveBg',
   'toastBg',
+  // ─── 신규 3 (task 08 epic-12) ───
+  'successMuted',
+  'errorText',
+  'warning',
 ];
 
 // ────────────────────────────────────────────────
-// REQ-001 — darkColors 키셋 (24개)
+// REQ-001 — darkColors 키셋 (27개)
 // ────────────────────────────────────────────────
-describe('REQ-001 — darkColors — ColorTokens 키셋 (task 04 missing-tokens)', () => {
-  it('ColorTokens 필수 키 24개를 모두 포함한다', () => {
+describe('REQ-001 — darkColors — ColorTokens 키셋 (task 08 missing-tokens)', () => {
+  it('ColorTokens 필수 키 27개를 모두 포함한다', () => {
     for (const key of REQUIRED_KEYS) {
       expect(darkColors).toHaveProperty(key);
     }
@@ -68,10 +77,10 @@ describe('REQ-001 — darkColors — ColorTokens 키셋 (task 04 missing-tokens)
 });
 
 // ────────────────────────────────────────────────
-// REQ-001 — lightColors 키셋 (24개)
+// REQ-001 — lightColors 키셋 (27개)
 // ────────────────────────────────────────────────
-describe('REQ-001 — lightColors — ColorTokens 키셋 (task 04 missing-tokens)', () => {
-  it('ColorTokens 필수 키 24개를 모두 포함한다', () => {
+describe('REQ-001 — lightColors — ColorTokens 키셋 (task 08 missing-tokens)', () => {
+  it('ColorTokens 필수 키 27개를 모두 포함한다', () => {
     for (const key of REQUIRED_KEYS) {
       expect(lightColors).toHaveProperty(key);
     }
@@ -198,6 +207,24 @@ describe('REQ-002 — darkColors — 신규 토큰 hex 값 (task 04 missing-toke
 });
 
 // ────────────────────────────────────────────────
+// REQ-002 — darkColors 신규 3 토큰 hex (task 08 shared-components)
+// 다크 = task 05/06/본 task 발견 hex 그대로 (다크 회귀 0)
+// ────────────────────────────────────────────────
+describe('REQ-002 — darkColors — 신규 토큰 hex 값 (task 08 shared-components)', () => {
+  it('successMuted: #5A8A6A', () => {
+    expect(darkColors.successMuted).toBe('#5A8A6A');
+  });
+
+  it('errorText: #FF6B6B', () => {
+    expect(darkColors.errorText).toBe('#FF6B6B');
+  });
+
+  it('warning: #E0B070', () => {
+    expect(darkColors.warning).toBe('#E0B070');
+  });
+});
+
+// ────────────────────────────────────────────────
 // REQ-004 — lightColors 기존 토큰 hex 값 (회귀 0)
 // ────────────────────────────────────────────────
 describe('REQ-004 — lightColors — 기존 토큰 hex 값 (변경 X)', () => {
@@ -310,6 +337,29 @@ describe('REQ-003 — lightColors — 신규 토큰 hex 값 (task 04 missing-tok
 });
 
 // ────────────────────────────────────────────────
+// REQ-003 — lightColors 신규 3 토큰 hex (task 08 shared-components)
+// 라이트 = architect 1차 결정값 (plan §3.3.1 근거)
+// errorText = destructive 흡수 (의도적)
+// ────────────────────────────────────────────────
+describe('REQ-003 — lightColors — 신규 토큰 hex 값 (task 08 shared-components)', () => {
+  it('successMuted: #3E6749 (라이트 beige 위 muted 녹색)', () => {
+    expect(lightColors.successMuted).toBe('#3E6749');
+  });
+
+  it('errorText: #C0392B (= destructive 흡수 — 라이트에서 errorText 와 destructive 동일 시각)', () => {
+    expect(lightColors.errorText).toBe('#C0392B');
+  });
+
+  it('errorText 가 lightColors.destructive 와 동일 hex 값이다 (의도적 흡수)', () => {
+    expect(lightColors.errorText).toBe(lightColors.destructive);
+  });
+
+  it('warning: #A07840 (라이트 beige 위 진한 황금색 — BGM 실패 토스트)', () => {
+    expect(lightColors.warning).toBe('#A07840');
+  });
+});
+
+// ────────────────────────────────────────────────
 // 하위 호환 별칭 + dark/light 분리 보장
 // ────────────────────────────────────────────────
 describe('Colors 하위 호환 별칭', () => {
@@ -327,5 +377,17 @@ describe('Colors 하위 호환 별칭', () => {
 
   it('dark 와 light 의 textPrimary 는 다른 hex 값이다 (명암 반전)', () => {
     expect(darkColors.textPrimary).not.toBe(lightColors.textPrimary);
+  });
+
+  it('dark 와 light 의 successMuted 는 다른 hex 값이다', () => {
+    expect(darkColors.successMuted).not.toBe(lightColors.successMuted);
+  });
+
+  it('dark 와 light 의 errorText 는 다른 hex 값이다 (다크 = 옅은 빨강 / 라이트 = destructive 흡수)', () => {
+    expect(darkColors.errorText).not.toBe(lightColors.errorText);
+  });
+
+  it('dark 와 light 의 warning 는 다른 hex 값이다', () => {
+    expect(darkColors.warning).not.toBe(lightColors.warning);
   });
 });
