@@ -11,7 +11,7 @@
  * - Android 하드웨어 백: 위와 동일 분기 적용
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   BackHandler,
   Modal,
@@ -25,6 +25,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import type { MainStackParamList } from '@navigation/types';
 import { stopPlayback } from '@audio/AudioEngine';
+import { useTheme } from '@hooks/useTheme';
+import type { ColorTokens } from '../theme/tokens';
 
 // ─── 타입 ─────────────────────────────────────────────────────────────────────
 
@@ -45,6 +47,8 @@ export function useBackNavigation({
   isPlaying,
 }: UseBackNavigationParams): UseBackNavigationReturn {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList, 'Play'>>();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [showConfirm, setShowConfirm] = useState(false);
 
   const handleBack = useCallback(() => {
@@ -119,29 +123,29 @@ export function useBackNavigation({
 
 // ─── 스타일 ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorTokens) => StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
   },
   dialog: {
-    backgroundColor: '#1E2140',
+    backgroundColor: colors.surfaceHigh,
     borderRadius: 16,
     padding: 24,
     width: '80%',
     alignItems: 'center',
   },
   dialogTitle: {
-    color: '#EEF0F8',
+    color: colors.textPrimary,
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 8,
     textAlign: 'center',
   },
   dialogBody: {
-    color: '#7B80A0',
+    color: colors.textSecondary,
     fontSize: 14,
     marginBottom: 24,
     textAlign: 'center',
@@ -156,24 +160,24 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#7B80A0',
+    borderColor: colors.textSecondary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   cancelText: {
-    color: '#EEF0F8',
+    color: colors.textPrimary,
     fontSize: 14,
   },
   confirmBtn: {
     flex: 1,
     height: 48,
     borderRadius: 12,
-    backgroundColor: '#5A7AA8',
+    backgroundColor: colors.accentPrimary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   confirmText: {
-    color: '#0D0F1A',
+    color: colors.bgPrimary,
     fontSize: 14,
     fontWeight: '600',
   },

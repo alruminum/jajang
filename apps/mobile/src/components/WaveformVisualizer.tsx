@@ -8,6 +8,7 @@
 
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
+import { darkColors } from '../theme/tokens';
 
 const BAR_COUNT = 40;
 const MIN_HEIGHT = 4;
@@ -34,7 +35,7 @@ type WaveformVisualizerProps =
 export function WaveformVisualizer({
   mode,
   levels,
-  color = '#5A7AA8',
+  color = darkColors.accentPrimary,
   height = 80,
   playbackPosition,
 }: WaveformVisualizerProps) {
@@ -57,7 +58,7 @@ export function WaveformVisualizer({
       {bars.map((barHeight, i) => {
         const isPlayed = mode === 'static' && i < playedUpTo;
         const barColor = mode === 'static'
-          ? (isPlayed ? '#5A7AA8' : color)
+          ? (isPlayed ? darkColors.accentPrimary : color)
           : color;
         return (
           <View
