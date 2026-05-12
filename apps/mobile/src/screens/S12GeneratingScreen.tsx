@@ -2,11 +2,13 @@
 // S12 — 생성 대기 화면 (impl/07 — sessions API + SecureStore pending 복원)
 // polling / timeout_notice / completed / failed 4 분기
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import type { MainStackParamList } from '@navigation/types';
+import { useTheme } from '@hooks/useTheme';
+import type { ColorTokens } from '../theme/tokens';
 import { useSessionPolling } from '@hooks/useSessionPolling';
 import { clearPendingSession } from '@services/storage/pendingSession';
 import { generateSession } from '@services/api/sessions';
@@ -17,6 +19,9 @@ import GeneratingFailureView from '@components/GeneratingFailureView';
 type Props = NativeStackScreenProps<MainStackParamList, 'Generating'>;
 
 export default function S12GeneratingScreen({ route, navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const { sessionId } = route.params;
   const pollState = useSessionPolling(sessionId);
 
@@ -76,32 +81,33 @@ export default function S12GeneratingScreen({ route, navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0D0F1A' },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-  },
-  mainTitle: {
-    color: '#EEF0F8',
-    fontSize: 22,
-    textAlign: 'center',
-    lineHeight: 32,
-    marginBottom: 12,
-  },
-  subtitle: {
-    color: '#7B80A0',
-    fontSize: 15,
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  backgroundNotice: {
-    color: '#7B80A0',
-    fontSize: 13,
-    textAlign: 'center',
-    marginBottom: 32,
-  },
-  homeLink: { color: '#C49A8A', fontSize: 15, textDecorationLine: 'underline' },
-});
+const makeStyles = (colors: ColorTokens) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.bgPrimary },
+    center: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 32,
+    },
+    mainTitle: {
+      color: colors.textPrimary,
+      fontSize: 22,
+      textAlign: 'center',
+      lineHeight: 32,
+      marginBottom: 12,
+    },
+    subtitle: {
+      color: colors.textSecondary,
+      fontSize: 15,
+      textAlign: 'center',
+      marginBottom: 24,
+    },
+    backgroundNotice: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      textAlign: 'center',
+      marginBottom: 32,
+    },
+    homeLink: { color: colors.accentSecondary, fontSize: 15, textDecorationLine: 'underline' },
+  });

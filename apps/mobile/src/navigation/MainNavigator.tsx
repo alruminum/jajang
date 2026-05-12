@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MainStackParamList, HomeTabParamList } from './types';
+import { useTheme } from '@hooks/useTheme';
 
 // Tab screens
 import S06HomeScreen from '@screens/S06HomeScreen';
@@ -25,18 +26,21 @@ const Tab = createBottomTabNavigator<HomeTabParamList>();
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
 function HomeTabs() {
+  const { colors } = useTheme();
+  const tabScreenOptions = useMemo(
+    () => ({
+      headerShown: false as const,
+      tabBarStyle: {
+        backgroundColor: colors.bgDeep,
+        borderTopColor: colors.border,
+      },
+      tabBarActiveTintColor: colors.accentPrimary,
+      tabBarInactiveTintColor: colors.textSecondary,
+    }),
+    [colors],
+  );
   return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: '#12152B',
-          borderTopColor: '#2A2E48',
-        },
-        tabBarActiveTintColor: '#5A7AA8',
-        tabBarInactiveTintColor: '#7B80A0',
-      }}
-    >
+    <Tab.Navigator screenOptions={tabScreenOptions}>
       <Tab.Screen name="Home" component={S06HomeScreen} options={{ title: '홈' }} />
       <Tab.Screen name="Settings" component={S16SettingsScreen} options={{ title: '설정' }} />
     </Tab.Navigator>
@@ -44,13 +48,25 @@ function HomeTabs() {
 }
 
 export default function MainNavigator() {
+  const { colors } = useTheme();
+  const stackScreenOptions = useMemo(
+    () => ({
+      headerShown: false as const,
+      contentStyle: { backgroundColor: colors.bgPrimary },
+    }),
+    [colors],
+  );
+  const legalOptions = useMemo(
+    () => ({
+      title: '법적 정보',
+      headerShown: true,
+      headerStyle: { backgroundColor: colors.bgPrimary },
+      headerTintColor: colors.textPrimary,
+    }),
+    [colors],
+  );
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: '#0D0F1A' },
-      }}
-    >
+    <Stack.Navigator screenOptions={stackScreenOptions}>
       <Stack.Screen name="HomeTabs" component={HomeTabs} />
       <Stack.Screen name="SongSelect" component={S07SongSelectScreen} />
       {/* RecordMode (S08) — Stack에서 제거 (impl/13 폐기) */}
@@ -79,12 +95,7 @@ export default function MainNavigator() {
       <Stack.Screen
         name="Legal"
         component={LegalScreen}
-        options={{
-          title: '법적 정보',
-          headerShown: true,
-          headerStyle: { backgroundColor: '#0D0F1A' },
-          headerTintColor: '#EEF0F8',
-        }}
+        options={legalOptions}
       />
     </Stack.Navigator>
   );
