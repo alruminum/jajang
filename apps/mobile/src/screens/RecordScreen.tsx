@@ -120,7 +120,7 @@ const makeStyles = (colors: ColorTokens) =>
       marginBottom: 8,
     },
     bgmFailToast: {
-      color: '#E0B070', // TODO(task 09): #E0B070 → warning 토큰 정의 후 교체
+      color: colors.warning,
       fontSize: 13,
       textAlign: 'center',
       marginTop: 4,
@@ -140,7 +140,7 @@ const makeStyles = (colors: ColorTokens) =>
       marginVertical: 24,
     },
     silenceWarning: {
-      color: '#5A8A6A', // TODO(task 09): #5A8A6A → successMuted 토큰 정의 후 교체
+      color: colors.successMuted,
       fontSize: 14,
       textAlign: 'center',
       marginBottom: 8,

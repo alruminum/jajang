@@ -7,8 +7,10 @@
  * - @react-native-community/slider 미사용 — 외부 패키지 없는 커스텀 구현
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { View, PanResponder, StyleSheet } from 'react-native';
+import { useTheme } from '@hooks/useTheme';
+import type { ColorTokens } from '../theme/tokens';
 import type {
   GestureResponderEvent,
   PanResponderGestureState,
@@ -23,7 +25,44 @@ export interface VolumeSliderProps {
 
 const THUMB_SIZE = 22;
 
+const makeStyles = (colors: ColorTokens) => StyleSheet.create({
+  container: {
+    height: 48,
+    justifyContent: 'center',
+    paddingHorizontal: THUMB_SIZE / 2,
+  },
+  containerDisabled: {
+    opacity: 0.4,
+  },
+  trackBackground: {
+    position: 'absolute',
+    left: THUMB_SIZE / 2,
+    right: THUMB_SIZE / 2,
+    height: TRACK_HEIGHT,
+    borderRadius: TRACK_HEIGHT / 2,
+    backgroundColor: colors.border,
+  },
+  trackFill: {
+    position: 'absolute',
+    left: THUMB_SIZE / 2,
+    height: TRACK_HEIGHT,
+    borderRadius: TRACK_HEIGHT / 2,
+    backgroundColor: colors.accentPrimary,
+  },
+  thumb: {
+    position: 'absolute',
+    width: THUMB_SIZE,
+    height: THUMB_SIZE,
+    borderRadius: THUMB_SIZE / 2,
+    backgroundColor: colors.accentPrimary,
+    top: '50%',
+    marginTop: -THUMB_SIZE / 2,
+  },
+});
+
 export default function VolumeSlider({ value, disabled, onChange }: VolumeSliderProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const widthRef = useRef(0);
   const disabledRef = useRef(disabled);
   const onChangeRef = useRef(onChange);
@@ -93,38 +132,3 @@ export default function VolumeSlider({ value, disabled, onChange }: VolumeSlider
 }
 
 const TRACK_HEIGHT = 4;
-
-const styles = StyleSheet.create({
-  container: {
-    height: 48, // 최소 터치 타겟 48dp
-    justifyContent: 'center',
-    paddingHorizontal: THUMB_SIZE / 2,
-  },
-  containerDisabled: {
-    opacity: 0.4,
-  },
-  trackBackground: {
-    position: 'absolute',
-    left: THUMB_SIZE / 2,
-    right: THUMB_SIZE / 2,
-    height: TRACK_HEIGHT,
-    borderRadius: TRACK_HEIGHT / 2,
-    backgroundColor: '#2A2E48',
-  },
-  trackFill: {
-    position: 'absolute',
-    left: THUMB_SIZE / 2,
-    height: TRACK_HEIGHT,
-    borderRadius: TRACK_HEIGHT / 2,
-    backgroundColor: '#5A7AA8',
-  },
-  thumb: {
-    position: 'absolute',
-    width: THUMB_SIZE,
-    height: THUMB_SIZE,
-    borderRadius: THUMB_SIZE / 2,
-    backgroundColor: '#5A7AA8',
-    top: '50%',
-    marginTop: -THUMB_SIZE / 2,
-  },
-});

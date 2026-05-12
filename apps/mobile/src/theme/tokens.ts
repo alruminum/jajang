@@ -26,6 +26,10 @@ export type ColorTokens = {
   interactive:      string;  // 결제 CTA / Premium 배지 / 강조 링크
   destructiveBg:    string;  // 위험 영역 배경
   toastBg:          string;  // toast bg (rgba 포함 가능)
+  // ─── 신규 3 (task 08 epic-12) ───
+  successMuted:     string;  // 삭제 버튼 / silenceWarning / exhaustedText
+  errorText:        string;  // 에러 메시지 / 삭제 액션 텍스트
+  warning:          string;  // BGM 실패 토스트
 };
 
 // ─── Dark Colors (Midnight Indigo) ───────────────────────────────────────────
@@ -56,6 +60,10 @@ export const darkColors: ColorTokens = {
   interactive:      '#4A6FFF',
   destructiveBg:    '#2A1A0F',
   toastBg:          'rgba(30, 34, 60, 0.95)',
+  // ─── 신규 3 (task 08 epic-12) — 다크 = task 05/06/본 task 발견 hex 그대로 (회귀 0) ───
+  successMuted:    '#5A8A6A',
+  errorText:       '#FF6B6B',
+  warning:         '#E0B070',
 };
 
 // ─── Light Colors ─────────────────────────────────────────────────────────────
@@ -86,6 +94,10 @@ export const lightColors: ColorTokens = {
   interactive:      '#3A5FE0',
   destructiveBg:    '#F4E8DC',
   toastBg:          'rgba(220, 212, 200, 0.95)',
+  // ─── 신규 3 (task 08 epic-12) — 라이트 = architect 1차 결정값 (plan §3.3.1) ───
+  successMuted:    '#3E6749',
+  errorText:       '#C0392B',   // = lightColors.destructive (의도적 흡수)
+  warning:         '#A07840',
 };
 
 // ─── 하위 호환 별칭 ────────────────────────────────────────────────────────────

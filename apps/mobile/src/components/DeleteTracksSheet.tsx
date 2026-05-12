@@ -11,7 +11,7 @@
  * - S16SettingsScreen → DeleteTracksSheet: tracks, onClose
  */
 
-import React, { useCallback } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import {
   View,
   Text,
@@ -27,6 +27,8 @@ import type { Track } from '@services/dataManagementApi'
 import { deleteTrack, deleteAllTracks } from '@services/dataManagementApi'
 import { useGenerationStore } from '@store/generationSlice'
 import { showToast } from '@utils/toast'
+import { useTheme } from '@hooks/useTheme'
+import type { ColorTokens } from '../theme/tokens'
 
 // ─── 오프라인 삭제 큐 ──────────────────────────────────────────────────────────
 
@@ -90,8 +92,80 @@ interface Props {
 
 // ─── DeleteTracksSheet ─────────────────────────────────────────────────────────
 
+const makeStyles = (colors: ColorTokens) => StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: colors.overlay,
+  },
+  sheet: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 12,
+    paddingBottom: 40,
+    maxHeight: '80%',
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.border,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  title: {
+    color: colors.textPrimary,
+    fontSize: 16,
+    fontWeight: '600',
+    paddingHorizontal: 20,
+    marginBottom: 8,
+  },
+  list: {
+    flexGrow: 0,
+    maxHeight: 320,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  trackName: {
+    flex: 1,
+    color: colors.textPrimary,
+    fontSize: 16,
+  },
+  deleteBtn: {
+    color: colors.successMuted,
+    fontSize: 14,
+  },
+  emptyText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    textAlign: 'center',
+    paddingVertical: 24,
+  },
+  deleteAllBtn: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    paddingVertical: 16,
+    backgroundColor: colors.surfaceHigh,
+    borderRadius: 14,
+    alignItems: 'center',
+  },
+  deleteAllText: {
+    color: colors.errorText,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+})
+
 export function DeleteTracksSheet({ tracks, onClose }: Props) {
   const { removeTrack, clearAllTracks } = useGenerationStore()
+  const { colors } = useTheme()
+  const styles = useMemo(() => makeStyles(colors), [colors])
 
   // ─── 개별 삭제 (오프라인 대응) ────────────────────────────────────────────
 
@@ -201,74 +275,3 @@ export function DeleteTracksSheet({ tracks, onClose }: Props) {
   )
 }
 
-// ─── 스타일 ───────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  sheet: {
-    backgroundColor: '#1A1D2E',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 12,
-    paddingBottom: 40,
-    maxHeight: '80%',
-  },
-  handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#3A3D58',
-    alignSelf: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    color: '#EEF0F8',
-    fontSize: 16,
-    fontWeight: '600',
-    paddingHorizontal: 20,
-    marginBottom: 8,
-  },
-  list: {
-    flexGrow: 0,
-    maxHeight: 320,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#2A2E48',
-  },
-  trackName: {
-    flex: 1,
-    color: '#EEF0F8',
-    fontSize: 16,
-  },
-  deleteBtn: {
-    color: '#5A8A6A',
-    fontSize: 14,
-  },
-  emptyText: {
-    color: '#7B80A0',
-    fontSize: 14,
-    textAlign: 'center',
-    paddingVertical: 24,
-  },
-  deleteAllBtn: {
-    marginHorizontal: 20,
-    marginTop: 16,
-    paddingVertical: 16,
-    backgroundColor: '#21253E',
-    borderRadius: 14,
-    alignItems: 'center',
-  },
-  deleteAllText: {
-    color: '#FF6B6B',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-})

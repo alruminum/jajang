@@ -341,7 +341,7 @@ const makeStyles = (colors: ColorTokens) =>
       marginBottom: 16,
     },
     errorText: {
-      color: '#FF6B6B', // TODO(task 09): destructiveBright 토큰 도입 후 교체
+      color: colors.errorText,
       fontSize: 14,
     },
     processingBanner: {
@@ -360,7 +360,7 @@ const makeStyles = (colors: ColorTokens) =>
       marginBottom: 16,
     },
     exhaustedText: {
-      color: '#5A8A6A', // TODO(task 09): successMuted 토큰 도입 후 교체
+      color: colors.successMuted,
       fontSize: 14,
       marginBottom: 4,
     },
