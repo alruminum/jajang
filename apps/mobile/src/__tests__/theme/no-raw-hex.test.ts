@@ -1,12 +1,13 @@
 /**
  * task 09 — Jest hex-lint 회귀 방지 인프라
+ * task 10 — RecordModeScreen 폐기 + backtick hex 검출 보강
  *
  * 대상: apps/mobile/src/ 전체 (.ts/.tsx)
- * 패턴: /['"]#[0-9A-Fa-f]{3,6}['"]/g (quote-aware — 직접 hex *리터럴* 만 검출.
+ * 패턴: /[`'"]#[0-9A-Fa-f]{3,6}[`'"]/g (quote/backtick-aware — 직접 hex *리터럴* 만 검출.
+ *       3~6자리 강제: 8자리 #RRGGBBAA 제외.
  *       주석 안 `// (#222)` 같은 이슈 번호 텍스트는 quote 부재 → 자연 제외)
  * 예외 (절대 경로 기준):
  *   - apps/mobile/src/theme/tokens.ts          (SSOT — hex 정의 본체)
- *   - apps/mobile/src/screens/RecordModeScreen.tsx (폐기 예정 화면 — 별도 cleanup backlog 항목)
  *   - **\/__tests__\/**                          (테스트 파일 자체)
  *   - **\/__mocks__\/**                          (mock 파일)
  *   - *.test.ts / *.test.tsx / *.spec.ts / *.spec.tsx
@@ -29,16 +30,15 @@ import * as path from 'path';
 const SRC_ROOT = path.resolve(__dirname, '..', '..');
 
 /**
- * hex 검출 정규식 — quote 강제. 직접 hex *리터럴* (예: `'#FF4444'` / `"#fff"`) 만 검출.
+ * hex 검출 정규식 — quote/backtick 강제. 직접 hex *리터럴* (예: `'#FF4444'` / `"#fff"` / `` `#fff` ``) 만 검출.
  * 주석 안 텍스트 (예: `// TODO(#222)` / `// (#129).`) 는 quote 부재 → 자연 제외.
- * 8자리 alpha hex (`'#000000AA'`) = 매치 X — 양쪽 quote 사이 글자수 3~6 강제.
+ * 3~6자리 강제: 8자리 alpha hex (`'#000000AA'`) = 양쪽 quote 사이 글자수 8 → regex `{3,6}` 범위 외 자연 제외.
  */
-const HEX_REGEX = /['"]#[0-9A-Fa-f]{3,6}['"]/g;
+const HEX_REGEX = /[`'"]#[0-9A-Fa-f]{3,6}[`'"]/g;
 
-/** 파일 단위 예외 — SSOT 본체 + 폐기 예정 화면 (별도 backlog cleanup). 상대 경로 (SRC_ROOT 기준). */
+/** 파일 단위 예외 — SSOT 본체. 상대 경로 (SRC_ROOT 기준). */
 const ALLOWED_FILES: string[] = [
   'theme/tokens.ts',
-  'screens/RecordModeScreen.tsx',
 ];
 
 /** 디렉토리 단위 예외 — 테스트 + mock. (SRC_ROOT 기준 prefix) */
@@ -81,7 +81,7 @@ function isAllowed(relPath: string): boolean {
   return false;
 }
 
-/** content 안 hex match + 라인 번호 추출. match 결과는 양쪽 quote 포함 → quote 벗겨내고 hex 만 노출. */
+/** content 안 hex match + 라인 번호 추출. match 결과는 양쪽 quote/backtick 포함 → slice(1,-1) 로 제거해 hex 만 노출. */
 function findHexMatches(content: string): Array<{ line: number; hex: string }> {
   const lines = content.split('\n');
   const matches: Array<{ line: number; hex: string }> = [];
@@ -142,7 +142,7 @@ describe('task 09 — no-raw-hex 인프라 자가 검증', () => {
       'utf-8',
     );
     const matches = content.match(HEX_REGEX);
-    // tokens.ts = hex SSOT → ColorTokens 29 토큰 × 2 (dark/light) = 58 hex 리터럴 (모두 quote 안).
+    // tokens.ts = hex SSOT → quote 안 hex 리터럴 다수.
     // 8자리 alpha hex (`'#000000AA'`) 는 quote 사이 글자수 8 → regex `{3,6}` 범위 외 자연 제외.
     expect(matches).not.toBeNull();
     expect((matches ?? []).length).toBeGreaterThan(0);
@@ -150,7 +150,8 @@ describe('task 09 — no-raw-hex 인프라 자가 검증', () => {
 
   it('예외 등재 함수 isAllowed — 등재 파일 / 디렉토리 prefix / 테스트 suffix 모두 통과', () => {
     expect(isAllowed('theme/tokens.ts')).toBe(true);
-    expect(isAllowed('screens/RecordModeScreen.tsx')).toBe(true);
+    // REQ-004: task 10 에서 ALLOWED_FILES 제거됨 — RecordModeScreen 은 예외 아님
+    expect(isAllowed('screens/RecordModeScreen.tsx')).toBe(false);
     expect(isAllowed('__tests__/theme/no-raw-hex.test.ts')).toBe(true);
     expect(isAllowed('__mocks__/Foo.ts')).toBe(true); // __mocks__/ prefix 매치
     expect(isAllowed('components/Foo.test.tsx')).toBe(true);
@@ -163,5 +164,13 @@ describe('task 09 — no-raw-hex 인프라 자가 검증', () => {
     expect('// useFocusEffect (#129).'.match(HEX_REGEX)).toBeNull();
     expect("color: '#FF4444'".match(HEX_REGEX)).not.toBeNull();
     expect('color: "#fff"'.match(HEX_REGEX)).not.toBeNull();
+  });
+
+  // REQ-005: backtick hex 리터럴 검출 — task 10 HEX_REGEX 보강 후 GREEN
+  it('backtick hex 리터럴 검출 — `#RRGGBB` 패턴 매치', () => {
+    expect('`#FF4444`'.match(HEX_REGEX)).not.toBeNull();
+    expect('`#fff`'.match(HEX_REGEX)).not.toBeNull();
+    // 변수 주입 패턴은 backtick 직후가 # 아님 → 검출 X
+    expect('`${color}`'.match(HEX_REGEX)).toBeNull();
   });
 });
