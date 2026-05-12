@@ -7,7 +7,8 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import { Animated, Easing, StyleSheet } from 'react-native';
+import { Animated, Easing } from 'react-native';
+import { useTheme } from '@hooks/useTheme';
 
 export interface AlbumArtRotatingProps {
   isPlaying: boolean;
@@ -17,6 +18,7 @@ export interface AlbumArtRotatingProps {
 const ALBUM_ART_URI = 'https://assets.jajang.app/album-art.png';
 
 export default function AlbumArtRotating({ isPlaying, size = 240 }: AlbumArtRotatingProps) {
+  const { colors } = useTheme();
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const animRef = useRef<Animated.CompositeAnimation | null>(null);
 
@@ -45,7 +47,9 @@ export default function AlbumArtRotating({ isPlaying, size = 240 }: AlbumArtRota
     <Animated.Image
       source={{ uri: ALBUM_ART_URI }}
       style={[
-        styles.base,
+        {
+          backgroundColor: colors.surface, // URI 로드 전 placeholder 색상
+        },
         {
           width: size,
           height: size,
@@ -57,9 +61,3 @@ export default function AlbumArtRotating({ isPlaying, size = 240 }: AlbumArtRota
     />
   );
 }
-
-const styles = StyleSheet.create({
-  base: {
-    backgroundColor: '#1A1D30', // URI 로드 전 placeholder 색상
-  },
-});

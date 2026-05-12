@@ -21,10 +21,10 @@ import * as path from 'path';
 /**
  * 경로 계산:
  *   __dirname = apps/mobile/src/__tests__/theme
- *   MOBILE_ROOT = path.resolve(__dirname, '../..') = apps/mobile
+ *   MOBILE_ROOT = path.resolve(__dirname, '../../..') = apps/mobile
  *   rel 은 apps/mobile 기준 (src/ prefix 포함)
  */
-const MOBILE_ROOT = path.resolve(__dirname, '..', '..');
+const MOBILE_ROOT = path.resolve(__dirname, '..', '..', '..');
 
 // ────────────────────────────────────────────────
 // REQ-005 — 6 대상 파일 (hex 교체 대상)

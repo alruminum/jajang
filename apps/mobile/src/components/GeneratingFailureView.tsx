@@ -2,8 +2,10 @@
 // DSP 실패 시 재시도 버튼 + 에러 메시지 + 홈 이동 버튼
 // impl/07 §1
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { useTheme } from '@hooks/useTheme';
+import type { ColorTokens } from '../theme/tokens';
 
 interface Props {
   error: string;
@@ -11,7 +13,42 @@ interface Props {
   onHome: () => void;
 }
 
+const makeStyles = (colors: ColorTokens) => StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  emoji: { fontSize: 64, marginBottom: 24 },
+  title: {
+    color: colors.textPrimary,
+    fontSize: 22,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  errorText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 32,
+  },
+  retryBtn: {
+    height: 52,
+    backgroundColor: colors.accentPrimary,
+    borderRadius: 26,
+    paddingHorizontal: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  retryBtnText: { color: colors.bgPrimary, fontSize: 16 },
+  homeLink: { color: colors.accentSecondary, fontSize: 15, textDecorationLine: 'underline' },
+});
+
 export default function GeneratingFailureView({ error, onRetry, onHome }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.container}>
       <Text style={styles.emoji}>{'😔'}</Text>
@@ -33,36 +70,3 @@ export default function GeneratingFailureView({ error, onRetry, onHome }: Props)
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-  },
-  emoji: { fontSize: 64, marginBottom: 24 },
-  title: {
-    color: '#EEF0F8',
-    fontSize: 22,
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  errorText: {
-    color: '#7B80A0',
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 32,
-  },
-  retryBtn: {
-    height: 52,
-    backgroundColor: '#5A7AA8',
-    borderRadius: 26,
-    paddingHorizontal: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  retryBtnText: { color: '#0D0F1A', fontSize: 16 },
-  homeLink: { color: '#C49A8A', fontSize: 15, textDecorationLine: 'underline' },
-});
