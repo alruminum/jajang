@@ -17,6 +17,12 @@
  * REQ-001: ColorTokens 신규 3 토큰 키셋 포함 (총 27개)
  * REQ-002: darkColors 신규 3 토큰 hex = task 05/06/본 task 발견 hex 그대로 (다크 회귀 0)
  * REQ-003: lightColors 신규 3 토큰 hex = §3.3.1 architect 결정값 (errorText = destructive 흡수)
+ *
+ * [task 09 epic-12 추가]
+ * REQ-001: ColorTokens 신규 2 토큰 키셋 포함 (총 29개)
+ * REQ-002: darkColors 신규 2 토큰 hex = task 05 §3.2.3 발견 hex 그대로 (다크 회귀 0)
+ * REQ-003: lightColors 신규 2 토큰 hex = §3.3.1 architect 결정값
+ * REQ-004: 기존 27 토큰 dark/light hex 변경 X (회귀 0)
  */
 
 import { darkColors, lightColors, Colors } from '../../theme/tokens';
@@ -56,13 +62,16 @@ const REQUIRED_KEYS: (keyof ColorTokens)[] = [
   'successMuted',
   'errorText',
   'warning',
+  // ─── 신규 2 (task 09 epic-12) ───
+  'successHigh',
+  'destructiveAction',
 ];
 
 // ────────────────────────────────────────────────
-// REQ-001 — darkColors 키셋 (27개)
+// REQ-001 — darkColors 키셋 (29개)
 // ────────────────────────────────────────────────
-describe('REQ-001 — darkColors — ColorTokens 키셋 (task 08 missing-tokens)', () => {
-  it('ColorTokens 필수 키 27개를 모두 포함한다', () => {
+describe('REQ-001 — darkColors — ColorTokens 키셋 (task 09 hex-lint)', () => {
+  it('ColorTokens 필수 키 29개를 모두 포함한다', () => {
     for (const key of REQUIRED_KEYS) {
       expect(darkColors).toHaveProperty(key);
     }
@@ -77,10 +86,10 @@ describe('REQ-001 — darkColors — ColorTokens 키셋 (task 08 missing-tokens)
 });
 
 // ────────────────────────────────────────────────
-// REQ-001 — lightColors 키셋 (27개)
+// REQ-001 — lightColors 키셋 (29개)
 // ────────────────────────────────────────────────
-describe('REQ-001 — lightColors — ColorTokens 키셋 (task 08 missing-tokens)', () => {
-  it('ColorTokens 필수 키 27개를 모두 포함한다', () => {
+describe('REQ-001 — lightColors — ColorTokens 키셋 (task 09 hex-lint)', () => {
+  it('ColorTokens 필수 키 29개를 모두 포함한다', () => {
     for (const key of REQUIRED_KEYS) {
       expect(lightColors).toHaveProperty(key);
     }
@@ -225,6 +234,20 @@ describe('REQ-002 — darkColors — 신규 토큰 hex 값 (task 08 shared-compo
 });
 
 // ────────────────────────────────────────────────
+// REQ-002 — darkColors 신규 2 토큰 hex (task 09 hex-lint)
+// 다크 = task 05 §3.2.3 발견 hex 그대로 (다크 회귀 0)
+// ────────────────────────────────────────────────
+describe('darkColors — 신규 토큰 hex 값 (task 09 hex-lint)', () => {
+  it('successHigh: #82B090', () => {
+    expect(darkColors.successHigh).toBe('#82B090');
+  });
+
+  it('destructiveAction: #FF4444', () => {
+    expect(darkColors.destructiveAction).toBe('#FF4444');
+  });
+});
+
+// ────────────────────────────────────────────────
 // REQ-004 — lightColors 기존 토큰 hex 값 (회귀 0)
 // ────────────────────────────────────────────────
 describe('REQ-004 — lightColors — 기존 토큰 hex 값 (변경 X)', () => {
@@ -360,6 +383,20 @@ describe('REQ-003 — lightColors — 신규 토큰 hex 값 (task 08 shared-comp
 });
 
 // ────────────────────────────────────────────────
+// REQ-003 — lightColors 신규 2 토큰 hex (task 09 hex-lint)
+// 라이트 = architect 1차 결정값 (plan §3.3.1 근거)
+// ────────────────────────────────────────────────
+describe('lightColors — 신규 토큰 hex 값 (task 09 hex-lint)', () => {
+  it('successHigh: #5C8270', () => {
+    expect(lightColors.successHigh).toBe('#5C8270');
+  });
+
+  it('destructiveAction: #D63838', () => {
+    expect(lightColors.destructiveAction).toBe('#D63838');
+  });
+});
+
+// ────────────────────────────────────────────────
 // 하위 호환 별칭 + dark/light 분리 보장
 // ────────────────────────────────────────────────
 describe('Colors 하위 호환 별칭', () => {
@@ -389,5 +426,13 @@ describe('Colors 하위 호환 별칭', () => {
 
   it('dark 와 light 의 warning 는 다른 hex 값이다', () => {
     expect(darkColors.warning).not.toBe(lightColors.warning);
+  });
+
+  it('dark 와 light 의 successHigh 는 다른 hex 값이다 (task 09)', () => {
+    expect(darkColors.successHigh).not.toBe(lightColors.successHigh);
+  });
+
+  it('dark 와 light 의 destructiveAction 는 다른 hex 값이다 (task 09)', () => {
+    expect(darkColors.destructiveAction).not.toBe(lightColors.destructiveAction);
   });
 });

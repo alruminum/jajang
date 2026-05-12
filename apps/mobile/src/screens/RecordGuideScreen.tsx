@@ -101,7 +101,7 @@ const makeStyles = (colors: ColorTokens) => ({
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       borderWidth: 1,
-      borderColor: '#82B090', // TODO(task 09 token-define): #82B090 → mutedGreen 토큰 정의 후 colors.mutedGreen 교체
+      borderColor: colors.successHigh,
       borderRadius: 20,
       paddingVertical: 8,
       paddingHorizontal: 14,
@@ -109,7 +109,7 @@ const makeStyles = (colors: ColorTokens) => ({
       marginBottom: 20,
     },
     icon: { fontSize: 14, marginRight: 6 },
-    text: { color: '#82B090', fontSize: 13, fontFamily: 'NotoSansKR-Regular' }, // TODO(task 09 token-define): 동일
+    text: { color: colors.successHigh, fontSize: 13, fontFamily: 'NotoSansKR-Regular' },
   }),
   modal: StyleSheet.create({
     overlay: {

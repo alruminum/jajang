@@ -68,7 +68,8 @@
 - [x] Epic 09 — Mobile Test Triage (Issue #157 완료)
 - [x] Epic 10 — Mobile Test Finalize + PR #149 Merge (Issue #166 완료, PR #149 merged)
 - [x] Epic 11 — Mobile QA Tour Package + Jajang Integration (#181, Story 3 #185 완료)
-- [ ] Epic 12 — Theme drift fix (직접 hex → theme token 마이그레이션) — Epic 11 종료 후 등록
+- [x] Epic 12 — Theme drift fix (직접 hex → theme token 마이그레이션) — Issue #237 (task 01~09 모두 완료, hex-lint 회귀 방지 인프라 GREEN)
+- [ ] Epic 12 follow-up — RecordModeScreen.tsx 폐기 처리 (9 hex 잔존, no-raw-hex.test.ts 에 임시 ALLOWED 등재됨. 화면 자체 제거 또는 토큰 마이그레이션 결정 필요)
 - [ ] Epic 13 — `mobile-qa-tour` 별도 레포 분리 + npm publish — semver 1.0.0 안정화 후
 - [ ] Epic 14 — QA tour CI 자동화 (GitHub Actions) — PR merge 전 자동 실행
 - [ ] Epic 15 — iOS 시뮬레이터 지원 — iOS QA 필요 시점
