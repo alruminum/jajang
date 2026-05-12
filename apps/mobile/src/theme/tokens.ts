@@ -30,6 +30,9 @@ export type ColorTokens = {
   successMuted:     string;  // 삭제 버튼 / silenceWarning / exhaustedText
   errorText:        string;  // 에러 메시지 / 삭제 액션 텍스트
   warning:          string;  // BGM 실패 토스트
+  // ─── 신규 2 (task 09 epic-12) ───
+  successHigh:      string;  // HeadphoneChip border + text (RecordGuide)
+  destructiveAction: string; // stopRing border + stopBtn bg (RecordScreen)
 };
 
 // ─── Dark Colors (Midnight Indigo) ───────────────────────────────────────────
@@ -64,6 +67,9 @@ export const darkColors: ColorTokens = {
   successMuted:    '#5A8A6A',
   errorText:       '#FF6B6B',
   warning:         '#E0B070',
+  // ─── 신규 2 (task 09 epic-12) — 다크 = task 05 §3.2.3 발견 hex 그대로 (회귀 0) ───
+  successHigh:     '#82B090',
+  destructiveAction: '#FF4444',
 };
 
 // ─── Light Colors ─────────────────────────────────────────────────────────────
@@ -98,6 +104,9 @@ export const lightColors: ColorTokens = {
   successMuted:    '#3E6749',
   errorText:       '#C0392B',   // = lightColors.destructive (의도적 흡수)
   warning:         '#A07840',
+  // ─── 신규 2 (task 09 epic-12) — 라이트 = §3.3.1 architect 결정값 ───
+  successHigh:     '#5C8270',
+  destructiveAction: '#D63838',
 };
 
 // ─── 하위 호환 별칭 ────────────────────────────────────────────────────────────

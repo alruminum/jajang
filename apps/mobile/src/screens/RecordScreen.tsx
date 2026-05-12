@@ -180,7 +180,7 @@ const makeStyles = (colors: ColorTokens) =>
       height: 96,
       borderRadius: 48,
       borderWidth: 2,
-      borderColor: '#FF4444', // TODO(task 09): #FF4444 → recordStop 토큰 정의 후 교체
+      borderColor: colors.destructiveAction,
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -188,14 +188,14 @@ const makeStyles = (colors: ColorTokens) =>
       width: 72,
       height: 72,
       borderRadius: 36,
-      backgroundColor: '#FF4444', // TODO(task 09): 동일
+      backgroundColor: colors.destructiveAction,
       justifyContent: 'center',
       alignItems: 'center',
     },
     stopIcon: {
       width: 26,
       height: 26,
-      backgroundColor: colors.textOnAccent, // task 04 신규 토큰 즉시 활용 (#fff → textOnAccent)
+      backgroundColor: colors.textOnAccent,
       borderRadius: 4,
     },
   });
