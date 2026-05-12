@@ -1,8 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
 import { getLyrics } from '../data/lyrics';
 import { SONG_NAMES } from '../services/songs';
+import { useTheme } from '@hooks/useTheme';
+import type { ColorTokens } from '../theme/tokens';
 
 interface LyricsBoxProps {
   songKey: string;
@@ -10,6 +12,8 @@ interface LyricsBoxProps {
 }
 
 export function LyricsBox({ songKey, mode }: LyricsBoxProps): React.ReactElement | null {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const lyrics = getLyrics(songKey);
   const title = SONG_NAMES[songKey];
   const opacity = useRef(new Animated.Value(0)).current;
@@ -40,28 +44,28 @@ export function LyricsBox({ songKey, mode }: LyricsBoxProps): React.ReactElement
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: ColorTokens) => StyleSheet.create({
   container: {
-    backgroundColor: '#1A1D30',
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 20,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: '#2A2E48',
+    borderColor: colors.border,
   },
   title: {
-    color: '#EEF0F8',
+    color: colors.textPrimary,
     fontSize: 16,
     fontFamily: 'NotoSansKR-Regular',
     marginBottom: 10,
   },
   divider: {
     height: 1,
-    backgroundColor: '#2A2E48',
+    backgroundColor: colors.border,
     marginBottom: 12,
   },
   line: {
-    color: '#EEF0F8',
+    color: colors.textPrimary,
     fontSize: 15,
     lineHeight: 24,
     fontFamily: 'NotoSansKR-Regular',
