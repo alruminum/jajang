@@ -13,7 +13,7 @@
  * - BannerAdSlot: impl/07에서 구현 예정 — null placeholder
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -27,6 +27,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { MainStackParamList } from '@navigation/types';
+import { useTheme } from '@hooks/useTheme';
+import type { ColorTokens } from '../theme/tokens';
 import { usePlayerStore } from '@store/player-store';
 import { useAuthStore } from '@store/auth-store';
 import { SONG_NAMES } from '@services/songs';
@@ -88,6 +90,8 @@ function formatDuration(ms: number): string {
 }
 
 function TimerRemainingLabel({ endsAt }: { endsAt: number }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [remaining, setRemaining] = useState(() => Math.max(0, endsAt - Date.now()));
 
   useEffect(() => {
@@ -114,6 +118,8 @@ function PlayPauseButton({
   isPlaying: boolean;
   onPress: () => void;
 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <Pressable
       style={styles.playPauseBtn}
@@ -129,6 +135,8 @@ function PlayPauseButton({
 // ─── TimerButton (내부 컴포넌트) ──────────────────────────────────────────────
 
 function TimerButton({ onPress }: { onPress: () => void }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <Pressable
       style={styles.timerBtn}
@@ -150,6 +158,8 @@ function Header({
   onBack: () => void;
   rightAction?: React.ReactNode;
 }) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   return (
     <View style={styles.header}>
       <Pressable
@@ -169,6 +179,9 @@ function Header({
 // ─── PlayScreen ───────────────────────────────────────────────────────────────
 
 export default function S13PlayScreen({ route }: PlayScreenProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const { trackId, trackUrl, presignUrl, songKey } = route.params;
 
   // trackUrl 우선, S12의 presignUrl 하위호환 처리
@@ -289,105 +302,106 @@ export default function S13PlayScreen({ route }: PlayScreenProps) {
   );
 }
 
-// ─── 스타일 (ux-flow.md 기반) ─────────────────────────────────────────────────
+// ─── 스타일 factory (ux-flow.md 기반) ────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  // 배경: #0D0F1A
-  container: {
-    flex: 1,
-    backgroundColor: '#0D0F1A',
-    alignItems: 'center',
-  },
+const makeStyles = (colors: ColorTokens) =>
+  StyleSheet.create({
+    // 배경
+    container: {
+      flex: 1,
+      backgroundColor: colors.bgPrimary,
+      alignItems: 'center',
+    },
 
-  // Header
-  header: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 8,
-    minHeight: 56,
-  },
-  headerBackBtn: {
-    width: 48,
-    height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerBackText: {
-    color: '#EEF0F8',
-    fontSize: 22,
-  },
-  headerRight: {
-    width: 48,
-    height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+    // Header
+    header: {
+      width: '100%',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingTop: 8,
+      paddingBottom: 8,
+      minHeight: 56,
+    },
+    headerBackBtn: {
+      width: 48,
+      height: 48,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    headerBackText: {
+      color: colors.textPrimary,
+      fontSize: 22,
+    },
+    headerRight: {
+      width: 48,
+      height: 48,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
 
-  // AlbumArt
-  artContainer: {
-    marginTop: 32,
-    marginBottom: 36,
-  },
+    // AlbumArt
+    artContainer: {
+      marginTop: 32,
+      marginBottom: 36,
+    },
 
-  // SongInfo
-  songInfo: {
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    marginBottom: 32,
-  },
-  // 텍스트 주: #EEF0F8
-  songTitle: {
-    color: '#EEF0F8',
-    fontSize: 22,
-    marginBottom: 6,
-  },
-  // 텍스트 보조: #7B80A0
-  songSubtitle: {
-    color: '#7B80A0',
-    fontSize: 14,
-  },
+    // SongInfo
+    songInfo: {
+      alignItems: 'center',
+      paddingHorizontal: 24,
+      marginBottom: 32,
+    },
+    // 텍스트 주
+    songTitle: {
+      color: colors.textPrimary,
+      fontSize: 22,
+      marginBottom: 6,
+    },
+    // 텍스트 보조
+    songSubtitle: {
+      color: colors.textSecondary,
+      fontSize: 14,
+    },
 
-  // VolumeSlider
-  sliderContainer: {
-    width: '80%',
-    marginBottom: 40,
-  },
+    // VolumeSlider
+    sliderContainer: {
+      width: '80%',
+      marginBottom: 40,
+    },
 
-  // PlayPauseButton: 앰버 채움, 높이 56, borderRadius 28
-  playPauseBtn: {
-    height: 56,
-    width: 120,
-    backgroundColor: '#5A7AA8',
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  playPauseBtnText: {
-    color: '#0D0F1A',
-    fontSize: 24,
-  },
+    // PlayPauseButton
+    playPauseBtn: {
+      height: 56,
+      width: 120,
+      backgroundColor: colors.accentPrimary,
+      borderRadius: 28,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 24,
+    },
+    playPauseBtnText: {
+      color: colors.bgPrimary,
+      fontSize: 24,
+    },
 
-  // TimerButton
-  timerBtn: {
-    width: 48,
-    height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  timerBtnText: {
-    color: '#EEF0F8',
-    fontSize: 22,
-  },
+    // TimerButton
+    timerBtn: {
+      width: 48,
+      height: 48,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    timerBtnText: {
+      color: colors.textPrimary,
+      fontSize: 22,
+    },
 
-  // TimerRemainingLabel: 앰버 색상 (tabular-nums)
-  timerLabel: {
-    color: '#5A7AA8',
-    fontSize: 15,
-    fontVariant: ['tabular-nums'],
-  },
-});
+    // TimerRemainingLabel (tabular-nums)
+    timerLabel: {
+      color: colors.accentPrimary,
+      fontSize: 15,
+      fontVariant: ['tabular-nums'],
+    },
+  });

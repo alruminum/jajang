@@ -1,7 +1,7 @@
 // apps/mobile/src/screens/S11PreviewScreen.tsx
 // S11 — 녹음 미리듣기 화면 (파형 미리보기 + 재생 + 업로드 + 서버 품질 검증)
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -19,12 +19,17 @@ import { WaveformVisualizer } from '@components/WaveformVisualizer';
 import { useRecordingStore } from '@store/recordingSlice';
 import { useAuthStore } from '@store/authSlice';
 import type { MainStackParamList } from '@navigation/types';
+import { useTheme } from '@hooks/useTheme';
+import type { ColorTokens } from '../theme/tokens';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Preview'>;
 
 type UploadPhase = 'idle' | 'validating_client' | 'uploading' | 'validating_server' | 'error';
 
 export default function S11PreviewScreen({ navigation }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const {
     localAudioUri,
     selectedSongKey,
@@ -215,7 +220,7 @@ export default function S11PreviewScreen({ navigation }: Props) {
         <WaveformVisualizer
           mode="static"
           levels={recordingLevels}
-          color="#C49A8A"
+          color={colors.accentSecondary}
           playbackPosition={playbackPosition}
         />
         <View style={styles.playbackRow}>
@@ -241,7 +246,7 @@ export default function S11PreviewScreen({ navigation }: Props) {
       {/* 처리 중 상태 */}
       {isProcessing && (
         <View style={styles.processingBanner}>
-          <ActivityIndicator size="small" color="#5A7AA8" style={{ marginRight: 8 }} />
+          <ActivityIndicator size="small" color={colors.accentPrimary} style={{ marginRight: 8 }} />
           <Text style={styles.processingText}>{phaseMessages[phase]}</Text>
         </View>
       )}
@@ -294,103 +299,104 @@ function formatTime(sec: number): string {
   return `${m}:${s}`;
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0D0F1A',
-    paddingHorizontal: 20,
-    paddingTop: 24,
-  },
-  title: {
-    color: '#EEF0F8',
-    fontSize: 20,
-    fontFamily: 'NotoSansKR-Regular',
-    marginBottom: 24,
-  },
-  waveformCard: {
-    backgroundColor: '#1A1D30',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-  },
-  playbackRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 14,
-  },
-  playIcon: {
-    color: '#C49A8A',
-    fontSize: 22,
-    marginRight: 12,
-  },
-  timecode: {
-    color: '#7B80A0',
-    fontSize: 13,
-    fontVariant: ['tabular-nums'],
-  },
-  errorBanner: {
-    backgroundColor: '#2A1A1A',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 16,
-  },
-  errorText: {
-    color: '#FF6B6B',
-    fontSize: 14,
-  },
-  processingBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  processingText: {
-    color: '#7B80A0',
-    fontSize: 14,
-  },
-  exhaustedBanner: {
-    backgroundColor: '#21253E',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 16,
-  },
-  exhaustedText: {
-    color: '#5A8A6A',
-    fontSize: 14,
-    marginBottom: 4,
-  },
-  exhaustedSub: {
-    color: '#7B80A0',
-    fontSize: 13,
-  },
-  buttonGroup: {
-    gap: 12,
-    marginTop: 'auto',
-    marginBottom: 32,
-  },
-  primaryBtn: {
-    height: 56,
-    backgroundColor: '#5A7AA8',
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  primaryBtnText: {
-    color: '#0D0F1A',
-    fontSize: 17,
-    fontFamily: 'NotoSansKR-Regular',
-  },
-  secondaryBtn: {
-    height: 52,
-    backgroundColor: '#1A1D30',
-    borderRadius: 26,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  secondaryBtnText: {
-    color: '#C49A8A',
-    fontSize: 15,
-  },
-  btnDisabled: {
-    opacity: 0.4,
-  },
-});
+const makeStyles = (colors: ColorTokens) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.bgPrimary,
+      paddingHorizontal: 20,
+      paddingTop: 24,
+    },
+    title: {
+      color: colors.textPrimary,
+      fontSize: 20,
+      fontFamily: 'NotoSansKR-Regular',
+      marginBottom: 24,
+    },
+    waveformCard: {
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      padding: 20,
+      marginBottom: 20,
+    },
+    playbackRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 14,
+    },
+    playIcon: {
+      color: colors.accentSecondary,
+      fontSize: 22,
+      marginRight: 12,
+    },
+    timecode: {
+      color: colors.textSecondary,
+      fontSize: 13,
+      fontVariant: ['tabular-nums'],
+    },
+    errorBanner: {
+      backgroundColor: colors.destructiveBg, // task 04 흡수 §3.2.2
+      borderRadius: 12,
+      padding: 14,
+      marginBottom: 16,
+    },
+    errorText: {
+      color: '#FF6B6B', // TODO(task 09): destructiveBright 토큰 도입 후 교체
+      fontSize: 14,
+    },
+    processingBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    processingText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+    },
+    exhaustedBanner: {
+      backgroundColor: colors.surfaceHigh,
+      borderRadius: 12,
+      padding: 14,
+      marginBottom: 16,
+    },
+    exhaustedText: {
+      color: '#5A8A6A', // TODO(task 09): successMuted 토큰 도입 후 교체
+      fontSize: 14,
+      marginBottom: 4,
+    },
+    exhaustedSub: {
+      color: colors.textSecondary,
+      fontSize: 13,
+    },
+    buttonGroup: {
+      gap: 12,
+      marginTop: 'auto',
+      marginBottom: 32,
+    },
+    primaryBtn: {
+      height: 56,
+      backgroundColor: colors.accentPrimary,
+      borderRadius: 28,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    primaryBtnText: {
+      color: colors.bgPrimary,
+      fontSize: 17,
+      fontFamily: 'NotoSansKR-Regular',
+    },
+    secondaryBtn: {
+      height: 52,
+      backgroundColor: colors.surface,
+      borderRadius: 26,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    secondaryBtnText: {
+      color: colors.accentSecondary,
+      fontSize: 15,
+    },
+    btnDisabled: {
+      opacity: 0.4,
+    },
+  });
