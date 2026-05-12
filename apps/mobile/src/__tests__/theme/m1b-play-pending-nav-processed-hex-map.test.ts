@@ -141,23 +141,23 @@ describe('task 06 m1b-play-pending-nav — 처리 hex 잔존 0', () => {
   }
 });
 
-// ─── describe 2: 보류 hex 명시 (task 09 위임) ─────────────────────────────────
+// ─── describe 2: 보류 hex 해소 검증 (task 08 흡수 + task 09 종료) ─────────────
+//
+// task 06 시점 보류 명시 2종 = '#FF6B6B' (errorText) + '#5A8A6A' (exhaustedText).
+// task 08 (shared-components) 가 ColorTokens 에 `errorText` / `successMuted` 토큰 추가하면서
+// S11PreviewScreen 의 두 hex 도 동시 흡수. task 09 (Epic 12 마지막) 시점에 이미 0건.
 
-describe('task 06 m1b-play-pending-nav — 보류 hex 명시 (task 09 위임)', () => {
-  it('S11PreviewScreen 의 #FF6B6B (errorText) — task 09 까지 잔존 허용', () => {
+describe('task 06 m1b-play-pending-nav — 보류 hex 해소 검증 (task 08/09 흡수 후)', () => {
+  it('S11PreviewScreen 의 #FF6B6B (errorText) — 본 task 시점에 0건 (task 08 흡수)', () => {
     const abs = path.join(SRC_ROOT, 'screens/S11PreviewScreen.tsx');
     const src = fs.readFileSync(abs, 'utf-8');
-    // 명시적 positive — 본 task 머지 후에도 1건 존재해야 함 (보류 명시)
-    // 현재 상태: S11PreviewScreen 에 '#FF6B6B' 존재 → GREEN (구현 전/후 모두)
-    expect(src.includes("'#FF6B6B'")).toBe(true);
+    expect(src.includes("'#FF6B6B'")).toBe(false);
   });
 
-  it('S11PreviewScreen 의 #5A8A6A (exhaustedText) — task 09 까지 잔존 허용', () => {
+  it('S11PreviewScreen 의 #5A8A6A (exhaustedText) — 본 task 시점에 0건 (task 08 흡수)', () => {
     const abs = path.join(SRC_ROOT, 'screens/S11PreviewScreen.tsx');
     const src = fs.readFileSync(abs, 'utf-8');
-    // 명시적 positive — 본 task 머지 후에도 1건 존재해야 함 (보류 명시)
-    // 현재 상태: S11PreviewScreen 에 '#5A8A6A' 존재 → GREEN (구현 전/후 모두)
-    expect(src.includes("'#5A8A6A'")).toBe(true);
+    expect(src.includes("'#5A8A6A'")).toBe(false);
   });
 });
 

@@ -2,18 +2,20 @@
  * task 09 — Jest hex-lint 회귀 방지 인프라
  *
  * 대상: apps/mobile/src/ 전체 (.ts/.tsx)
- * 패턴: /#[0-9A-Fa-f]{3,6}\b/g (3자리 + 6자리 hex; \b 로 8자리 alpha hex 자연 제외)
+ * 패턴: /['"]#[0-9A-Fa-f]{3,6}['"]/g (quote-aware — 직접 hex *리터럴* 만 검출.
+ *       주석 안 `// (#222)` 같은 이슈 번호 텍스트는 quote 부재 → 자연 제외)
  * 예외 (절대 경로 기준):
- *   - apps/mobile/src/theme/tokens.ts  (SSOT — hex 정의 본체)
- *   - **\/__tests__\/**                  (테스트 파일 자체)
- *   - **\/__mocks__\/**                  (mock 파일)
+ *   - apps/mobile/src/theme/tokens.ts          (SSOT — hex 정의 본체)
+ *   - apps/mobile/src/screens/RecordModeScreen.tsx (폐기 예정 화면 — 별도 cleanup backlog 항목)
+ *   - **\/__tests__\/**                          (테스트 파일 자체)
+ *   - **\/__mocks__\/**                          (mock 파일)
  *   - *.test.ts / *.test.tsx / *.spec.ts / *.spec.tsx
  *   - 본 테스트 파일 자체 (자동 — __tests__ 안)
  *
- * 실패 시 출력: 파일 상대 경로:라인 + 발견 hex (가까운 토큰 제안 = 별도 옵션, MVP 미포함)
+ * 실패 시 출력: 파일 상대 경로:라인 + 발견 hex.
  *
  * 도입 시점: task 09 (Epic 12 마지막 task). 본 테스트 머지 시점에 GREEN 보장 → 이후 미래 PR
- * 누군가 src/ 안에 hex 추가 시 즉시 RED.
+ * 누군가 src/ 안에 hex 리터럴 추가 시 즉시 RED.
  */
 import * as fs from 'fs';
 import * as path from 'path';
@@ -26,12 +28,17 @@ import * as path from 'path';
  */
 const SRC_ROOT = path.resolve(__dirname, '..', '..');
 
-/** hex 검출 정규식 — 3 또는 6 자리. \b word boundary 로 8자리 (alpha 포함) 자연 제외. */
-const HEX_REGEX = /#[0-9A-Fa-f]{3,6}\b/g;
+/**
+ * hex 검출 정규식 — quote 강제. 직접 hex *리터럴* (예: `'#FF4444'` / `"#fff"`) 만 검출.
+ * 주석 안 텍스트 (예: `// TODO(#222)` / `// (#129).`) 는 quote 부재 → 자연 제외.
+ * 8자리 alpha hex (`'#000000AA'`) = 매치 X — 양쪽 quote 사이 글자수 3~6 강제.
+ */
+const HEX_REGEX = /['"]#[0-9A-Fa-f]{3,6}['"]/g;
 
-/** 파일 단위 예외 — SSOT 본체 + 본 테스트. 상대 경로 (SRC_ROOT 기준). */
+/** 파일 단위 예외 — SSOT 본체 + 폐기 예정 화면 (별도 backlog cleanup). 상대 경로 (SRC_ROOT 기준). */
 const ALLOWED_FILES: string[] = [
   'theme/tokens.ts',
+  'screens/RecordModeScreen.tsx',
 ];
 
 /** 디렉토리 단위 예외 — 테스트 + mock. (SRC_ROOT 기준 prefix) */
@@ -74,14 +81,17 @@ function isAllowed(relPath: string): boolean {
   return false;
 }
 
-/** content 안 hex match + 라인 번호 추출. */
+/** content 안 hex match + 라인 번호 추출. match 결과는 양쪽 quote 포함 → quote 벗겨내고 hex 만 노출. */
 function findHexMatches(content: string): Array<{ line: number; hex: string }> {
   const lines = content.split('\n');
   const matches: Array<{ line: number; hex: string }> = [];
   lines.forEach((lineText, idx) => {
     const found = lineText.match(HEX_REGEX);
     if (found) {
-      found.forEach((hex) => matches.push({ line: idx + 1, hex }));
+      found.forEach((quoted) => {
+        const hex = quoted.slice(1, -1);
+        matches.push({ line: idx + 1, hex });
+      });
     }
   });
   return matches;
@@ -126,24 +136,32 @@ describe('task 09 — no-raw-hex 인프라 자가 검증', () => {
     expect(fs.existsSync(path.join(SRC_ROOT, 'theme/tokens.ts'))).toBe(true);
   });
 
-  it('ALLOWED_FILES 의 tokens.ts 는 실제 hex 정의를 포함한다 (regex 동작 확인)', () => {
+  it('ALLOWED_FILES 의 tokens.ts 는 실제 hex 리터럴 정의를 포함한다 (regex 동작 확인)', () => {
     const content = fs.readFileSync(
       path.join(SRC_ROOT, 'theme/tokens.ts'),
       'utf-8',
     );
     const matches = content.match(HEX_REGEX);
-    // tokens.ts = hex SSOT → 최소 15+9+3+2 = 29 토큰 × 2 (dark/light) ≈ 58 hex (3자리·6자리 합산).
-    // 단 8자리 (`#000000AA` 등) 는 \b 로 자연 제외 → 6자리 hex 카운트 < 전체. 정확 카운트 X — 0보다 큰지만 확인.
+    // tokens.ts = hex SSOT → ColorTokens 29 토큰 × 2 (dark/light) = 58 hex 리터럴 (모두 quote 안).
+    // 8자리 alpha hex (`'#000000AA'`) 는 quote 사이 글자수 8 → regex `{3,6}` 범위 외 자연 제외.
     expect(matches).not.toBeNull();
     expect((matches ?? []).length).toBeGreaterThan(0);
   });
 
-  it('예외 등재 함수 isAllowed — tokens.ts / __tests__ / __mocks__ / *.test.* 통과', () => {
+  it('예외 등재 함수 isAllowed — 등재 파일 / 디렉토리 prefix / 테스트 suffix 모두 통과', () => {
     expect(isAllowed('theme/tokens.ts')).toBe(true);
+    expect(isAllowed('screens/RecordModeScreen.tsx')).toBe(true);
     expect(isAllowed('__tests__/theme/no-raw-hex.test.ts')).toBe(true);
-    expect(isAllowed('__mocks__/react-native-track-player.js')).toBe(false); // .js 확장자 → 수집 대상 외
+    expect(isAllowed('__mocks__/Foo.ts')).toBe(true); // __mocks__/ prefix 매치
     expect(isAllowed('components/Foo.test.tsx')).toBe(true);
     expect(isAllowed('components/Foo.spec.ts')).toBe(true);
     expect(isAllowed('screens/RecordScreen.tsx')).toBe(false);
+  });
+
+  it('quote-aware regex — 주석 안 hex 형태 텍스트는 검출 X', () => {
+    expect('// TODO(#222): loop'.match(HEX_REGEX)).toBeNull();
+    expect('// useFocusEffect (#129).'.match(HEX_REGEX)).toBeNull();
+    expect("color: '#FF4444'".match(HEX_REGEX)).not.toBeNull();
+    expect('color: "#fff"'.match(HEX_REGEX)).not.toBeNull();
   });
 });
