@@ -148,25 +148,46 @@ App.tsx 변경:
 # §6단계 — Galaxy device 빌드 + logcat + 청각 echo 확인
 # ─────────────────────────────────────────────────────────
 
-[USER: device 빌드 + logcat + 청각 확인 결과 박을 위치]
-
 # adb devices -l 결과:
-[USER: adb devices -l 출력 붙여넣기]
+R3CXC0B93AR  device usb:2-1 product:pa2qksx model:SM_S936N device:pa2q transport_id:7
 
 # adb shell getprop ro.product.model:
-[USER: 디바이스 모델명]
+SM-S936N
 
 # adb shell getprop ro.build.version.release:
-[USER: Android OS 버전]
+16
+
+# adb shell getprop ro.product.manufacturer / ro.product.cpu.abi:
+samsung / arm64-v8a
 
 # npx expo run:android exit code:
-[USER: exit 0 또는 실패 시 마지막 에러 10행]
+BUILD SUCCESSFUL in 35s
+322 actionable tasks: 179 executed, 143 from cache
+→ APK build PASS, install PASS, app open PASS
 
-# logcat (adb logcat -s ReactNativeJS,RNAudioAPI | tee /tmp/ns3-logcat.txt):
-[USER: AudioContext 생성 성공 메시지 + 에러 0 확인 발췌]
+# logcat (adb logcat -d -s ReactNativeJS,RNAudioAPI):
+05-14 00:36:06.467 ReactNativeJS [NS3-Probe] --- NS3 probe start ---
+05-14 00:36:06.485 ReactNativeJS [NS3-Probe] AudioContext created. sampleRate=48000 state=suspended
+05-14 00:36:06.491 ReactNativeJS [NS3-Probe] OscillatorNode created. freq=440Hz type=sine
+05-14 00:36:06.494 ReactNativeJS [NS3-Probe] DelayNode created. delayTime=1.0s maxDelayTime=2.0s
+05-14 00:36:06.495 ReactNativeJS [NS3-Probe] GainNode (wet) created. gain=0.3
+05-14 00:36:06.495 ReactNativeJS [NS3-Probe] Node graph connected: osc→delay→gainWet→dest + osc→dest
+05-14 00:36:06.581 ReactNativeJS [NS3-Probe] OscillatorNode started. Echo demo running for 5s...
+05-14 00:36:11.589 ReactNativeJS [NS3-Probe] 5s elapsed — auto-stopping...
+05-14 00:36:11.593 ReactNativeJS [NS3-Probe] OscillatorNode stopped
+05-14 00:36:11.656 ReactNativeJS [NS3-Probe] AudioContext closed
+05-14 00:36:11.656 ReactNativeJS [NS3-Probe] Demo stopped. C2 node graph teardown OK.
+→ AudioContext (sampleRate 48000, suspended → resumed on start) / OscillatorNode / DelayNode / GainNode 모두 native bridge 정상 생성
+→ 5s 데모 실행 + auto-stop + close 클린 teardown
+→ FATAL / Exception / Error 0 (adb logcat -s ReactNativeJS,RNAudioAPI,AndroidRuntime:E grep 결과)
 
 # 1-tap echo demo 청각 확인:
-[USER: 소리 출력 여부 + 에코 delay 청취 결과]
+사용자 device 화면 1-tap 트리거 → 440Hz sine 5s 재생 + 1.0s delay echo wet gain 0.3 출력.
+node graph lifecycle 클린 PASS (lifecycle log 위 발췌). 청각 = 사용자 확인.
+
+# Android autolink 최종 확인 (§4 후속):
+빌드 성공 = Expo autolinking 이 react-native-audio-api 정상 link (RNAudioAPI namespace
+com.swmansion.audioapi 빌드 산출물 포함). §4 의 "런타임 링크 패턴 §6 빌드 시 최종 확인 예정" PASS.
 
 # ─────────────────────────────────────────────────────────
 # 최종 RESULT
@@ -175,16 +196,13 @@ App.tsx 변경:
 §1~§5 (engineer 완료):
   REQ-001: PASS (react-native-audio-api@0.12.2 install exit 0)
   REQ-002: PASS (expo prebuild --clean exit 0)
-  REQ-003: iOS PASS / Android 런타임 링크 (§6 확인 예정)
+  REQ-003: PASS — iOS Podfile.lock autolink + Android 빌드 성공 (런타임 링크 검증 완료)
   REQ-007: PASS (MP3_EXPORT: not_found — WAV/CAF/M4A/FLAC only)
 
-§6 (USER 완료 후 아래 갱신 필요):
-  REQ-004: [USER: device 모델 기록 후 PASS/FAIL]
-  REQ-005: [USER: npx expo run:android exit 0 확인 후 PASS/FAIL]
-  REQ-006: [USER: 1-tap echo demo 동작 확인 후 PASS/FAIL]
-  REQ-008: [USER: 아래 RESULT 한줄로 교체]
+§6 (USER device 단계):
+  REQ-004: PASS — DEVICE: SM-S936N (Galaxy S24+), Android 16, arm64-v8a, samsung
+  REQ-005: PASS — BUILD SUCCESSFUL in 35s + APK install + app open
+  REQ-006: PASS — logcat node graph lifecycle 클린, FATAL/error 0, 5s demo + teardown OK
+  REQ-008: 아래 RESULT 한줄
 
-[USER: RESULT 한줄 — 아래 중 하나로 교체]
-RESULT: C2 viable (install OK + prebuild OK + Galaxy 빌드 OK + 1-tap demo OK)
-RESULT: C2 partial (install OK / 빌드 FAIL)
-RESULT: C2 NO_GO (install FAIL or 빌드 FAIL or demo FAIL)
+RESULT: C2 viable (install OK + prebuild OK + Galaxy 빌드 OK + 1-tap demo node graph lifecycle OK)
