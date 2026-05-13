@@ -3,11 +3,22 @@ depth: deep
 story: 1
 task_index: "3/3"
 design: not-required
+status: DEPRECATED
+deprecated_reason: ffmpeg-kit fork 의존 전제가 task 01 spike NO_GO 로 무효화됨 (2026-05-13)
+deprecated_replaces: impl/04-spike-ns1-afftdn-perceptual.md (예정), impl/05-spike-ns2-pure-js-perf.md (예정), impl/06-spike-ns3-rn-audio-api-integration.md (예정), impl/07-spike-ns4-candidate-comparison.md (예정)
 ---
 
-# 03 — spike-device-perf-size-license
+> **⚠️ DEPRECATED (2026-05-13)** — 본 task 는 task 02 (ffprobe -filters) PASS 가 진입 전제. task 02 = DEPRECATED 이므로 본 task 도 동일하게 무효.
+>
+> 또한 본 task 가 측정하려던 3 항목 (디바이스별 처리시간 #3 / 앱 크기 델타 #4 / LGPL 라이선스 #5) 모두 ffmpeg-kit fork 라이브러리 기준이라 framing reset (port-implementation → port-requirement) 후 후보 set (C1~C4) 와 align 되지 않음.
+>
+> 새 Spike NS2 (`impl/05-spike-ns2-pure-js-perf.md` 예정) 가 본 task 의 처리시간 측정 부분을 *후보별로* 다시 정의함. 앱 크기 델타 (#4) + LGPL (#5) 는 후보별 dep 변경에 따라 새 spike scope 에서 자연스럽게 재측정.
+>
+> 본 파일은 historical 보존. 새 spike 진입 = module-architect 재호출.
 
-**Epic 19 Story 1 · GO/NO_GO 게이트**
+# 03 — spike-device-perf-size-license  [DEPRECATED]
+
+**Epic 19 Story 1 · GO/NO_GO 게이트** *(구 framing — port-implementation 가정 위)*
 
 디바이스별 30초 입력 처리시간 (artifact #3) + ipa/apk 크기 델타 (artifact #4) + LGPL 라이선스 확정 (artifact #5) 를 실측 데이터로 확보하고 GO/NO_GO 판정을 내리는 task. 3 artifacts 모두 PASS 시에만 Story 2 (04, 05) + Story 3 (06) 진입. 1+ FAIL 시 04~06 폐기 + V2+ 이관 + epic 19 부분 종료.
 

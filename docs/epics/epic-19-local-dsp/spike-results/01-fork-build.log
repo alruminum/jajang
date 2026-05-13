@@ -1,0 +1,231 @@
+# Epic 19 / Story 1 / task 01 — Fork build evaluation log
+
+측정일: 2026-05-13
+브랜치: feature/epic19_story1_task01_fork_eval (base: feature/local-dsp)
+Primary fork: jdarshan5/ffmpeg-kit-react-native (default branch)
+실측 디바이스: Android 만 보유 (iOS REQ-002 = N/A — 사용자 디바이스 부재)
+
+---
+
+## 1단계 — fork npm install (REQ-001)
+
+명령: `npm install github:jdarshan5/ffmpeg-kit-react-native` (apps/mobile cwd)
+결과: 성공 (added 1 package)
+설치 위치: monorepo workspace hoist → /Users/dc.kim/project/jajang/node_modules/ffmpeg-kit-react-native
+
+node_modules/ffmpeg-kit-react-native/package.json:
+- name: ffmpeg-kit-react-native
+- version: 6.0.2
+- main: src/index
+- repository: https://github.com/jdarshan5/ffmpeg-kit-react-native
+- license: LGPL-3.0  (← 단, 실제 native 의존은 podspec/gradle 에 정의됨, 아래 참조)
+
+apps/mobile/package.json 항목 추가:
+  "ffmpeg-kit-react-native": "github:jdarshan5/ffmpeg-kit-react-native"
+
+## 사전 native 의존성 분석 (prebuild 전 정적 read)
+
+### iOS — ffmpeg-kit-react-native.podspec
+```
+s.dependency 'ffmpeg-kit-full-gpl', "~> 6.0.2"
+```
+🚨 fork 가 podspec 레벨에서 **`-full-gpl` 변종**을 hardcode.
+- task 03 §주의사항-4 + GO/NO_GO 결정표 §artifact #5: `-gpl` 변종 = 즉시 NO_GO (App Store 클로즈드 앱 GPL 위반).
+- 추가 podspec `ffmpeg-kit-full-gpl.podspec` 도 동봉돼 있음 (LGPL podspec 부재).
+- npm package 의 license 필드 (LGPL-3.0) 는 wrapper (JS/Obj-C shim) 라이선스이고, 실제 native 바이너리 = GPL.
+
+### Android — android/build.gradle
+```
+implementation 'com.arthenica:ffmpeg-kit-' + safePackageName(safeExtGet('ffmpegKitPackage', 'https')) + ':' + safePackageVersion(safeExtGet('ffmpegKitPackage', 'https'))
+```
+android/gradle.properties:
+```
+ffmpegKit.android.main.version=6.0-2
+```
+🚨 의존 좌표 = **`com.arthenica:ffmpeg-kit-https:6.0-2`** (Maven Central).
+- arthenica Maven Central artifact 는 2025-04-01 v6.0 일괄 제거됨 (plan-reviewer PRE_CHECK 2026-05-13 확정 사실).
+- fork 는 자체 maven repo / local aar / 대체 mirror 미제공 — 본가 좌표를 그대로 의존.
+- dev.to 2026 broken 케이스 (`Could not find com.arthenica:ffmpeg-kit-https:6.0-2`) 그대로 재현 예정.
+
+→ 이 시점에서 primary fork (jdarshan5) artifact #1 **사실상 FAIL 확정** (정적 분석).
+→ 그러나 spec (impl 01 §3단계/4단계) 은 실측 의무. prebuild + gradle resolve 실제 실행 후 RESULT 확정.
+
+
+---
+
+## 2단계 — npx expo prebuild --clean (REQ-001)
+
+명령: `npx expo prebuild --clean`
+결과: 성공 (exit 0)
+- ios/ + android/ native 디렉토리 신규 생성
+- pod install 성공 (CocoaPods 1.16.2 brew 자동 설치 → 재실행)
+
+### iOS Podfile.lock 결과
+```
+- ffmpeg-kit-full-gpl (6.0.2)
+- ffmpeg-kit-react-native (6.0.2):
+  - ffmpeg-kit-full-gpl (~> 6.0.2)
+```
+🚨 iOS = `ffmpeg-kit-full-gpl 6.0.2` 실제 다운로드/설치됨 (CocoaPods CDN 캐시 잔존 추정).
+- iOS native 바이너리 = **GPL** 변종.
+- task 03 §주의사항-4 + GO/NO_GO §artifact #5: `-gpl` 부재 + LGPL 명시 동시 충족 시만 PASS — 본 fork iOS = **즉시 NO_GO 사유** (artifact #5 영역, 사전 발견).
+- 본 task 01 의 iOS REQ-002 는 사용자 디바이스 부재로 N/A 처리이므로 빌드 자체는 로컬 시도 안 함. 그러나 GPL 변종 사실은 Story 1 종합 GO/NO_GO 에 직접 반영 의무.
+
+### Android settings.gradle / arthenica 직접 ref
+`grep -rn "arthenica" apps/mobile/android/` → 0 매치.
+- Expo autolinking 경유로 ffmpeg-kit-react-native 모듈이 :ffmpeg-kit-react-native gradle subproject 로 자동 포함됨.
+- arthenica Maven 좌표는 fork 의 node_modules/ffmpeg-kit-react-native/android/build.gradle 안에서 동적으로 합성됨 → apps/mobile/android/ 에는 ref 표면화 안 됨.
+
+## 3단계 — iOS real device 빌드 (REQ-002)
+
+**상태: N/A — 사용자 iOS 디바이스 부재 (Android only spike)**.
+- iOS 정적 분석 결과 (위) 만으로 GPL 변종 사실 확정.
+- iOS 실측은 디바이스 확보 시 후속 task 또는 별도 spike 로 분리.
+
+## 4단계 — Android real device 빌드 시도 (REQ-003 / REQ-004)
+
+### Device 연결 확인
+```
+$ adb devices -l
+List of devices attached
+R3CXC0B93AR  device usb:2-1 product:pa2qksx model:SM_S936N device:pa2q
+$ adb shell getprop ro.product.model
+SM-S936N         ← Samsung Galaxy S24+
+$ adb shell getprop ro.build.version.release
+16               ← Android 16
+```
+
+### 의존성 resolve 사전 check
+명령: `cd apps/mobile/android && ./gradlew :app:dependencies --configuration releaseRuntimeClasspath`
+결과 (관련 부분 발췌):
+```
++--- project :ffmpeg-kit-react-native
+|    \--- com.arthenica:ffmpeg-kit-https:6.0-2 FAILED
+```
+
+### 실제 device 빌드 시도
+명령: `npx expo run:android` (디바이스 단일 연결 → 자동 선택)
+결과: BUILD FAILED in 5s (Gradle dep resolution 단계, 컴파일 진입 못 함):
+```
+FAILURE: Build failed with an exception.
+* What went wrong:
+Could not determine the dependencies of task ':app:processDebugResources'.
+> Could not resolve all dependencies for configuration ':app:debugRuntimeClasspath'.
+   > Could not find com.arthenica:ffmpeg-kit-https:6.0-2.
+     Searched in the following locations:
+       - https://dl.google.com/dl/android/maven2/com/arthenica/ffmpeg-kit-https/6.0-2/ffmpeg-kit-https-6.0-2.pom
+       - https://repo.maven.apache.org/maven2/com/arthenica/ffmpeg-kit-https/6.0-2/ffmpeg-kit-https-6.0-2.pom
+       - https://www.jitpack.io/com/arthenica/ffmpeg-kit-https/6.0-2/ffmpeg-kit-https-6.0-2.pom
+       - https://central.sonatype.com/repository/maven-snapshots/com/arthenica/ffmpeg-kit-https/6.0-2/ffmpeg-kit-https-6.0-2.pom
+     Required by:
+         project ':app' > project :ffmpeg-kit-react-native
+BUILD FAILED in 5s
+Error: /Users/dc.kim/project/jajang/apps/mobile/android/gradlew app:assembleDebug ... exited with non-zero code: 1
+```
+
+🚨 **Android REQ-003 = FAIL (real device 연결 + 실제 빌드 명령 실행 결과)** — dev.to broken 시나리오 (`Could not find com.arthenica:ffmpeg-kit-https:6.0-2`) **4개 Maven repo (Google + Maven Central + JitPack + Sonatype Snapshots) 전체에서 missing** 확정.
+- arthenica Maven Central artifact 2025-04-01 v6.0 일괄 제거 사실 확정 (plan-reviewer PRE_CHECK 2026-05-13 + 본 실측으로 재확인).
+- `ffmpegKitPackage` ext property 를 `min` / `audio` / `lts` 로 바꿔도 모두 `com.arthenica:ffmpeg-kit-<variant>:6.0-2` → 동일하게 FAIL.
+- fork 가 자체 maven repo / mirror / local aar 미제공.
+- 디바이스에 APK install 도달 못 함 (gradle dep resolve 단계 차단).
+
+**REQ-003**: FAIL — device 연결 + 실제 build 명령 실행 결과로 확정.
+**REQ-004**: PASS (검증 자체) / 단 결과는 본가 Maven 좌표 그대로 의존 = **broken 확정**.
+
+→ Primary fork (jdarshan5) 채택 = **FAIL**. impl §핵심 로직 fallback 분기 진입.
+
+
+---
+
+## 5단계 — Fallback 1차: kingjnr4/ffmpeg-expo (impl §핵심 로직 fallback)
+
+명령:
+```
+npm uninstall ffmpeg-kit-react-native
+npm install github:kingjnr4/ffmpeg-expo
+```
+결과: npm install 성공 (1 package added).
+
+apps/mobile/package.json 항목 추가 (자동):
+```
+"expo-ffmpeg-monorepo": "github:kingjnr4/ffmpeg-expo"
+```
+
+🚨 **구조 문제 1**: GitHub repo 가 **monorepo wrapper** (`expo-ffmpeg-monorepo` private workspace).
+- 실제 사용 가능 RN/Expo 모듈 = `packages/expo-ffmpeg/` 안 (`name: "ffmpeg-expo"`, version: 0.0.1, license: MIT).
+- `npm install github:kingjnr4/ffmpeg-expo` = monorepo root 만 설치 → inner `ffmpeg-expo` 패키지 = `node_modules/expo-ffmpeg-monorepo/packages/expo-ffmpeg/` 에 묻힘.
+- Expo autolinking 은 `node_modules/<top-level>/` 만 스캔 → **inner package 미발견**.
+- 검증: `grep -i "ffmpeg" ios/Podfile.lock` → 0 매치, `grep -i "ffmpeg" android/settings.gradle` → 0 매치.
+
+🚨 **구조 문제 2**: postinstall.js 가 존재하지 않는 v0.0.3 release 타겟.
+- `BINARY_VERSION = 'v0.0.3'` hardcode (`node_modules/expo-ffmpeg-monorepo/packages/expo-ffmpeg/scripts/postinstall.js:13`).
+- GitHub Releases 실측: `v0.0.3` 부재 (HTTP 404). 단 1개 release `v0.0.1` (2026-01-29) 존재 — assets: `ffmpeg-android.tar.gz` (21MB) + `ffmpeg-ios.zip` (24MB).
+- postinstall 실행 시 로그:
+```
+[android] Failed to download binaries: Failed to download: 404
+[android] You may need to build binaries manually or download from:
+[android] https://github.com/kingjnr4/ffmpeg-expo/releases/download/v0.0.3/ffmpeg-android.tar.gz
+[ios] Failed to download binaries: Failed to download: 404
+[ffmpeg-expo] Binary setup complete  ← 거짓 보고 (silent fail)
+```
+
+🚨 **구조 문제 3**: iOS podspec (`packages/expo-ffmpeg/ios/ExpoFFmpeg.podspec`) 에 가짜 URL.
+- `s.source = { :git => 'https://github.com/anthropics/expo-ffmpeg.git', :tag => "v#{s.version}" }` ← `anthropics/expo-ffmpeg` repo 존재 안 함 (AI 생성 placeholder 추정).
+- `s.homepage = 'https://github.com/anthropics/expo-ffmpeg'` ← 동일.
+
+### 추가 구조보강 시도 (spec 준수 — 시뮬레이션이라도 PASS 가능성 검증)
+
+수동 v0.0.1 자산 배포:
+```
+curl -L -o ffmpeg-android.tar.gz https://github.com/kingjnr4/ffmpeg-expo/releases/download/v0.0.1/ffmpeg-android.tar.gz
+tar -xzf ffmpeg-android.tar.gz -C node_modules/expo-ffmpeg-monorepo/packages/expo-ffmpeg/android/jniLibs/
+curl -L -o ffmpeg-ios.zip https://github.com/kingjnr4/ffmpeg-expo/releases/download/v0.0.1/ffmpeg-ios.zip
+unzip -o ffmpeg-ios.zip -d node_modules/expo-ffmpeg-monorepo/packages/expo-ffmpeg/ios/Frameworks/
+```
+결과:
+- Android jniLibs: armeabi-v7a + arm64-v8a libav*.so 7건씩 추출 성공 (libavfilter / libavcodec / libavformat / libavutil / libavdevice / libswscale / libswresample). x86_64 부재 → 에뮬레이터 미지원 (real device ARM OK 가정).
+- iOS Frameworks: `FFmpeg.xcframework` 추출 성공.
+
+→ 바이너리 자체는 v0.0.1 기준 사용 가능. 그러나 위 **구조 문제 1** (autolinking 미발견) 는 해소 안 됨.
+
+추가 시도 실효 확인:
+- `npx expo prebuild --clean` 재실행 → ios/Podfile.lock 에 `ffmpeg`/`ExpoFFmpeg` 0 매치, android/settings.gradle 에 0 매치.
+- 즉 Podfile / Gradle 어디에도 fallback fork 가 들어가지 않음.
+
+→ Fallback (kingjnr4) 채택 **= FAIL** (autolinking 미발견 / 구조 문제).
+
+**3차 fallback (자체 native module)** = architecture.md §3.1 정의상 본 spike scope 외 (별 epic 필요). impl §주의사항-5 정합 — 2차 시도 의무는 충족.
+
+---
+
+## RESULT: NO_GO
+
+### 사유 요약
+
+| Fork | 결과 | 근본 원인 |
+|---|---|---|
+| Primary: jdarshan5/ffmpeg-kit-react-native v6.0.2 | FAIL | Android: `com.arthenica:ffmpeg-kit-https:6.0-2` Maven Central 부재 (2025-04-01 제거). iOS: `ffmpeg-kit-full-gpl` GPL 변종 hardcode = artifact #5 즉시 NO_GO 사유. |
+| Fallback: kingjnr4/ffmpeg-expo (`expo-ffmpeg-monorepo`) | FAIL | Monorepo wrapper 구조 → `npm install github:` 시 inner `ffmpeg-expo` 패키지가 autolinking 미발견. postinstall = 404 silent fail. iOS podspec 가짜 URL. v0.0.1 자산 수동 배포해도 autolinking 미해소. |
+| 3차: 자체 native module | OUT-OF-SCOPE | architecture.md §3.1 — 별 epic 필요. |
+
+### 수용 기준 매핑
+
+| REQ | 결과 |
+|---|---|
+| REQ-001 (npm install + prebuild exit 0) | Primary 부분 PASS (npm install + prebuild OK, 그러나 native dep 미해결). Fallback npm install OK / prebuild OK / 그러나 autolinking FAIL. |
+| REQ-002 (iOS real device 설치) | N/A (사용자 iOS 디바이스 부재) — 단 Primary iOS = GPL 변종 / Fallback iOS = autolinking FAIL 로 별도 NO_GO 사유 충족. |
+| REQ-003 (Android real device 설치) | FAIL — Galaxy S24+ (SM-S936N, Android 16) USB 연결 + `npx expo run:android` 실측. Gradle dep resolution 5초 만에 차단 (4개 Maven repo missing). APK install 도달 못 함. Fallback 은 autolinking 자체가 안 됨. |
+| REQ-004 (arthenica Maven 본가 의존 여부) | PASS (검증) — Primary 가 본가 좌표 그대로 의존 = broken 확정. |
+| REQ-005 (빌드 로그 저장) | PASS — 본 파일. |
+| REQ-006 (RESULT 라인 명시) | PASS — 본 줄. |
+
+### 후속 분기 (impl §후속 분기 표 정합)
+
+→ task 02 (`02-spike-filter-probe.md`), task 03 (`03-spike-device-perf-size-license.md`) **skip**.
+→ Story 2 (#264 미등록) / Story 3 (#265 미등록) **폐기 또는 V2+ 이관** 결정 = architect + 사용자 위임.
+→ `docs/epics/epic-19-local-dsp/architecture.md` §1 "상태: 가설" 유지 (PASS 못 했으므로 ARCHITECTURE.md 본문 보강 금지).
+→ `docs/epics/epic-19-local-dsp/adr.md` ADR-19A 상태 = `Proposed` → `Superseded` (사유: artifact #1 NO_GO, primary fork Maven 부재 + fallback fork autolinking 미발견).
+→ `backlog.md` 에 V2+ 항목 추가 권장:
+  - [ ] Epic 19 재진입 (V2+) — NO_GO 원인: artifact #1 fork 양쪽 (jdarshan5 Maven 부재 + kingjnr4 autolinking 미발견). 해소 조건: 자체 native module 빌드 (별 epic) 또는 본가 ffmpeg-kit 재공급 / 신규 활성 fork 등장.
+
+RESULT: NO_GO

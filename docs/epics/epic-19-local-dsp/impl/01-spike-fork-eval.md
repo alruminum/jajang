@@ -6,9 +6,23 @@ slug: spike-fork-eval
 epic: 19
 github_issue: 263
 branch_prefix: spike/epic19-task01-fork-eval
+status: COMPLETED (RESULT: NO_GO)
+result: NO_GO (2026-05-13)
+result_artifact: spike-results/01-fork-build.log
+result_pr: https://github.com/alruminum/jajang/pull/270
 ---
 
-# task 01 — Local DSP spike: jdarshan5 fork build + iOS/Android real device 설치 (artifact #1)
+> **✅ COMPLETED — RESULT: NO_GO (2026-05-13)**
+>
+> Galaxy S24+ (SM-S936N, Android 16) USB 연결 + `npx expo run:android` 실 빌드 시도 → BUILD FAILED in 5s. Primary fork (jdarshan5/ffmpeg-kit-react-native v6.0.2) Android 의존성 `com.arthenica:ffmpeg-kit-https:6.0-2` 가 dl.google / Maven Central / JitPack / Sonatype Snapshots **4-repo 전체 missing** (본가 retire 2025-04-01 v6.0 바이너리 제거 직격탄). Fallback fork (kingjnr4/ffmpeg-expo) = monorepo wrapper 구조라 npm install github: 시 inner package autolinking 0 매치.
+>
+> 본 task 의 NO_GO 결과로 Epic 19 framing 재정의 진행 중 (port-implementation → port-requirement). [stories.md](../stories.md#story-1--spike-dsp-달성-후보-결정-ns1ns4) + [architecture.md §3.1](../architecture.md#31-후보-set-framing-재정의-후-2026-05-13) + [adr.md ADR-19A](../adr.md#adr-19a-local-dsp-path-도입--후보-set-framing-재정의-진행-중) 참조.
+>
+> 측정 사실 산출물: [spike-results/01-fork-build.log](../spike-results/01-fork-build.log) (231 lines).
+>
+> 본 파일은 historical 보존. 후속 task 02 / task 03 = DEPRECATED. 새 spike NS1~NS4 = impl/04~07 (module-architect 재호출 시 작성).
+
+# task 01 — Local DSP spike: jdarshan5 fork build + iOS/Android real device 설치 (artifact #1)  [COMPLETED — NO_GO]
 
 ## 사전 준비 (먼저 read 필수)
 

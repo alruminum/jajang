@@ -76,6 +76,6 @@
 - [ ] Epic 16 — Pencil 노드 매핑 확장 (S10 외 6 화면) — 디자인 폴리시 마무리 단계
 - [ ] Epic 17 — Deep-link 인프라 + Preview/Generating/Play 화면 tour — 30초 녹음 우회 mock 후
 - [ ] Epic 18 — testID 확대 (82 → 19 screens × 5+ avg) — tour 좌표 fallback 의존 제거
-- [ ] Epic 19 — Local DSP migration (server ffmpeg → mobile path 추가, server path 보존 + 미래 sync mp3-only 정책) — [stories](docs/epics/epic-19-local-dsp/stories.md) · 통합 브랜치 `feature/local-dsp` · ⚠️ Story 1 spike 결과 의존 (5 artifacts: build / ffprobe / 처리시간 / 앱 크기 / LGPL)
+- [ ] Epic 19 — Local DSP migration (server ffmpeg → mobile path 추가, server path 보존 + 미래 sync mp3-only 정책) — [stories](docs/epics/epic-19-local-dsp/stories.md) · 통합 브랜치 `feature/local-dsp` · ⚠️ **framing 재정의 진행 중 (2026-05-13)**. ffmpeg-kit fork 양쪽 NO_GO 측정 확정 ([spike-results/01-fork-build.log](docs/epics/epic-19-local-dsp/spike-results/01-fork-build.log)). 후보 set 을 *port-implementation* → *port-requirement* 로 재정의 (C1 pure-JS / C2 react-native-audio-api 합성 / C3 DSP 강등 + UX 보강 / C4 afftdn-only 자체 native) — [ADR-19A 갱신](docs/epics/epic-19-local-dsp/adr.md#adr-19a) · 새 spike NS1~NS4 미실행
 - [ ] 내부 베타 (TestFlight / Internal Test Track)
 - [ ] 앱스토어 심사 통과 + 공개 출시
