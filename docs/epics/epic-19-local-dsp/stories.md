@@ -1,5 +1,7 @@
 # Epic 19 — Local DSP Migration: Server ffmpeg DSP → Mobile Local DSP path 추가
 
+**Base Branch:** feature/local-dsp
+
 **목표:** v1.3.0 피벗으로 확립된 서버 DSP 파이프라인 4 효과 (`afftdn` 노이즈 감소 / `equalizer` peak EQ / `aecho` delay reverb / `acrossfade` segment cross-fade) 의 *결과* 를 **mobile (Expo Bare React Native) 디바이스에서 달성**. 서버 path 는 코드 살린 채로 MVP 비활성. 미래 sync 기능 도입 시 *완성 mp3* 만 서버 업로드 (raw 녹음은 영구 로컬). 무료 3회 BM 유지 (클라이언트 카운터).
 
 **framing 재정의 (2026-05-13):** 초기 framing = "server ffmpeg → mobile ffmpeg" port-implementation. Story 1 task 01 spike 결과 ffmpeg-kit fork 양쪽 broken 확정 ([spike-results/01-fork-build.log](spike-results/01-fork-build.log)) → port-requirement framing 으로 재정의. 후보 set = C1 pure-JS / C2 react-native-audio-api 합성 / C3 DSP 강등 + UX 보강 / C4 afftdn-only 자체 native ([architecture.md §3.1](architecture.md#31-후보-set-framing-재정의-후-2026-05-13) + [adr.md ADR-19A](adr.md#adr-19a-local-dsp-path-도입--후보-set-framing-재정의-진행-중)). memory: [feedback_migration_epic_port_vs_requirement](../../../../../.claude/projects/-Users-dc-kim-project-jajang/memory/feedback_migration_epic_port_vs_requirement.md).
