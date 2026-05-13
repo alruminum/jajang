@@ -225,12 +225,13 @@ grep "^RESULT:" docs/epics/epic-19-local-dsp/spike-results/05-ns2-pure-js-perf.l
    - RESULT 라인 = `RESULT: ESCALATE — 고사양 측정 X.Xs, 저사양 미측정. 저사양 기기 확보 요청`
    - 즉, S24+ 만으론 C1 viable/NO_GO 결론 낼 수 없음. 저사양 gap 을 명시해 사용자에게 위임
 
-4. **DSP 파라미터 일관성**. 서버 ffmpeg 4 필터 chain 과 동일 파라미터 의무:
-   - highpass: `cutoff=80Hz` (afftdn 강등 대체 — `nr=10:nf=-25` 등가 아님, 강등 후보)
-   - biquadEq: `f=300, g=+3dB, Q=2` (octave width 2 = Q ≈ 2 근사)
-   - delay: `delayMs=1000, decay=0.3, wet=0.9, inGain=0.8` (aecho=0.8:0.9:1000:0.3 등가)
-   - crossfade: `fadeMs=300, shape=triangular` (acrossfade=d=0.3:c1=tri:c2=tri 등가)
+4. **DSP 파라미터 일관성**. **`apps/api/app/services/dsp/ffmpeg_service.py` DspService 상수 = 단일 진실 소스 (SSOT)**. 본 task 진입 *전* DspService 클래스 상수 grep 의무, 본문 파라미터는 그 시점 SSOT 의 스냅샷 (불일치 시 SSOT 우선):
+   - **highpass**: `cutoff=80Hz` (afftdn 강등 대체 — `afftdn=nr=AFFTDN_NR:nf=AFFTDN_NF` 등가 아님, 강등 후보. 단순 1차 IIR `y[n] = a*(y[n-1] + x[n] - x[n-1])`, a = exp(-2π·fc/sr))
+   - **biquadEq**: `f=EQ_FREQ, width_type=h, width=EQ_WIDTH, g=EQ_GAIN` (DspService 2026-05-13 스냅샷 = `f=2500, width=200Hz, g=+3dB`. width_type=h 는 Hz 단위 대역폭이므로 Q ≈ f/width = 2500/200 = 12.5. octave Q ≈ 2 잘못. 본문 plan 의 `f=300, Q=2` 는 module-architect 단계 오기 — SSOT 우선)
+   - **delay (aecho)**: `inGain=AECHO_IN, outGain=AECHO_OUT, delayMs=AECHO_DELAY, decay=AECHO_DECAY` (DspService 2026-05-13 스냅샷 = `in=0.6, out=0.3, delay=100ms, decay=0.3`. 본문 plan 의 `0.8:0.9:1000:0.3` 은 module-architect 단계 오기 — SSOT 우선)
+   - **crossfade**: `fadeMs=CROSSFADE_D*1000, shape=CROSSFADE_C` (DspService 2026-05-13 스냅샷 = `d=0.3s, c=tri`, 본문 일치)
    - 파라미터 달리 측정 시 NS4 perceptual diff baseline 불일치 → 설계 의도 위반
+   - engineer 가 DspService 상수 grep 결과를 측정 스크립트 상단 주석에 박을 것 (2026-05-13 측정 시점 스냅샷 명시)
 
 5. **engineer agent git commit 금지**. 본 spike 산출물 = log 파일 + 스크립트. commit/push 는 메인 Claude 가 sub-PR 로 처리.
 
