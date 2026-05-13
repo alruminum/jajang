@@ -1,0 +1,190 @@
+# NS3 Spike — react-native-audio-api Expo Bare 통합 실측 로그
+# task: docs/epics/epic-19-local-dsp/impl/06-spike-ns3-rn-audio-api-integration.md
+# 측정일: 2026-05-14
+# 환경: macOS Darwin 24.6.0 / Expo Bare RN 0.83.6 / Expo 55.0.17
+
+# ─────────────────────────────────────────────────────────
+# §1단계 — ffmpeg-kit 잔존 dep 확인 + cleanup
+# ─────────────────────────────────────────────────────────
+
+grep "ffmpeg" apps/mobile/package.json
+→ exit 1 (no output)
+→ ffmpeg 잔존 dep 없음. cleanup 불필요. SKIP.
+
+node_modules/ ffmpeg 잔재 확인:
+ls node_modules/ | grep -i ffmpeg → 0 결과
+
+# ─────────────────────────────────────────────────────────
+# §2단계 — react-native-audio-api install + version 확인
+# ─────────────────────────────────────────────────────────
+
+npm view react-native-audio-api version
+→ 0.12.2
+→ (측정 시점 latest: 0.12.2, exit 0)
+
+npm install react-native-audio-api
+→ added 952 packages, and audited 955 packages in 6s
+→ exit 0
+
+node_modules/react-native-audio-api/package.json 의 version 필드:
+→ version: 0.12.2
+
+package.json 에 추가된 항목:
+→ "react-native-audio-api": "^0.12.2"
+
+REQ-001: PASS
+
+# ─────────────────────────────────────────────────────────
+# §3단계 — MP3 export 지원 여부 (.d.ts 직접 read)
+# ─────────────────────────────────────────────────────────
+
+주 타입 파일: node_modules/react-native-audio-api/lib/typescript/index.d.ts
+→ export * from './api'  (실제 export = api.d.ts + hooks.d.ts)
+
+node_modules/react-native-audio-api/lib/typescript/types.d.ts 의 FileFormat enum:
+  FileFormat {
+    Wav = 0,
+    Caf = 1,
+    M4A = 2,
+    Flac = 3
+  }
+
+MP3 관련 타입 검색 결과:
+- MediaRecorder: 없음
+- AudioEncoder: 없음
+- encodeAudio: 없음
+- exportToMP3: 없음
+- FileFormat.Mp3 또는 FileFormat.MP3: 없음
+
+MP3_EXPORT: not_found
+→ WAV / CAF / M4A / FLAC 만 지원. MP3 직접 export 미지원.
+→ NS4 비교 표 메모: C2 후보 MP3 export 위해 추가 bridge 모듈 필요 (-1 score)
+
+확인된 주요 API (probe 코드 작성 근거):
+- AudioContext: constructor(options?) / createOscillator() / createDelay(maxDelayTime?) / createGain()
+                 / createBiquadFilter() / destination / sampleRate / state / close()
+- OscillatorNode: .type / .frequency (AudioParam) / .start(when?) / .stop(when?)
+- DelayNode: .delayTime (AudioParam) / .connect(destination)
+- GainNode: .gain (AudioParam) / .connect(destination)
+- AudioParam: .value (getter/setter) / setValueAtTime() / linearRampToValueAtTime() 등
+- AudioNode: .connect(AudioNode | AudioParam): AudioNode / .disconnect()
+
+REQ-007: PASS (MP3_EXPORT: not_found 명시)
+
+# ─────────────────────────────────────────────────────────
+# §4단계 — npx expo prebuild --clean + autolink 검증
+# ─────────────────────────────────────────────────────────
+
+cd apps/mobile && npx expo prebuild --clean
+→ ✔ Cleared android, ios code
+→ ✔ Created native directories
+→ ✔ Updated package.json | no changes
+→ ✔ Finished prebuild
+→ ✔ Installed CocoaPods
+→ exit 0
+
+REQ-002: PASS
+
+# iOS Podfile.lock autolink 확인
+grep -i "audio.api\|audio_api\|AudioApi\|react-native-audio-api" apps/mobile/ios/Podfile.lock
+→ 결과 (7행):
+  - RNAudioAPI (0.12.2):
+    - RNAudioAPI/audioapi (= 0.12.2)
+  - RNAudioAPI/audioapi (0.12.2):
+    - RNAudioAPI/audioapi/audioapi_dsp (= 0.12.2)
+    - RNAudioAPI/audioapi/ios (= 0.12.2)
+    - RNAudioAPI/audioapi/miniaudio_impl (= 0.12.2)
+  - RNAudioAPI/audioapi/audioapi_dsp (0.12.2):
+  - RNAudioAPI/audioapi/ios (0.12.2):
+  - RNAudioAPI/audioapi/miniaudio_impl (0.12.2):
+  - RNAudioAPI (from `../../../node_modules/react-native-audio-api`)
+→ iOS autolink: 10행 이상 매치. PASS
+
+# Android autolink 확인
+grep -i "audio.api\|audio_api\|AudioApi" android/settings.gradle android/app/build.gradle
+→ exit 1 (no explicit match)
+→ 이유: Android 는 Expo autolinking 플러그인 (expo-modules-autolinking) 이
+         settings.gradle 의 `expoAutolinking.useExpoModules()` + React Native 커뮤니티
+         autolinking 이 빌드 시점에 동적으로 react-native-audio-api 를 링크함.
+         정적 파일에 명시적 include 없음 = Expo Bare 정상 패턴.
+         실제 링크 확인은 §6단계 npx expo run:android 빌드 시 검증.
+→ android/build.gradle (root) 에 react-native-audio-api 자체 build.gradle 확인:
+   node_modules/react-native-audio-api/android/build.gradle 존재 (namespace: com.swmansion.audioapi)
+
+REQ-003: iOS PASS / Android 런타임 링크 패턴 (§6 빌드 시 최종 확인 예정)
+
+# ─────────────────────────────────────────────────────────
+# §5단계 — probe 코드 작성
+# ─────────────────────────────────────────────────────────
+
+파일 생성:
+- apps/mobile/src/spike/RnAudioApiProbeScreen.tsx
+  → 1-tap button → OscillatorNode(440Hz sine) → DelayNode(1.0s) → GainNode(0.3) → destination
+  → 5초 자동 stop + AudioContext.close()
+  → API 명 = .d.ts 직접 확인 후 사용 (추측 0)
+  → MP3_EXPORT: not_found footer 표시
+
+- apps/mobile/src/spike/__tests__/RnAudioApiProbeScreen.test.tsx
+  → react-native-audio-api native 모듈 mock
+  → 3 tests: render title / idle status / footer MP3 info
+
+테스트 실행 결과:
+PASS src/spike/__tests__/RnAudioApiProbeScreen.test.tsx
+  ✓ renders title and start button (1010 ms)
+  ✓ shows idle status on initial render (6 ms)
+  ✓ shows MP3 export info in footer (2 ms)
+Tests: 3 passed, 3 total (exit 0)
+
+App.tsx 변경:
+- import RnAudioApiProbeScreen 추가 (NS3 spike DEV only)
+- `if (__DEV__) { return <RnAudioApiProbeScreen />; }` 1줄 추가
+- 기존 화면 (RecordModeScreen 등) 코드 수정 0
+
+타입 체크 (본 파일 관련):
+- RnAudioApiProbeScreen.tsx 관련 타입 에러 0
+- 기존 pre-existing 에러 (react-native-track-player 미설치 등) = 본 작업 외
+
+# ─────────────────────────────────────────────────────────
+# §6단계 — Galaxy device 빌드 + logcat + 청각 echo 확인
+# ─────────────────────────────────────────────────────────
+
+[USER: device 빌드 + logcat + 청각 확인 결과 박을 위치]
+
+# adb devices -l 결과:
+[USER: adb devices -l 출력 붙여넣기]
+
+# adb shell getprop ro.product.model:
+[USER: 디바이스 모델명]
+
+# adb shell getprop ro.build.version.release:
+[USER: Android OS 버전]
+
+# npx expo run:android exit code:
+[USER: exit 0 또는 실패 시 마지막 에러 10행]
+
+# logcat (adb logcat -s ReactNativeJS,RNAudioAPI | tee /tmp/ns3-logcat.txt):
+[USER: AudioContext 생성 성공 메시지 + 에러 0 확인 발췌]
+
+# 1-tap echo demo 청각 확인:
+[USER: 소리 출력 여부 + 에코 delay 청취 결과]
+
+# ─────────────────────────────────────────────────────────
+# 최종 RESULT
+# ─────────────────────────────────────────────────────────
+
+§1~§5 (engineer 완료):
+  REQ-001: PASS (react-native-audio-api@0.12.2 install exit 0)
+  REQ-002: PASS (expo prebuild --clean exit 0)
+  REQ-003: iOS PASS / Android 런타임 링크 (§6 확인 예정)
+  REQ-007: PASS (MP3_EXPORT: not_found — WAV/CAF/M4A/FLAC only)
+
+§6 (USER 완료 후 아래 갱신 필요):
+  REQ-004: [USER: device 모델 기록 후 PASS/FAIL]
+  REQ-005: [USER: npx expo run:android exit 0 확인 후 PASS/FAIL]
+  REQ-006: [USER: 1-tap echo demo 동작 확인 후 PASS/FAIL]
+  REQ-008: [USER: 아래 RESULT 한줄로 교체]
+
+[USER: RESULT 한줄 — 아래 중 하나로 교체]
+RESULT: C2 viable (install OK + prebuild OK + Galaxy 빌드 OK + 1-tap demo OK)
+RESULT: C2 partial (install OK / 빌드 FAIL)
+RESULT: C2 NO_GO (install FAIL or 빌드 FAIL or demo FAIL)
