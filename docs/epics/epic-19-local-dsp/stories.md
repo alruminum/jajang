@@ -81,7 +81,7 @@ NS1~NS3 직렬 (각 후보 viability), NS4 = NS1~NS3 결과 후. 각 spike = 1 s
 
 ## Story 2 — Local DSP Path 추가 (mobile-side DSP 구현 + 클라이언트 카운터)
 
-**GitHub Issue:** [#264](https://github.com/alruminum/jajang/issues/264) (epic #262 sub-issue, **미등록**)
+**GitHub Issue:** [#264](https://github.com/alruminum/jajang/issues/264) (epic #262 sub-issue, framing 재정의 반영 완료 2026-05-13)
 
 **(전제: Story 1 NS1~NS4 spike PASS + 후보 1개 채택 — 미달 시 Story 2 폐기 또는 V2+ 이관)**
 
@@ -95,7 +95,7 @@ NS1~NS3 직렬 (각 후보 viability), NS4 = NS1~NS3 결과 후. 각 spike = 1 s
 
 ## Story 3 — 서버 DSP path 보존 + 미래 sync 정책 architecture 박힘
 
-**GitHub Issue:** [#265](https://github.com/alruminum/jajang/issues/265) (epic #262 sub-issue, **미등록**)
+**GitHub Issue:** [#265](https://github.com/alruminum/jajang/issues/265) (epic #262 sub-issue, framing 재정의 반영 완료 2026-05-13 — 단 본 Story 는 framing 영향 없음)
 
 **As a** jajang 시스템 운영자 / 미래 AI 합성 또는 sync 기능 도입 시점의 엔지니어,
 **I want** 서버 DSP 엔드포인트 + Celery 워커 + S3 업로드 코드가 *그대로 보존* 되고, 미래 sync 기능 도입 시 "raw 녹음은 영구 로컬 / 완성 mp3 만 서버 업로드" 정책이 `docs/ARCHITECTURE.md` 또는 `docs/ADR.md` 에 박혀있길 원한다,
