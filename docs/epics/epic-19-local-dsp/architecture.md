@@ -1,14 +1,17 @@
-# Epic 19 — Local DSP Migration · Architecture (가설)
+# Epic 19 — Local DSP Migration · Architecture (가설 — framing 재정의 진행 중, 2026-05-13)
 
-**상태**: 가설 (spec 확정 X). Story 1 spike 5 artifacts 결과로 Story 2/3 진입 여부 결정.
-**작성일**: 2026-05-13
+**상태**: 가설 + **framing 재정의 진행 중** (Story 1 task 01 spike NO_GO 후 후보 set 확장 단계).
+**작성일**: 2026-05-13 (initial), 2026-05-13 (framing reset)
 **관련**:
 - PRD v1.4.x candidate 트랙 ([docs/PRD.md](../../PRD.md) §회고)
 - Stories ([docs/epics/epic-19-local-dsp/stories.md](stories.md))
 - ADR ([docs/epics/epic-19-local-dsp/adr.md](adr.md))
 - 기존 서버 path ([docs/ARCHITECTURE.md](../../ARCHITECTURE.md) §음원 생성 시퀀스)
+- Spike 측정 사실 ([spike-results/01-fork-build.log](spike-results/01-fork-build.log))
 
-> 본 문서는 가설. `docs/ARCHITECTURE.md` (확정 spec) 본문 보강은 Story 1 spike PASS 후 별도 sub-PR 로 진행한다. 가설 단계 정보가 confirmed spec 처럼 보이면 후속 엔지니어가 측정 없이 구현 진입할 위험이 있음.
+> 본 문서는 가설. `docs/ARCHITECTURE.md` (확정 spec) 본문 보강은 Spike Gate PASS 후 별도 sub-PR 로 진행한다. 가설 단계 정보가 confirmed spec 처럼 보이면 후속 엔지니어가 측정 없이 구현 진입할 위험이 있음.
+
+> **framing 재정의 회고 (2026-05-13)**: 초기 ADR-19A 는 "server 가 ffmpeg 4 필터 쓰니 mobile 도 ffmpeg 그대로" 라는 *port-implementation* framing 으로 좁혀짐. Story 1 task 01 spike 결과 (jdarshan5 fork = arthenica Maven 4-repo missing / kingjnr4 fork = monorepo wrapper autolinking 미발견) 가 NO_GO 로 나왔지만, **이 NO_GO 는 ffmpeg-kit fork 가 broken 이라는 사실일 뿐 epic 자체의 V2+ 이관 결정 근거로는 부족**. 진짜 question = "afftdn / equalizer / aecho / acrossfade 4 효과의 *결과* 를 mobile 에서 어떻게 달성? (ffmpeg-as-given 가정 풀고)". §3.1 후보 set 을 그 시점 framing 으로 확장. memory: [feedback_migration_epic_port_vs_requirement](../../../../../.claude/projects/-Users-dc-kim-project-jajang/memory/feedback_migration_epic_port_vs_requirement.md).
 
 ---
 
@@ -58,18 +61,48 @@
 
 ## 3. 시스템 구조 (Story 1 spike 후보 + Story 2 가설 구조)
 
-### 3.1 라이브러리 후보 (Spike Gate — 측정 의무)
+### 3.1 후보 set (framing 재정의 후, 2026-05-13)
 
-> 단일 라이브러리 결정은 spike 결과 의존. 본 문서는 *후보 순서* 만 박는다. Story 1 PASS 후 1개 선정 → ADR-19A 보강.
+> Story 1 task 01 spike NO_GO ([spike-results/01-fork-build.log](spike-results/01-fork-build.log)) 후 framing 을 *port-implementation (= ffmpeg-kit 그대로)* → *port-requirement (= 4 효과의 결과 달성)* 로 재정의. 각 효과 단위로 독립 후보 평가 + 선택지 조합으로 결정.
 
-| 우선 | 후보 | 근거 | 결정적 리스크 |
+#### 3.1.A 효과 → 후보 매트릭스
+
+각 ffmpeg 필터의 *기능적 결과* 단위로 분리 (단순 렌즈 = "byte buffer 의 어떤 변환을 줘야 하는가"):
+
+| 효과 (서버 ffmpeg 인자) | 기능 | 결과 의무 강도 | mobile 달성 후보 |
 |---|---|---|---|
-| 1차 | `jdarshan5/ffmpeg-kit-react-native` fork | 본가 retire 후 활성 fork 중 LGPL 변종 보유, Android+iOS 동시 | semver 없음 + Expo Bare 통합 문서 없음 + 단일 binary release (2025-04-08) 만 |
-| 2차 | `ffmpeg-expo` (kingjnr4 v0.0.1) | Expo 공식 인터페이스 따름 | 1 commit, production track record 없음, 4 필터 컴파일 미검증 |
-| 3차 | 자체 native module (iOS AVAudioEngine + Android AudioEffect) | 라이선스 / 크기 통제 가능 | `afftdn` 동등 spectral noise reduction = custom DSP 직접 구현 (필터당 1~2주) |
-| 폐기 | `@spreen/ffmpeg-kit-react-native` | iOS-only + GPL → App Store 불가 | 비교 가치 0 |
-| 폐기 | `react-native-audio-api` (Software Mansion) | EQ + Reverb ✓ | `afftdn` 동등 missing, `acrossfade` missing, MP3 export 미확인 |
-| 폐기 | `ffmpeg.wasm` on RN | — | Hermes / JSC WASM 미지원 |
+| `afftdn=nr=10:nf=-25` | FFT spectral noise gating (방 hum / 에어컨 등 정상 노이즈 제거) | **재검토** — UX 가이드로 입력 측면 통제 가능성 | (a) pure-JS FFT (`fft.js` lib) (b) iOS Accelerate vDSP_FFT + Android KissFFT 자체 native (c) 강등 + UX 가이드 ("조용한 환경 녹음") + 단순 highpass IIR (d) ffmpeg fork 부활 시 그대로 |
+| `equalizer=f=300:width_type=o:width=2:g=3` | 단일 biquad peak EQ (300Hz +3dB octave width 2) | 강 (목소리 따뜻함) | (a) pure-JS biquad (5-tap 직접 구현) (b) `react-native-audio-api` BiquadFilterNode (c) ffmpeg fork |
+| `aecho=0.8:0.9:1000:0.3` | 단일 delay line + decay (1000ms / decay 0.3 / wet 0.9 / in 0.8) | 강 (잠자리 ambience) | (a) pure-JS delay buffer + 곱셈 (b) `react-native-audio-api` DelayNode + GainNode (c) convolution with synthesized impulse (d) ffmpeg fork |
+| `acrossfade=d=0.3:c1=tri:c2=tri` | 0.3s triangular cross-fade between segments | 중 (셔플 청크 이음새) | (a) pure-JS gain ramp (linear or tri 직접 곱셈) (b) `react-native-audio-api` GainNode automation (c) ffmpeg fork |
+
+→ 핵심 인사이트: **biquad EQ + delay echo + gain ramp = 셋 다 trivial** (각 < 200ms in JS Hermes for 30s mono input). FFT-based noise gate (afftdn) 만 무겁고, 그것도 (c) 강등 + UX 가이드로 회피 가능.
+
+#### 3.1.B 통합 후보 (조합 단위)
+
+| 후보 ID | 후보명 | 구성 | 예상 작업 | 예상 처리시간 30s 입력 | 결정적 리스크 |
+|---|---|---|---|---|---|
+| **C1** | pure-JS DSP over WAV/PCM Buffer | 4 효과 모두 JS (afftdn = `fft.js` lib) | 모듈 4개 + jest. 외부 native dep 0 | < 10s (afftdn 포함 추정, 단 측정 의무) | Hermes 의 typed array 산술 성능 한계 (저사양 Android) |
+| **C2** | `react-native-audio-api` 합성 + JS afftdn | EQ/echo/crossfade = RN-audio-api node graph / afftdn = JS `fft.js` | RN-audio-api dep 1개. node graph 구성 | < 5s (RN-audio-api native 가속 + afftdn 만 JS) | RN-audio-api Expo Bare 통합 검증 의무 (별도 sub-spike) |
+| **C3** | DSP 강등 + 단순 native EQ/echo | UX 가이드 + highpass IIR (afftdn 대체) + native (RN-audio-api or 자체) EQ/echo/crossfade | UX 보강 + 가벼운 모듈 | < 2s | "afftdn 강등 OK" 가 product 결정 의무 (m0-self-test 와 perceptual diff 측정) |
+| **C4** | afftdn-only 자체 native module | afftdn = iOS Accelerate vDSP / Android KissFFT 자체 native module / 나머지 3개 = JS or RN-audio-api | 별 epic 가능 (큰 native scope) | < 3s (vDSP HW 가속) | 자체 native = bug 자기 책임 + iOS/Android 유지 비용 |
+| ~~Old C5~~ | ~~ffmpeg-kit fork (jdarshan5)~~ | ~~ffmpeg 4 필터 그대로~~ | ~~spike NO_GO 확정~~ | — | **Maven 4-repo missing 측정 확정 (NO_GO)** |
+| ~~Old C6~~ | ~~ffmpeg-expo (kingjnr4)~~ | ~~동상~~ | ~~spike NO_GO 확정~~ | — | **autolinking 미발견 측정 확정 (NO_GO)** |
+| 보류 | `ffmpeg.wasm` on RN | — | — | — | Hermes / JSC WASM 미지원 (재검증 불필요) |
+| 보류 | 서버 path 유지 (현행) | — | — | — | 본 epic 도입 동기 (비용/오프라인/프라이버시) 미충족 |
+
+#### 3.1.C 새 spike scope (framing reset 후)
+
+기존 task 01~03 (ffmpeg fork eval) 는 폐기. 새 spike 정의 (PRD/architect 재호출 시 정식화):
+
+| spike | 결정할 것 | 측정 방법 | PASS 조건 |
+|---|---|---|---|
+| **NS1 — afftdn 강등 perceptual diff** | "afftdn 없이 highpass IIR 만으로 m0-self-test SNR ≥15dB 합격선 유지 가능?" | m0-self-test 30s 입력에 afftdn 제외 + highpass 만 적용 후 SNR 재측정 | SNR ≥15dB 유지 시 → C3 후보 viable. 미달 시 C1/C2/C4 만 |
+| **NS2 — pure-JS DSP 처리시간** | "C1 후보 (`fft.js` 포함) 가 저사양 Android 30s 입력 ≤ 30s 처리?" | Galaxy A 시리즈 + `fft.js` + biquad/delay/gain JS 구현 / `performance.now()` | ≤ 30s |
+| **NS3 — `react-native-audio-api` Expo Bare 통합** | "C2 후보 라이브러리가 Expo Bare 에서 install + node graph 동작?" | npm install + Expo prebuild + Galaxy S24+ 빌드 + 1-tap node graph echo demo | 빌드 + demo 동작 |
+| **NS4 — 변종 perceptual diff** | "C1 vs C2 vs C3 vs C4 4 후보 출력의 perceptual quality 차이?" | 동일 30s 입력에 4 후보 적용 → 청취자 blind comparison + waveform diff | C3 (강등) 가 m0-self-test 합격선 만족 시 = 채택 (가장 가벼움) |
+
+NS1~NS3 직렬, NS4 = 후보 viable 확정 후. 각 NS = 1 spike artifact + log file.
 
 ### 3.2 Story 2 mobile path 구조 (가설)
 
@@ -252,11 +285,28 @@ LocalCounterRepo
 
 ---
 
-## 9. Spike Gate 결과 (현 시점)
+## 9. Spike Gate 결과 (현 시점, 2026-05-13 framing reset 반영)
 
-| 외부 의존 | 상태 | 검증 SDK/모델 | 비고 |
+### 9.1 task 01 (구 spike) 결과
+
+| 외부 의존 | 상태 | 측정 일자 | 비고 |
 |---|---|---|---|
-| ffmpeg 4 필터 chain mobile 실행 | **PENDING** (Story 1 spike 의 본질 자체) | — | 본 architecture.md = **가설**. spike 5 artifacts PASS 전 Story 2 entry 금지 |
-| LGPL App Store 정합 | **PENDING** (artifact #5) | — | 변종명 `-gpl` 부재 + LICENSE read 의무 |
+| ffmpeg-kit fork (jdarshan5) Android 빌드 | **FAIL** | 2026-05-13 | `com.arthenica:ffmpeg-kit-https:6.0-2` 가 dl.google / Maven Central / JitPack / Sonatype Snapshots 4-repo missing. Galaxy S24+ (SM-S936N, Android 16) 실 빌드 5초 만에 BUILD FAILED. 본가 retire 2025-04-01 직격탄 재현 |
+| ffmpeg-kit fork (jdarshan5) iOS 변종 | **NO_GO** (정적) | 2026-05-13 | podspec 가 `ffmpeg-kit-full-gpl` GPL 변종 hardcode. App Store 클로즈드 앱 GPL 위반 |
+| Fallback fork (kingjnr4/ffmpeg-expo) | **FAIL** | 2026-05-13 | repo 가 monorepo wrapper → autolinking 0 매치. postinstall = v0.0.3 release 404 silent fail. iOS podspec source URL 가짜 (`anthropics/expo-ffmpeg`) |
+| 측정 산출물 | — | 2026-05-13 | [spike-results/01-fork-build.log](spike-results/01-fork-build.log) (231 lines) |
 
-> 본 epic 의 Spike Gate 는 *본 architecture.md 가 spike 절차 자체를 설계한다* 는 점에서 **spike-driven epic 패턴** (ADR-19D). PRD spec 확정을 spike 결과로 미루는 것이 정답. `MockFfmpegBridge` 만 박고 PASS 처리하는 안티패턴 명시 금지 — Story 1 spike 3 task 모두 real-device 측정 의무.
+→ **ffmpeg-kit fork 경로 = NO_GO 확정**. 그러나 이건 ffmpeg-kit 만 broken 사실이고, Epic 19 자체는 §3.1 후보 set 확장 (C1~C4) 으로 재진입 가능.
+
+### 9.2 새 Spike Gate (framing reset 후, 미실행)
+
+| spike | 결정할 것 | 의존 | 상태 |
+|---|---|---|---|
+| **NS1** afftdn 강등 perceptual diff | C3 후보 viability | m0-self-test 데이터 (`docs/m0-dsp-self-test.md`) | PENDING |
+| **NS2** pure-JS DSP 처리시간 | C1 후보 viability + 저사양 Android 성능 | Galaxy A 시리즈 디바이스 (S24+ 와 별개로 저사양 측정 의무) | PENDING |
+| **NS3** `react-native-audio-api` Expo Bare 통합 | C2 후보 viability | npm install + Expo prebuild + Android 빌드 | PENDING |
+| **NS4** 4 후보 perceptual quality 비교 | 최종 후보 1개 선정 | NS1~NS3 viability 확정 | PENDING |
+
+> 본 epic 의 Spike Gate 는 spike-driven epic 패턴 (ADR-19D) 그대로 — PRD spec 확정을 spike 결과로 미룬다. 단, 이번 framing reset 의 학습 = "spike scope 자체도 framing 검증 후 확정" — port-implementation 으로 spike 좁히면 후보 누락 catastrophic. memory: [feedback_migration_epic_port_vs_requirement](../../../../../.claude/projects/-Users-dc-kim-project-jajang/memory/feedback_migration_epic_port_vs_requirement.md).
+
+> `MockFfmpegBridge` 등 mock 으로 PASS 처리 금지 정책 동일.

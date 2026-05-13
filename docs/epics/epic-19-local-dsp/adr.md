@@ -9,36 +9,61 @@
 
 ---
 
-## ADR-19A — Local DSP path 도입 + 라이브러리 후보 spike 게이팅
+## ADR-19A — Local DSP path 도입 + 후보 set (framing 재정의 진행 중)
 
-**상태**: Proposed (Story 1 spike 결과 의존 — PASS 시 Accepted, FAIL 시 Superseded by 새 ADR 또는 epic 폐기)
+**상태**: **Re-evaluating spike scope** (2026-05-13). 초기 framing (port-implementation = ffmpeg-kit 그대로) 가 spike NO_GO 후 부적절 판정. 후보 set 을 *port-requirement (4 효과의 결과 달성)* 단위로 재정의 중.
 
-**결정**:
-서버 ffmpeg DSP 파이프라인을 mobile (iOS + Android, Expo Bare RN) 디바이스에서 직접 실행하는 path 를 추가한다. 라이브러리는 단일 선정이 아닌 **spike 게이팅** 으로 결정한다:
-- 1차 후보: `jdarshan5/ffmpeg-kit-react-native` fork
-- 2차 fallback: `ffmpeg-expo` (kingjnr4)
-- 3차 fallback: 자체 native module (iOS AVAudioEngine + Android AudioEffect)
+**framing 재정의 회고 (2026-05-13)**:
 
-Story 1 spike 5 artifacts (working build / `ffprobe -filters` / 디바이스별 30초 처리시간 / ipa/apk 델타 / LGPL 확정) 모두 PASS 시에만 1차 후보 채택. 1+ FAIL 시 2차 fallback 으로 재진입, 모두 FAIL 시 V2+ 이관 또는 epic 폐기.
+초기 ADR-19A (Proposed) 는 "server 가 ffmpeg DSP 4 필터 쓰니 mobile 도 ffmpeg" 라는 *port-implementation* framing 으로 ffmpeg-kit fork 3개 + react-native-audio-api 한 줄 dismiss 만 검토했다. Story 1 task 01 spike (2026-05-13) 결과:
 
-**이유**:
+- Primary fork (jdarshan5/ffmpeg-kit-react-native v6.0.2) Android = `com.arthenica:ffmpeg-kit-https:6.0-2` 가 dl.google / Maven Central / JitPack / Sonatype Snapshots **4-repo 전체 missing**. Galaxy S24+ (SM-S936N, Android 16) 실 빌드 5초 만에 BUILD FAILED. iOS = podspec 가 `ffmpeg-kit-full-gpl` GPL 변종 hardcode = artifact #5 즉시 NO_GO 사유.
+- Fallback fork (kingjnr4/ffmpeg-expo) = repo 가 monorepo wrapper → npm install github: 시 inner package autolinking 0 매치. postinstall = v0.0.3 release 404 silent fail. iOS podspec source URL 가짜.
+- 측정 산출물: [spike-results/01-fork-build.log](spike-results/01-fork-build.log).
+
+이 NO_GO 는 **ffmpeg-kit fork 양쪽 broken 사실**일 뿐, Epic 19 도입 동기 (비용/오프라인/프라이버시) 자체는 유효. 진짜 question = "afftdn / equalizer / aecho / acrossfade 4 효과의 *결과* 를 mobile 에서 어떻게 달성? (ffmpeg 가정 풀고)". 후보 set 을 그 단위로 재정의. memory: [feedback_migration_epic_port_vs_requirement](../../../../../.claude/projects/-Users-dc-kim-project-jajang/memory/feedback_migration_epic_port_vs_requirement.md).
+
+**새 결정 (re-evaluating)**:
+
+서버 ffmpeg DSP 파이프라인의 *결과* 를 mobile 에서 달성하는 path 를 추가한다. 후보는 ffmpeg-as-given 가정을 풀고 *효과 단위* 로 분해 (architecture.md §3.1.A) 후, *통합 후보* (C1~C4, architecture.md §3.1.B) 4개 비교로 결정한다:
+
+- **C1**: pure-JS DSP over WAV/PCM Buffer (4 효과 모두 JS, afftdn = `fft.js`)
+- **C2**: `react-native-audio-api` 합성 + JS afftdn (EQ/echo/crossfade = native node graph, afftdn 만 JS)
+- **C3**: DSP 강등 + 단순 native EQ/echo (afftdn 폐기 + UX 가이드 + highpass IIR. 가장 가벼움)
+- **C4**: afftdn-only 자체 native module (iOS Accelerate vDSP / Android KissFFT, 나머지 JS or RN-audio-api)
+
+새 Spike Gate (NS1~NS4, architecture.md §9.2) 4 단계 후 1개 후보 채택. NS1 (afftdn 강등 perceptual diff) PASS 시 C3 우선 (가장 가벼움), 미달 시 C1/C2/C4 perceptual diff 비교.
+
+**이유** (도입 동기 = 변경 없음):
+
 - **인프라 비용 절감** — Celery worker + API server stop → 인프라 비용 0
 - **오프라인** — 새벽 와이파이 끊긴 환경에서도 자장가 생성 가능 (현재 NW 의존 path 의 핵심 UX 약점)
 - **프라이버시** — raw 부모 음성이 디바이스 외 유출 0 (생체정보 안전 우선, PRD §F13 정합)
-- **외부 검증된 라이브러리 retire 인지** — `ffmpeg-kit` 본가 2025-01-06 retire, 2025-04-01 v6.0 바이너리 npm/CocoaPods/Maven 제거, 2025-06-23 GitHub archive ([plan-reviewer PRE_CHECK 2026-05-13](stories.md#참고))
+- **외부 검증된 라이브러리 retire 인지** — `ffmpeg-kit` 본가 2025-01-06 retire, 2025-04-01 v6.0 바이너리 npm/CocoaPods/Maven 제거, 2025-06-23 GitHub archive (실측 재현 완료)
 
-**트레이드오프**:
-- 1차 후보 = semver 없음 + Expo Bare 통합 문서 없음 + 단일 binary release (2025-04-08) 만. **선정 자체가 위험** → spike 게이팅 필수
-- LGPL App Store 정합 = Arthenica wiki "hard to achieve", Apple 공식 입장 없음 → artifact #5 검증 의무
-- 앱 크기 +45~150MB (full variant) → ABI split + iOS thinning 으로 완화 spike 측정 필요
-- fork bug fix = 자체 책임. 본가 issue tracker 응답 0
+**트레이드오프 (새 후보 set)**:
 
-**대안 (버린 것)**:
+- C1 (pure-JS): Hermes typed array 산술 성능 한계. 저사양 Android NS2 측정 필수
+- C2 (RN-audio-api): Expo Bare 통합 검증 별 sub-spike (NS3) 필요
+- C3 (강등): "afftdn 강등 OK" 가 product 결정 의무 (m0-self-test perceptual diff 측정 NS1)
+- C4 (afftdn-only native): 자체 native = bug 자기 책임 + iOS/Android 유지 비용 (단 ffmpeg 통째 통합보다 압도적으로 작은 scope)
+
+**대안 (확정 폐기)**:
+
+- `jdarshan5/ffmpeg-kit-react-native` fork — Maven 4-repo missing 측정 확정 NO_GO (2026-05-13)
+- `kingjnr4/ffmpeg-expo` fork — monorepo wrapper autolinking 미발견 측정 확정 NO_GO (2026-05-13)
 - `@spreen/ffmpeg-kit-react-native` — iOS-only + GPL → App Store 불가
-- `react-native-audio-api` (Software Mansion) — `afftdn` 동등 noise reduction missing, `acrossfade` missing
 - `ffmpeg.wasm` on RN — Hermes / JSC WASM 미지원
 - `expo-av` — 재생/녹음만, DSP X
 - 서버 path 유지 (현행) — 본 epic 의 도입 동기 (비용/오프라인/프라이버시) 미충족
+
+**다음 단계 (미실행)**:
+
+- [ ] NS1: afftdn 강등 perceptual diff (m0-self-test 데이터 재측정)
+- [ ] NS2: C1 pure-JS 처리시간 (저사양 Android Galaxy A 시리즈)
+- [ ] NS3: C2 react-native-audio-api Expo Bare 통합 spike
+- [ ] NS4: 4 후보 perceptual quality 비교 + 최종 1개 선정
+- [ ] 기존 task 01~03 impl 파일 = 폐기 마크 (NS1~NS4 신규 impl 파일로 대체) — module-architect 재호출 시점에 정리
 
 ---
 
