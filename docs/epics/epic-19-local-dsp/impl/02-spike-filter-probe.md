@@ -6,9 +6,18 @@ slug: spike-filter-probe
 epic: 19
 github_issue: 263
 branch_prefix: spike/epic19-task02-filter-probe
+status: DEPRECATED
+deprecated_reason: ffmpeg-kit fork 의존 전제가 task 01 spike NO_GO 로 무효화됨 (2026-05-13)
+deprecated_replaces: impl/04-spike-ns1-afftdn-perceptual.md (예정), impl/05-spike-ns2-pure-js-perf.md (예정), impl/06-spike-ns3-rn-audio-api-integration.md (예정), impl/07-spike-ns4-candidate-comparison.md (예정)
 ---
 
-# task 02 — Local DSP spike: `ffprobe -filters` 출력으로 4 필터 컴파일 증거 확보 (artifact #2)
+> **⚠️ DEPRECATED (2026-05-13)** — 본 task 는 ffmpeg-kit fork 가 mobile 빌드 가능하다는 전제 위에 작성됨. Story 1 task 01 spike 결과 ffmpeg-kit fork 양쪽 broken 확정 ([spike-results/01-fork-build.log](../spike-results/01-fork-build.log)) → 본 task 진입 자체 불가능.
+>
+> Epic 19 framing 재정의 (port-implementation → port-requirement, 2026-05-13) 후 본 task 는 새 Spike NS1~NS4 ([architecture.md §3.1.C](../architecture.md#31c-새-spike-scope-framing-reset-후) + [adr.md ADR-19A](../adr.md#adr-19a-local-dsp-path-도입--후보-set-framing-재정의-진행-중)) 로 대체됨.
+>
+> 본 파일은 historical 보존 (framing reset 결정의 *전 상태* 추적용). 새 spike 진입 = module-architect 재호출 후 `impl/04~07-spike-ns*-*.md` 파일로 진행.
+
+# task 02 — Local DSP spike: `ffprobe -filters` 출력으로 4 필터 컴파일 증거 확보 (artifact #2)  [DEPRECATED]
 
 ## 사전 준비 (먼저 read 필수)
 
