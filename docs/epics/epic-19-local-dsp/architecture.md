@@ -104,9 +104,9 @@
 
 NS1~NS3 직렬, NS4 = 후보 viable 확정 후. 각 NS = 1 spike artifact + log file.
 
-### 3.2 Story 2 mobile path 구조 (가설)
+### 3.2 Story 2 mobile path 구조 (C3 채택 확정, 2026-05-14)
 
-> 1차 후보 (jdarshan5 fork) 가정. 2차/3차 fallback 시 모듈 경계는 동일, 내부 구현만 교체.
+> **C3 채택 반영**: afftdn 폐기 + highpass IIR + EQ + echo + crossfade. ffmpeg 라이브러리 의존 0 (NS1~NS4 결과). `FfmpegBridge` 명칭은 `MinimalDspBridge` 로 변경.
 
 ```
 [apps/mobile/src/]
@@ -119,21 +119,21 @@ NS1~NS3 직렬, NS4 = 후보 viable 확정 후. 각 NS = 1 spike artifact + log 
        │
        ├─ LocalDspService.ts         ← 단일 진입점 (start / cancel / pollStatus)
        │       │
-       │       │   (2) ffmpeg subprocess call
+       │       │   (2) DSP chain dispatch
        │       ▼
-       ├─ FfmpegBridge.ts            ← 1차: ffmpeg-kit-react-native fork 래퍼
-       │       │                       2차: ffmpeg-expo 래퍼
-       │       │                       3차: 자체 native module 래퍼
+       ├─ MinimalDspBridge.ts        ← C3 wrapper. NS1 spike script 재사용 (Hermes JS 산술 or react-native-audio-api 한정 사용)
        │       │
-       │       │   (3) 4 필터 chain (afftdn → equalizer → aecho → acrossfade → mp3)
+       │       │   (3) 4 step chain (highpass IIR → EQ biquad → delay echo → triangular gain crossfade → mp3 encode)
        │       ▼
-       ├─ DspPipeline.ts             ← 필터 인자 박힌 ffmpeg command 생성 (서버 DspService 와 동일 인자)
+       ├─ DspPipeline.ts             ← pure function. step 파라미터 + 순서 정의 (서버 DspService 와 동일 인자, afftdn 제외)
        │
        └─ LocalCounterRepo.ts        ← AsyncStorage 기반 무료 3회 카운터 (status=completed 직후 increment)
 
   services/api/generations.ts    (기존, MVP 미호출 — 호출 site 만 LocalDspService 로 교체)
   store/generationSlice.ts       (기존 sessionId/pollState 그대로, source 만 LocalDspService 가 됨)
 ```
+
+> **C3 채택 이유 재요약** (architecture.md §9.2 참조): 가장 가벼움 (dep 0 + size 0 + server SSOT 재사용). NS1 spike 결과 afftdn 제외 + highpass IIR 만으로 m0-self-test SNR ≥15dB 합격선 유지 측정 완료.
 
 ### 3.3 의존 그래프 (인과관계 1줄씩)
 
@@ -144,13 +144,13 @@ screens (RecordModeScreen 등)
    ▼
 LocalDspService
    │
-   │  ffmpeg 호출 추상화 = 라이브러리 교체 가능성 (1차→2차→3차) 명시되어 있어 DIP 박음
+   │  DSP 호출 추상화 = NS1 측정 결과 (highpass IIR + EQ + echo + crossfade) 를 wrapper 단위 캡슐화. 향후 C2 native 가속 도입 시 교체 가능성 잔존 → DIP 박음
    ▼
-FfmpegBridge ──── (3-fallback strategy 교체)
+MinimalDspBridge ──── (필요 시 react-native-audio-api 가속 교체 가능)
    │
-   │  command 문자열 빌드는 라이브러리 무관 = 서버 DspService 와 동일 인자 set, 분리 단위 명확
+   │  step 파라미터 빌드는 라이브러리 무관 = 서버 DspService 와 동일 인자 set (afftdn 제외), 분리 단위 명확
    ▼
-DspPipeline (pure function, 라이브러리 의존 0)
+DspPipeline (pure function, native 의존 0)
 
 LocalDspService
    │
@@ -163,14 +163,14 @@ LocalCounterRepo
 
 | 모듈 | 단독 lifecycle? | 의존 부재 시 동작? | DIP 필요? |
 |---|---|---|---|
-| `DspPipeline` | ✓ (pure function, ffmpeg command 문자열만 생성) | ✓ (jest 단독 테스트 가능) | ✗ (concrete 1개로 충분) |
-| `FfmpegBridge` | ✗ (네이티브 모듈 의존) | ✗ (real device + library 필요) | ✓ (3-fallback strategy → interface) |
+| `DspPipeline` | ✓ (pure function, step 파라미터 set 만 생성) | ✓ (jest 단독 테스트 가능) | ✗ (concrete 1개로 충분) |
+| `MinimalDspBridge` | ✗ (Hermes typed-array 산술 or RN-audio-api 의존) | ✗ (real device 또는 jest+JSDOM 환경 필요) | ✓ (가속 옵션 교체 가능성 → interface) |
 | `LocalCounterRepo` | ✓ (AsyncStorage in-memory mock 가능) | ✓ (jest 단독) | ✗ (concrete, repo 패턴 자체가 추상) |
-| `LocalDspService` | △ (FfmpegBridge mock + LocalCounterRepo mock 필요) | ✗ | ✗ (concrete, 위 3개 조합 단일 진입점) |
+| `LocalDspService` | △ (MinimalDspBridge mock + LocalCounterRepo mock 필요) | ✗ | ✗ (concrete, 위 3개 조합 단일 진입점) |
 
-→ **DIP 박는 곳 = `FfmpegBridge` 단 1개**. 다른 모듈 추상화 X (남용 금지).
+→ **DIP 박는 곳 = `MinimalDspBridge` 단 1개**. 다른 모듈 추상화 X (남용 금지).
 
-### 3.5 데이터 흐름 (Story 2 가설)
+### 3.5 데이터 흐름 (Story 2 — C3 채택 후)
 
 ```
 [Mobile only]
@@ -180,13 +180,14 @@ LocalCounterRepo
 2. LocalCounterRepo.peek() → count < 3 ? continue : throw FREE_LIMIT_REACHED
 3. job = new LocalGenerationJob(status='pending')
    generationSlice.setSessionId(job.id), setPollState({status: 'pending'})
-4. command = DspPipeline.build({ inputUri, songKey, outputUri })
-   FfmpegBridge.execute(command) → status='processing'
-5. ffmpeg complete:
+4. steps = DspPipeline.build({ inputUri, songKey, outputUri })
+   // steps = [{type:'highpass', f:80}, {type:'eq', f:300, g:3}, {type:'echo', delay:1000, decay:0.3}, {type:'crossfade-tri', d:0.3}]
+   MinimalDspBridge.execute(steps) → status='processing'
+5. DSP complete:
    - success → output mp3 uri 반환 → LocalCounterRepo.increment() → status='completed' → generationSlice.setPollState({status: 'completed', uri})
    - fail    → status='failed'    → generationSlice.setPollState({status: 'failed', error})
 
-   ※ 서버 호출 0. raw 녹음 / 완성 mp3 모두 디바이스 로컬 (FS) 잔존.
+   ※ 서버 호출 0. raw 녹음 / 완성 mp3 모두 디바이스 로컬 (FS) 잔존. afftdn 제외 (NS1 결과 product 결정).
 ```
 
 ### 3.6 Story 3 서버 path 보존 구조
@@ -230,29 +231,27 @@ LocalCounterRepo
 ## 6. 구현 순서 + 의존 chain
 
 ```
-01 spike-fork-eval                  ← 라이브러리 선정 (artifact #1 build)
+01~07 Story 1 spike (COMPLETED 2026-05-14, ADOPTED = C3)
        │
        ▼
-02 spike-filter-probe               ← ffprobe -filters (artifact #2)
+08 sample-asset-fixtures            ← Story 2: sample 자장가 음원 + 부모 목소리 샘플 mobile assets 박음 (AC-1 입력 의존)
        │
        ▼
-03 spike-device-perf-size-license   ← 처리시간 (#3) + 앱 크기 (#4) + LGPL (#5) 일괄
-       │
-       ▼  (5 artifacts 모두 PASS 시에만 진입)
-04 mobile-local-dsp-module          ← Story 2: LocalDspService + DspPipeline + FfmpegBridge + LocalCounterRepo
+09 mobile-local-dsp-module          ← Story 2: LocalDspService + DspPipeline + MinimalDspBridge + LocalCounterRepo
        │
        ▼
-05 mobile-screens-hookup            ← Story 2: RecordModeScreen 등 hook 교체 (서버 호출 → LocalDspService)
+10 mobile-screens-hookup            ← Story 2: RecordModeScreen 등 hook 교체 (서버 호출 → LocalDspService) + airplane mode E2E
        │
        ▼
-06 server-path-preserve-and-sync-policy   ← Story 3: 서버 코드 보존 명시 + 미래 sync 정책 ARCHITECTURE.md/ADR.md 박음
+11 server-path-preserve-and-sync-policy   ← Story 3: 서버 코드 보존 명시 + 미래 sync 정책 ARCHITECTURE.md/ADR.md 박음
 ```
 
 근거:
-- 01~03 = spike 직렬 (앞 artifact PASS 가 다음의 전제. 1차 후보 fail 시 라이브러리 교체 → 01 재진입)
-- 04 = Story 2 진입. 모듈 단위 분리는 *테스트 단위 정합* 우선 (DspPipeline 단독 jest 가능, FfmpegBridge real device 분리)
-- 05 = UI hook 교체. 04 PASS 후 단일 sub-PR
-- 06 = Story 3. 코드 변경 minimal (문서 위주). 04/05 와 병행 가능하나 sync 정책이 04 설계에 영향 줄 수 있어 04 이후 권장
+- 01~07 = Story 1 Spike Gate. ADOPTED = C3 으로 종료
+- 08 = AC-1 (sample 합성) 측정에 필요한 fixture asset 사전 박음. 09 의존
+- 09 = Story 2 진입. 모듈 단위 분리는 *테스트 단위 정합* 우선 (DspPipeline 단독 jest 가능, MinimalDspBridge real device 분리)
+- 10 = UI hook 교체 + AC-4 airplane mode E2E. 09 PASS 후 단일 sub-PR
+- 11 = Story 3. 코드 변경 minimal (문서 위주). 09/10 와 병행 가능하나 sync 정책이 09 설계에 영향 줄 수 있어 09 이후 권장
 
 ---
 
@@ -266,22 +265,28 @@ LocalCounterRepo
 
 ## 8. impl 목차
 
-| NN | impl 파일명 | 대응 Story | task_index | depth | 의존 | 1줄 요약 |
-|----|-------------|-----------|-----------|-------|------|---------|
-| 01 | 01-spike-fork-eval.md | Story 1 | 1/3 | deep | — | 1차 후보 (jdarshan5 fork) build + iOS/Android real device 동작 확인 (artifact #1) |
-| 02 | 02-spike-filter-probe.md | Story 1 | 2/3 | std | 01 | `ffprobe -filters` 출력 4 필터 컴파일 증거 (artifact #2) |
-| 03 | 03-spike-device-perf-size-license.md | Story 1 | 3/3 | deep | 02 | 디바이스별 30초 처리시간 (#3) + ipa/apk 델타 (#4) + LGPL 확정 (#5) 일괄 측정 + GO/NO_GO 결정 |
-| 04 | 04-mobile-local-dsp-module.md | Story 2 | 1/2 | std | 03 | `LocalDspService` + `DspPipeline` + `FfmpegBridge` + `LocalCounterRepo` 모듈 구현 + jest |
-| 05 | 05-mobile-screens-hookup.md | Story 2 | 2/2 | std | 04 | RecordModeScreen 등 hook 교체 (서버 호출 → LocalDspService) + airplane mode E2E |
-| 06 | 06-server-path-preserve-and-sync-policy.md | Story 3 | 1/1 | simple | 04 | 서버 코드 보존 명시 (변경 0 PR) + 미래 sync 정책 ARCHITECTURE.md/ADR.md 박음 |
+| NN | impl 파일명 | 대응 Story | task_index | depth | 의존 | 1줄 요약 | 상태 |
+|----|-------------|-----------|-----------|-------|------|---------|------|
+| 01 | 01-spike-fork-eval.md | Story 1 (구) | — | deep | — | ffmpeg-kit fork 1차 후보 build eval | ✅ NO_GO (구 framing) |
+| 02 | 02-spike-filter-probe.md | Story 1 (구) | — | std | 01 | `ffprobe -filters` 출력 4 필터 컴파일 증거 | ⚠️ DEPRECATED |
+| 03 | 03-spike-device-perf-size-license.md | Story 1 (구) | — | deep | 02 | 처리시간 / 크기 / LGPL 일괄 | ⚠️ DEPRECATED |
+| 04 | 04-spike-ns1-afftdn-perceptual.md | Story 1 (새) | 1/4 | deep | — | afftdn 제외 + highpass IIR perceptual diff 측정 | ✅ PASS (C3 viable) |
+| 05 | 05-spike-ns2-pure-js-perf.md | Story 1 (새) | 2/4 | std | — | pure-JS DSP 처리시간 Galaxy A 측정 | ✅ PASS (C1 viable) |
+| 06 | 06-spike-ns3-rn-audio-api-integration.md | Story 1 (새) | 3/4 | std | — | react-native-audio-api Expo Bare 통합 측정 | ✅ PASS (C2 viable) |
+| 07 | 07-spike-ns4-candidate-comparison.md | Story 1 (새) | 4/4 | deep | 04+05+06 | 4 후보 perceptual + 최종 1개 선정 | ✅ ADOPTED = C3 |
+| 08 | 08-sample-asset-fixtures.md | Story 2 | 1/3 | simple | 07 | sample 자장가 음원 + 부모 목소리 mobile assets 박음 (AC-1 입력) | ⏳ 미작성 |
+| 09 | 09-mobile-local-dsp-module.md | Story 2 | 2/3 | std | 08 | `LocalDspService` + `DspPipeline` + `MinimalDspBridge` + `LocalCounterRepo` 모듈 구현 + jest | ⏳ 미작성 |
+| 10 | 10-mobile-screens-hookup.md | Story 2 | 3/3 | std | 09 | RecordModeScreen hook 교체 + airplane mode E2E (AC-4) + 카운터 통합 (AC-3) | ⏳ 미작성 |
+| 11 | 11-server-path-preserve-and-sync-policy.md | Story 3 | 1/1 | simple | 09 | 서버 코드 보존 명시 + 미래 sync 정책 ARCHITECTURE.md/ADR.md 박음 | ⏳ 미작성 |
 
 **규칙**:
-- 03 = GO/NO_GO 게이트. FAIL 시 04~06 모두 폐기 또는 V2+ 이관 (architect 재진입)
-- 04 의 `FfmpegBridge` 는 03 에서 결정된 라이브러리 1개 concrete 구현
-- 06 은 04 와 병행 가능하나 sync 엔드포인트 *경로명 박음* 이 04 의 데이터 모델에 영향 줄 수 있어 04 이후 권장
-- duel mode (UI 컴포넌트 + design.md components) 적용 X — 본 epic UI 변화 0
+- 01~03 = 폐기 마크 유지 (`spike-results/01-fork-build.log` evidence 보존)
+- 04~07 = Story 1 Spike Gate, ADOPTED = C3 으로 마감
+- 09 의 `MinimalDspBridge` 는 C3 채택 후보 1개 concrete 구현 (afftdn 제외 chain)
+- 11 은 09 와 병행 가능하나 sync 엔드포인트 *경로명 박음* 이 09 의 데이터 모델에 영향 줄 수 있어 09 이후 권장
+- duel mode (UI 컴포넌트 + design.md components) 적용 X — 본 epic UI 변화 0 (sample asset fixtures + service hookup 만)
 
-**메인 호출 절차**: 위 6 행 순차로 module-architect 1회씩 호출. 각 호출 prompt 에 `task_index` (예: `1/3`) 박아 module-architect 가 impl 파일 frontmatter 에 박도록 지시. 03 PASS 후 04 진입 결정은 메인 (or 사용자) 판단.
+**메인 호출 절차**: 08~11 행 순차로 module-architect 1회씩 호출. 각 호출 prompt 에 `task_index` (예: `1/3`) 박아 module-architect 가 impl 파일 frontmatter 에 박도록 지시.
 
 ---
 
