@@ -11,7 +11,7 @@
 
 ## ADR-19A — Local DSP path 도입 + 후보 set (framing 재정의 진행 중)
 
-**상태**: **Re-evaluating spike scope** (2026-05-13). 초기 framing (port-implementation = ffmpeg-kit 그대로) 가 spike NO_GO 후 부적절 판정. 후보 set 을 *port-requirement (4 효과의 결과 달성)* 단위로 재정의 중.
+**상태**: **Accepted** (2026-05-14). Story 1 Spike Gate (NS1~NS4) 완료 — **ADOPTED = C3** (DSP 강등 + UX 보강). architecture.md §3.1.B "가장 가벼움" 우선 (dep 0 + size 0 + server SSOT 재사용). framing 재정의 (port-implementation → port-requirement, 2026-05-13) → spike PASS (2026-05-14).
 
 **framing 재정의 회고 (2026-05-13)**:
 
