@@ -44,6 +44,34 @@ jest.mock('@store/authSlice', () => ({
   useAuthStore: jest.fn(),
 }))
 
+// task 10: LocalCounterRepo mock — S07 카운터 소스 교체 후 기존 테스트 호환
+// ⚠️ jest.mock factory 는 파일 상단으로 hoisted → factory 밖 변수 참조 불가 (TDZ).
+//    peek mock 을 factory 안에서 선언하고 외부에서 접근 가능한 방법으로 노출.
+const mockLocalCounterRepoInstanceForS07 = {
+  peek: jest.fn().mockResolvedValue({ count: 0, limit: 3 }),
+  increment: jest.fn().mockResolvedValue(undefined),
+  reset: jest.fn().mockResolvedValue(undefined),
+};
+const mockLocalCounterRepoPeekS07 = mockLocalCounterRepoInstanceForS07.peek;
+
+jest.mock('../../audio/local-dsp/LocalCounterRepo', () => {
+  // factory-local mock — avoids TDZ hoisting issue
+  const peekFn = jest.fn().mockResolvedValue({ count: 0, limit: 3 });
+  const instance = { peek: peekFn, increment: jest.fn(), reset: jest.fn() };
+  const MockLocalCounterRepo = jest.fn().mockImplementation(() => instance);
+  (MockLocalCounterRepo as any).__peekFn = peekFn;
+  (MockLocalCounterRepo as any).__instance = instance;
+  return {
+    LocalCounterRepo: MockLocalCounterRepo,
+    FreeLimitReachedError: class FreeLimitReachedError extends Error {
+      constructor(count: number, limit: number) {
+        super(`Free limit reached: count=${count}, limit=${limit}`);
+        this.name = 'FreeLimitReachedError';
+      }
+    },
+  };
+});
+
 // useFocusEffect mock — focus 콜백을 즉시 실행하고, cleanup을 외부에서 호출 가능하게 노출.
 // unmount 시에도 cleanup이 호출되도록 React.useEffect의 cleanup return으로 위임 (AC-09 호환).
 const mockUseFocusEffect = {
@@ -72,6 +100,10 @@ import { createAudioPlayer } from 'expo-audio'
 import { useRecordingStore } from '@store/recordingSlice'
 import { useAuthStore } from '@store/authSlice'
 import { SongSelectScreen } from '@screens/S07SongSelectScreen'
+import { LocalCounterRepo } from '../../audio/local-dsp/LocalCounterRepo'
+
+// task 10: LocalCounterRepo mock instance 접근 — factory __instance 통해 peek fn 참조
+const getMockPeek = () => (LocalCounterRepo as any).__instance?.peek as jest.Mock | undefined;
 
 // ────────────────────────────────────────────
 // 공통 픽스처
@@ -139,6 +171,15 @@ beforeEach(() => {
   mockUseFocusEffect.cleanup = null
   // 기본: 곡 목록 API 성공
   jest.mocked(songsApi.listSongs).mockResolvedValue({ songs: MOCK_SONGS })
+  // task 10: LocalCounterRepo.peek mock 재설정 (clearAllMocks 이후)
+  const peekFn = getMockPeek()
+  if (peekFn) {
+    peekFn.mockResolvedValue({ count: 0, limit: 3 })
+  }
+  // LocalCounterRepo constructor mock 재설정
+  jest.mocked(LocalCounterRepo).mockImplementation(
+    () => (LocalCounterRepo as any).__instance
+  )
 })
 
 afterEach(async () => {
@@ -262,6 +303,8 @@ describe('S07SongSelectScreen — AC-04/AC-08: 곡 선택 후 CTA (impl/13: Reco
 // ────────────────────────────────────────────
 describe('S07SongSelectScreen — AC-07: 무료 유저 카운트 칩', () => {
   it('isFreeUser=true 일 때 생성 카운트 칩을 표시한다', async () => {
+    // task 10: LocalCounterRepo.peek() 소스 — count=1 mock
+    getMockPeek()?.mockResolvedValue({ count: 1, limit: 3 })
     setupStoreMocks({ entitlement: 'free', generationCount: 1 })
     const navigation = makeMockNavigation()
     render(<SongSelectScreen navigation={navigation as any} route={{} as any} />)
@@ -272,6 +315,8 @@ describe('S07SongSelectScreen — AC-07: 무료 유저 카운트 칩', () => {
   })
 
   it('isFreeUser=true 이고 0회 사용 시 "생성 0/3"을 표시한다', async () => {
+    // task 10: LocalCounterRepo.peek() 소스 — count=0 (기본값)
+    getMockPeek()?.mockResolvedValue({ count: 0, limit: 3 })
     setupStoreMocks({ entitlement: 'free', generationCount: 0 })
     const navigation = makeMockNavigation()
     render(<SongSelectScreen navigation={navigation as any} route={{} as any} />)
@@ -296,6 +341,8 @@ describe('S07SongSelectScreen — AC-07: 무료 유저 카운트 칩', () => {
 // ────────────────────────────────────────────
 describe('S07SongSelectScreen — AC-06: 무료 유저 횟수 소진', () => {
   it('free 유저 3/3 소진 시 CTA 탭 → UpgradeSheet(generation_exhausted)로 이동한다', async () => {
+    // task 10: LocalCounterRepo.peek() count=3 → 소진
+    getMockPeek()?.mockResolvedValue({ count: 3, limit: 3 })
     setupStoreMocks({ selectedSongKey: 'brahms', entitlement: 'free', generationCount: 3 })
     const navigation = makeMockNavigation()
     render(<SongSelectScreen navigation={navigation as any} route={{} as any} />)
@@ -307,6 +354,8 @@ describe('S07SongSelectScreen — AC-06: 무료 유저 횟수 소진', () => {
   })
 
   it('free 유저 3/3 소진 시 RecordGuide로 이동하지 않는다', async () => {
+    // task 10: LocalCounterRepo.peek() count=3 → 소진
+    getMockPeek()?.mockResolvedValue({ count: 3, limit: 3 })
     setupStoreMocks({ selectedSongKey: 'brahms', entitlement: 'free', generationCount: 3 })
     const navigation = makeMockNavigation()
     render(<SongSelectScreen navigation={navigation as any} route={{} as any} />)
@@ -318,6 +367,8 @@ describe('S07SongSelectScreen — AC-06: 무료 유저 횟수 소진', () => {
   })
 
   it('free 유저 2/3 사용 시(잔여 1회) CTA 탭 → RecordGuide({ songKey })로 이동한다', async () => {
+    // task 10: LocalCounterRepo.peek() count=2 → 잔여 1회
+    getMockPeek()?.mockResolvedValue({ count: 2, limit: 3 })
     setupStoreMocks({ selectedSongKey: 'brahms', entitlement: 'free', generationCount: 2 })
     const navigation = makeMockNavigation()
     render(<SongSelectScreen navigation={navigation as any} route={{} as any} />)

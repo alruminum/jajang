@@ -27,6 +27,9 @@ export type MainStackParamList = {
   Generating: {
     sessionId: string;  // sessions API session_id (impl/07)
   };                                                           // S12
+  LocalGenerating: {
+    jobId: string;      // LocalGenerationJob.jobId (task 10)
+  };                                                           // S12 local path
   Play: { trackId: string; trackUrl?: string; presignUrl?: string; songKey?: string }; // S13
   Upgrade: {                             // S14 (legacy)
     variant: 'background' | 'generation-exhausted';
@@ -38,6 +41,7 @@ export type MainStackParamList = {
   TrialExpired: undefined;               // S17
   AccountDeletionFlow: undefined;        // S18 — 계정 탈퇴 (impl/04)
   Legal: undefined;                      // 법적 정보 (impl/05)
+  DevSampleDemo: undefined;             // __DEV__ gate — 개발 빌드 전용 (task 10)
 };
 
 // --- Tab Param List ---
