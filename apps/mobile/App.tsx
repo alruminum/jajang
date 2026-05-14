@@ -11,6 +11,8 @@ import { RootStackParamList } from '@navigation/types';
 import { configurePurchases } from '@services/revenue-cat';
 import { useEntitlementSync } from '@hooks/useEntitlement';
 import { useTheme } from '@hooks/useTheme';
+// NS3 spike probe — DEV mode only (remove after NS4)
+import RnAudioApiProbeScreen from './src/spike/RnAudioApiProbeScreen';
 
 // 앱 레벨 1회 초기화 (컴포넌트 외부 — 어떤 화면도 열리기 전 SDK 준비)
 configurePurchases();
@@ -52,6 +54,8 @@ function SessionExpiredListener() {
 }
 
 export default function App() {
+  // NS3 spike probe — DEV mode only. Remove after NS4. (impl 06 §5단계 옵션 A)
+  if (__DEV__) { return <RnAudioApiProbeScreen />; }
   // entitlement 동기화 (포그라운드 복귀 + 실시간 리스너)
   useEntitlementSync();
   const { isDark } = useTheme();
