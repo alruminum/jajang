@@ -59,7 +59,7 @@ main ←──────────── feature/local-dsp (마지막 한방
 **진행 상태 (2026-05-13):**
 - **task 01 (구 framing)** = 완료, RESULT: NO_GO ([spike-results/01-fork-build.log](spike-results/01-fork-build.log)). ffmpeg-kit fork 양쪽 broken 확정 (Maven 4-repo missing + monorepo wrapper autolinking 미발견). PR [#270](https://github.com/alruminum/jajang/pull/270).
 - **task 02 / task 03 (구 framing)** = **DEPRECATED**. ffmpeg-kit fork 의존 전제 무효화 → impl 파일 폐기 마크 ([impl/02](impl/02-spike-filter-probe.md) / [impl/03](impl/03-spike-device-perf-size-license.md)).
-- **새 Spike Gate NS1~NS4** = 미실행. impl 파일 미작성 (module-architect 재호출 필요).
+- **새 Spike Gate NS1~NS4** = 완료 (2026-05-14). C1/C2/C3 모두 viable 확정 → **ADOPTED = C3** (architecture.md §3.1.B "가장 가벼움" 우선: dep 0 + size 0 + server SSOT 재사용). PR [#272](https://github.com/alruminum/jajang/pull/272) NS1 + [#273](https://github.com/alruminum/jajang/pull/273) NS2 + [#274](https://github.com/alruminum/jajang/pull/274) NS3 merged. NS4 본 PR = 결정 반영 (산출물 폐기 + docs 갱신). 부수 발견 (server DSP `AECHO_DELAY=100ms` production 부적합 등) = epic issue [#262](https://github.com/alruminum/jajang/issues/262) 코멘트 정리.
 
 **As a** jajang 엔지니어 / PM,
 **I want** mobile 디바이스에서 서버 DSP 4 효과 (afftdn / equalizer / aecho / acrossfade) 의 *결과* 를 달성하는 최적 경로 1개 (C1 pure-JS / C2 react-native-audio-api 합성 / C3 DSP 강등 + UX 보강 / C4 afftdn-only 자체 native 중) 를 측정 결과로 결정하길 원한다,
@@ -85,7 +85,7 @@ NS1~NS3 직렬 (각 후보 viability), NS4 = NS1~NS3 결과 후. 각 spike = 1 s
 
 **GitHub Issue:** [#264](https://github.com/alruminum/jajang/issues/264) (epic #262 sub-issue, framing 재정의 반영 완료 2026-05-13)
 
-**(전제: Story 1 NS1~NS4 spike PASS + 후보 1개 채택 — 미달 시 Story 2 폐기 또는 V2+ 이관)**
+**(전제: Story 1 NS1~NS4 spike PASS + 후보 1개 채택 — 완료 2026-05-14, **ADOPTED = C3**)**
 
 **As a** jajang 부모 사용자,
 **I want** 부모 raw 녹음으로부터 자장가 mp3 생성이 *디바이스 안에서* 완결되길 원한다 (네트워크 의존 없이),

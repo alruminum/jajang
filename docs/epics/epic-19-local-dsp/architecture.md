@@ -298,14 +298,14 @@ LocalCounterRepo
 
 → **ffmpeg-kit fork 경로 = NO_GO 확정**. 그러나 이건 ffmpeg-kit 만 broken 사실이고, Epic 19 자체는 §3.1 후보 set 확장 (C1~C4) 으로 재진입 가능.
 
-### 9.2 새 Spike Gate (framing reset 후, 미실행)
+### 9.2 새 Spike Gate (framing reset 후, COMPLETED 2026-05-14)
 
 | spike | 결정할 것 | 의존 | 상태 |
 |---|---|---|---|
-| **NS1** afftdn 강등 perceptual diff | C3 후보 viability | m0-self-test 데이터 (`docs/m0-dsp-self-test.md`) | PENDING |
-| **NS2** pure-JS DSP 처리시간 | C1 후보 viability + 저사양 Android 성능 | Galaxy A 시리즈 디바이스 (S24+ 와 별개로 저사양 측정 의무) | PENDING |
-| **NS3** `react-native-audio-api` Expo Bare 통합 | C2 후보 viability | npm install + Expo prebuild + Android 빌드 | PENDING |
-| **NS4** 4 후보 perceptual quality 비교 | 최종 후보 1개 선정 | NS1~NS3 viability 확정 | PENDING |
+| **NS1** afftdn 강등 perceptual diff | C3 후보 viability | m0-self-test 데이터 (`docs/m0-dsp-self-test.md`) | PASS — C3 viable ([PR #272](https://github.com/alruminum/jajang/pull/272)) |
+| **NS2** pure-JS DSP 처리시간 | C1 후보 viability + 저사양 Android 성능 | Galaxy A 시리즈 디바이스 (S24+ 와 별개로 저사양 측정 의무) | PASS — C1 viable ([PR #273](https://github.com/alruminum/jajang/pull/273)) |
+| **NS3** `react-native-audio-api` Expo Bare 통합 | C2 후보 viability | npm install + Expo prebuild + Android 빌드 | PASS — C2 viable ([PR #274](https://github.com/alruminum/jajang/pull/274)) |
+| **NS4** 4 후보 perceptual quality 비교 | 최종 후보 1개 선정 | NS1~NS3 viability 확정 | **ADOPTED = C3** (가장 가벼움, dep 0 + size 0 + server SSOT 재사용) |
 
 > 본 epic 의 Spike Gate 는 spike-driven epic 패턴 (ADR-19D) 그대로 — PRD spec 확정을 spike 결과로 미룬다. 단, 이번 framing reset 의 학습 = "spike scope 자체도 framing 검증 후 확정" — port-implementation 으로 spike 좁히면 후보 누락 catastrophic. memory: [feedback_migration_epic_port_vs_requirement](../../../../../.claude/projects/-Users-dc-kim-project-jajang/memory/feedback_migration_epic_port_vs_requirement.md).
 
