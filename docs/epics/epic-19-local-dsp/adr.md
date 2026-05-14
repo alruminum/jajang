@@ -65,6 +65,8 @@
 - [ ] NS4: 4 후보 perceptual quality 비교 + 최종 1개 선정
 - [ ] 기존 task 01~03 impl 파일 = 폐기 마크 (NS1~NS4 신규 impl 파일로 대체) — module-architect 재호출 시점에 정리
 
+> **task 10 POLISH 갱신 (2026-05-15)**: Story 2 출력 포맷 = `.wav` 채택 (mp3 인코딩은 미래 sync task 이관). 사유 = task 09 wav 종결 + lamejs 호환 검증 미수.
+
 ---
 
 ## ADR-19B — 서버 DSP path 코드 보존 + 배포 stop

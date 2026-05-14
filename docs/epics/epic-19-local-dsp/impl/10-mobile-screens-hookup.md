@@ -220,7 +220,7 @@ onUnmount:
 
 | REQ | 내용 | 검증 | 통과 조건 |
 |---|---|---|---|
-| REQ-001 | sample fixture + LocalDspService 합성 → 단일 mp3 파일 출력 | (MANUAL) | DevSampleDemoScreen 에서 "샘플 합성 시작" 탭 → console.log 에 `file://.../*.mp3` URI 출력 + `ls -la <uri>` 또는 `ffprobe -f mp3 <uri>` 에러 없음. 또는: `npx jest apps/mobile/src/__tests__/audio/local-dsp/integration.test.ts` → `sample synthesis → 1 mp3` 통과 |
+| REQ-001 | sample fixture + LocalDspService 합성 → 단일 wav 오디오 파일 출력 | (MANUAL) | DevSampleDemoScreen 에서 "샘플 합성 시작" 탭 → console.log 에 `file://.../*.wav` URI 출력 + `ls -la <uri>` 또는 `ffprobe <uri>` 에러 없음. 또는: `npx jest apps/mobile/src/__tests__/audio/local-dsp/integration.test.ts` → `sample synthesis → 1 wav` 통과 |
 | REQ-002 | `services/api/generations.ts` 호출 site 0 — raw 녹음 서버 유출 0 | (TEST) | `grep -rn "generationsApi\." apps/mobile/src/screens/ apps/mobile/src/hooks/` → 0 lines 출력 |
 | REQ-003 | `services/api/recordings.ts` 업로드 호출 site 0 (S11 교체 후) | (TEST) | `grep -rn "recordingsApi\.initUpload\|recordingsApi\.uploadToS3" apps/mobile/src/screens/S11PreviewScreen.tsx` → 0 lines 출력 |
 | REQ-004 | 카운터 +1 (status=completed 직후) | (TEST) | `npx jest apps/mobile/src/__tests__/screens/S11PreviewScreen.test.tsx` → `counter increments on completed` 통과. (task 09 LocalDspService mock 사용) |
@@ -228,6 +228,8 @@ onUnmount:
 | REQ-006 | airplane mode (네트워크 0) 에서 sample 합성 완료 | (MANUAL) | 디바이스에서 Settings → Airplane Mode ON → DevSampleDemoScreen "샘플 합성 시작" → outputUri 출력 확인. screenshot 을 `docs/epics/epic-19-local-dsp/spike-results/10-airplane-mode-e2e.png` 로 저장 |
 | REQ-007 | DevSampleDemoScreen 이 production build 미포함 | (TEST) | `grep -rn "DevSampleDemoScreen" apps/mobile/src/navigation/` → `__DEV__` 조건 guard 내부에만 등록 확인. `NODE_ENV=production grep -rn "DevSampleDemoScreen" apps/mobile/src/navigation/` 결과에 조건 없는 등록 0 |
 | REQ-008 | 기존 generationSlice `setSessionId` / `setPollState` 시그니처 보존 | (TEST) | `npx jest --testPathPattern="generationSlice\|generation-store"` → 기존 테스트 회귀 0 |
+
+> **출력 포맷 결정 (2026-05-15, POLISH 단계)**: 본 task 는 `.wav` 출력 채택. 사유 = (1) task 09 (`MinimalDspBridgeImpl.execute`) 가 wav 종결 (2) lamejs (pure-JS MP3 encoder) RN/Hermes 호환 검증 미수 — 별 spike 1회 필요 (3) 사용자 인지 = 파일 형식 무관 (4) wav vs mp3 디스크 차이 ~2MB/파일 × 3회 = ~7.5MB 합산 = 미세 (5) 미래 sync task 도입 시 (서버 업로드 단계) mp3 변환 옵션 잔존. ADR-19A / stories.md AC-1 도 동기적 갱신.
 
 **통합 빌드 검증 커맨드:**
 

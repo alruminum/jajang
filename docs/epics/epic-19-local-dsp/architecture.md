@@ -49,7 +49,7 @@
 
 | Entity / VO | 정의 | invariant | bounded context |
 |---|---|---|---|
-| **LocalGenerationJob** (신규 Entity) | 디바이스 내 단일 DSP 처리 작업 단위 (`job_id` = UUID, status enum, input recording uri, output mp3 uri) | status 는 단방향 (pending → processing → completed | failed). output mp3 uri 는 status=completed 일 때만 non-null | Mobile DSP |
+| **LocalGenerationJob** (신규 Entity) | 디바이스 내 단일 DSP 처리 작업 단위 (`job_id` = UUID, status enum, input recording uri, output wav uri) | status 는 단방향 (pending → processing → completed | failed). output wav uri 는 status=completed 일 때만 non-null | Mobile DSP |
 | **LocalDSPCounter** (신규 VO) | 클라이언트 사이드 무료 3회 카운터 (`count` int, `limit` int=3) | count ≥ 0, count ≤ limit. 증가는 status=completed 직후 단일 트랜잭션 | Mobile DSP |
 | **RecordingSession** (기존 재사용) | 1 녹음 세션 = 1 master 생성 단위 | 기존 정의 ([db-schema.md](../../db-schema.md)) | Server (보존, MVP 미호출) |
 | **MasterAudio** (기존 재사용) | 완성 mp3 메타 | status / s3_key invariant 기존 유지 | Server (보존) + Future Sync (mp3-only upload) |
@@ -123,7 +123,7 @@ NS1~NS3 직렬, NS4 = 후보 viable 확정 후. 각 NS = 1 spike artifact + log 
        │       ▼
        ├─ MinimalDspBridge.ts        ← C3 wrapper. NS1 spike script 재사용 (Hermes JS 산술 or react-native-audio-api 한정 사용)
        │       │
-       │       │   (3) 4 step chain (highpass IIR → EQ biquad → delay echo → triangular gain crossfade → mp3 encode)
+       │       │   (3) 4 step chain (highpass IIR → EQ biquad → delay echo → triangular gain crossfade)
        │       ▼
        ├─ DspPipeline.ts             ← pure function. step 파라미터 + 순서 정의 (서버 DspService 와 동일 인자, afftdn 제외)
        │
@@ -184,10 +184,11 @@ LocalCounterRepo
    // steps = [{type:'highpass', f:80}, {type:'eq', f:300, g:3}, {type:'echo', delay:1000, decay:0.3}, {type:'crossfade-tri', d:0.3}]
    MinimalDspBridge.execute(steps) → status='processing'
 5. DSP complete:
-   - success → output mp3 uri 반환 → LocalCounterRepo.increment() → status='completed' → generationSlice.setPollState({status: 'completed', uri})
+   - success → output wav uri 반환 → LocalCounterRepo.increment() → status='completed' → generationSlice.setPollState({status: 'completed', uri})
    - fail    → status='failed'    → generationSlice.setPollState({status: 'failed', error})
 
-   ※ 서버 호출 0. raw 녹음 / 완성 mp3 모두 디바이스 로컬 (FS) 잔존. afftdn 제외 (NS1 결과 product 결정).
+   ※ 서버 호출 0. raw 녹음 / 완성 wav 모두 디바이스 로컬 (FS) 잔존. afftdn 제외 (NS1 결과 product 결정).
+   ※ 본 task 10 POLISH 후 `.wav` 출력 채택. mp3 인코딩 = 미래 sync task 이관.
 ```
 
 ### 3.6 Story 3 서버 path 보존 구조

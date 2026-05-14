@@ -93,10 +93,10 @@ NS1~NS3 직렬 (각 후보 viability), NS4 = NS1~NS3 결과 후. 각 spike = 1 s
 
 ### 수용 기준 (Story 2 단위 — MVP 단순화 2026-05-14)
 
-> 음질 측정 (m0-self-test 합격선 SNR/셔플/무음) = Epic 단위 수용 기준 (stories.md 상단 §완료 기준 §2) 로 이관. Story 2 자체는 **샘플 사전 등록된 자장가 1곡 + 부모 목소리 샘플 1개를 디바이스에서 합성 → 단일 mp3 파일 산출** 까지만 확인.
+> 음질 측정 (m0-self-test 합격선 SNR/셔플/무음) = Epic 단위 수용 기준 (stories.md 상단 §완료 기준 §2) 로 이관. Story 2 자체는 **샘플 사전 등록된 자장가 1곡 + 부모 목소리 샘플 1개를 디바이스에서 합성 → 단일 wav 오디오 파일 산출** 까지만 확인.
 
-- **AC-1** — sample registered 자장가 음원 (`apps/mobile/assets/samples/lullaby-sample.{wav,mp3}` 등 사전 박힌 1곡) + sample 부모 목소리 녹음 (`apps/mobile/assets/samples/voice-sample.{wav,m4a}`) 가 device DSP path 통과 후 1개 mp3 파일로 출력된다.
-- **AC-2** — 출력 mp3 파일이 디바이스 로컬 FS 에만 존재 (서버 업로드 호출 0). raw 녹음도 디바이스 로컬에 잔존.
+- **AC-1** — sample registered 자장가 음원 (`apps/mobile/assets/samples/lullaby-sample.{wav,mp3}` 등 사전 박힌 1곡) + sample 부모 목소리 녹음 (`apps/mobile/assets/samples/voice-sample.{wav,m4a}`) 가 device DSP path 통과 후 1개 wav 오디오 파일로 출력된다. (mp3 인코딩은 미래 sync task 이관 — task 10 POLISH 결정 2026-05-15)
+- **AC-2** — 출력 wav 파일이 디바이스 로컬 FS 에만 존재 (서버 업로드 호출 0). raw 녹음도 디바이스 로컬에 잔존.
 - **AC-3** — 무료 3회 카운터 (`LocalCounterRepo`) 가 status=completed 직후 +1. count ≥ 3 시 진입 차단.
 - **AC-4** — airplane mode (네트워크 0) 에서 AC-1 시나리오 그대로 동작.
 - **AC-5** — 모듈 경계 = `LocalDspService` / `DspPipeline` / `MinimalDspBridge` / `LocalCounterRepo` (architecture.md §3.2). DIP 박는 곳 = `MinimalDspBridge` 1개.
