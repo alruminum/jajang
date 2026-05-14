@@ -83,15 +83,30 @@ NS1~NS3 직렬 (각 후보 viability), NS4 = NS1~NS3 결과 후. 각 spike = 1 s
 
 ## Story 2 — Local DSP Path 추가 (mobile-side DSP 구현 + 클라이언트 카운터)
 
-**GitHub Issue:** [#264](https://github.com/alruminum/jajang/issues/264) (epic #262 sub-issue, framing 재정의 반영 완료 2026-05-13)
+**GitHub Issue:** [#264](https://github.com/alruminum/jajang/issues/264) (epic #262 sub-issue)
 
-**(전제: Story 1 NS1~NS4 spike PASS + 후보 1개 채택 — 완료 2026-05-14, **ADOPTED = C3**)**
+**전제: Story 1 NS1~NS4 spike PASS + ADOPTED = C3** (DSP 강등 + UX 보강, 2026-05-14 완료). 구현 방향 = afftdn 폐기 + highpass IIR + EQ + echo + crossfade (서버 SSOT 재사용, dep 0, size 0).
 
 **As a** jajang 부모 사용자,
 **I want** 부모 raw 녹음으로부터 자장가 mp3 생성이 *디바이스 안에서* 완결되길 원한다 (네트워크 의존 없이),
 **So that** 새벽 와이파이 끊긴 환경에서도 생성이 가능하고, raw 목소리가 서버 밖으로 나가지 않는 프라이버시 보장을 받으며, 무료 3회 BM 은 클라이언트 카운터로 그대로 유지된다.
 
-> 구체적 구현 (라이브러리 / 모듈 구조) = NS4 결과 후보 1개에 따라 결정. architecture.md §3.2 의 모듈 경계 (`LocalDspService` / `DspPipeline` / `FfmpegBridge`(or 후보 wrapper) / `LocalCounterRepo`) 는 framing 무관 그대로 유지.
+### 수용 기준 (Story 2 단위 — MVP 단순화 2026-05-14)
+
+> 음질 측정 (m0-self-test 합격선 SNR/셔플/무음) = Epic 단위 수용 기준 (stories.md 상단 §완료 기준 §2) 로 이관. Story 2 자체는 **샘플 사전 등록된 자장가 1곡 + 부모 목소리 샘플 1개를 디바이스에서 합성 → 단일 mp3 파일 산출** 까지만 확인.
+
+- **AC-1** — sample registered 자장가 음원 (`apps/mobile/assets/samples/lullaby-sample.{wav,mp3}` 등 사전 박힌 1곡) + sample 부모 목소리 녹음 (`apps/mobile/assets/samples/voice-sample.{wav,m4a}`) 가 device DSP path 통과 후 1개 mp3 파일로 출력된다.
+- **AC-2** — 출력 mp3 파일이 디바이스 로컬 FS 에만 존재 (서버 업로드 호출 0). raw 녹음도 디바이스 로컬에 잔존.
+- **AC-3** — 무료 3회 카운터 (`LocalCounterRepo`) 가 status=completed 직후 +1. count ≥ 3 시 진입 차단.
+- **AC-4** — airplane mode (네트워크 0) 에서 AC-1 시나리오 그대로 동작.
+- **AC-5** — 모듈 경계 = `LocalDspService` / `DspPipeline` / `MinimalDspBridge` / `LocalCounterRepo` (architecture.md §3.2). DIP 박는 곳 = `MinimalDspBridge` 1개.
+
+### 모듈 경계 (C3 채택 후 확정)
+
+- `LocalDspService.ts` — 단일 진입점 (start / cancel / pollStatus)
+- `DspPipeline.ts` — pure function, 4 효과 파라미터 정의 (highpass IIR + EQ + echo + gain ramp crossfade)
+- `MinimalDspBridge.ts` — C3 wrapper. 내부 구현은 NS1 결과 스크립트 재사용 + RN side 통합 (Hermes typed-array 산술 or `react-native-audio-api` 한정 사용 — module-architect impl 단계에서 확정)
+- `LocalCounterRepo.ts` — AsyncStorage 기반 무료 3회 카운터
 
 ---
 
