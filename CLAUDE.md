@@ -201,17 +201,27 @@ PRD/스펙이 크게 바뀌어 새 마일스톤을 시작할 때 아래 순서�
 
 ### v01
 
-**Epic 19 — Local DSP Migration** · [stories](docs/epics/epic-19-local-dsp/stories.md) · ⚠️ framing 재정의 진행 중 (2026-05-13, port-implementation → port-requirement)
+**Epic 19 — Local DSP Migration** · [stories](docs/epics/epic-19-local-dsp/stories.md) · ✅ **COMPLETED 2026-05-15** ([#262](https://github.com/alruminum/jajang/issues/262), 통합 PR [#284](https://github.com/alruminum/jajang/pull/284))
+
+채택: **C3** (DSP 강등 + UX 보강 — afftdn 폐기 + highpass IIR + EQ + echo + crossfade / dep 0 + size 0 + server SSOT 재사용). 출력 = `.wav` (mp3 인코딩 = 미래 sync task 이관). 자세히 = [docs/ADR.md](docs/ADR.md) ADR-010 + [epics/epic-19-local-dsp/adr.md](docs/epics/epic-19-local-dsp/adr.md) ADR-19A~19E.
 
 | NN | impl 파일 | 상태 |
 |---|---|---|
-| 01 spike-fork-eval | [docs/epics/epic-19-local-dsp/impl/01-spike-fork-eval.md](docs/epics/epic-19-local-dsp/impl/01-spike-fork-eval.md) | ✅ COMPLETED — RESULT: NO_GO ([log](docs/epics/epic-19-local-dsp/spike-results/01-fork-build.log), [PR #270](https://github.com/alruminum/jajang/pull/270)) |
+| 01 spike-fork-eval | [docs/epics/epic-19-local-dsp/impl/01-spike-fork-eval.md](docs/epics/epic-19-local-dsp/impl/01-spike-fork-eval.md) | ✅ COMPLETED — RESULT: NO_GO ([PR #270](https://github.com/alruminum/jajang/pull/270)) |
 | 02 spike-filter-probe | [docs/epics/epic-19-local-dsp/impl/02-spike-filter-probe.md](docs/epics/epic-19-local-dsp/impl/02-spike-filter-probe.md) | ⚠️ DEPRECATED (ffmpeg-kit fork 의존 전제 무효) |
 | 03 spike-device-perf-size-license | [docs/epics/epic-19-local-dsp/impl/03-spike-device-perf-size-license.md](docs/epics/epic-19-local-dsp/impl/03-spike-device-perf-size-license.md) | ⚠️ DEPRECATED (동상) |
 | 04 spike-ns1-afftdn-perceptual | [docs/epics/epic-19-local-dsp/impl/04-spike-ns1-afftdn-perceptual.md](docs/epics/epic-19-local-dsp/impl/04-spike-ns1-afftdn-perceptual.md) | ✅ COMPLETED — C3 viable ([PR #272](https://github.com/alruminum/jajang/pull/272)) |
 | 05 spike-ns2-pure-js-perf | [docs/epics/epic-19-local-dsp/impl/05-spike-ns2-pure-js-perf.md](docs/epics/epic-19-local-dsp/impl/05-spike-ns2-pure-js-perf.md) | ✅ COMPLETED — C1 viable ([PR #273](https://github.com/alruminum/jajang/pull/273)) |
 | 06 spike-ns3-rn-audio-api-integration | [docs/epics/epic-19-local-dsp/impl/06-spike-ns3-rn-audio-api-integration.md](docs/epics/epic-19-local-dsp/impl/06-spike-ns3-rn-audio-api-integration.md) | ✅ COMPLETED — C2 viable ([PR #274](https://github.com/alruminum/jajang/pull/274)) |
-| 07 spike-ns4-candidate-comparison | [docs/epics/epic-19-local-dsp/impl/07-spike-ns4-candidate-comparison.md](docs/epics/epic-19-local-dsp/impl/07-spike-ns4-candidate-comparison.md) | ✅ COMPLETED — **ADOPTED: C3** (Story 1 Spike Gate 완료, 2026-05-14) |
-| 10 mobile-screens-hookup | [docs/epics/epic-19-local-dsp/impl/10-mobile-screens-hookup.md](docs/epics/epic-19-local-dsp/impl/10-mobile-screens-hookup.md) | ⏳ 미시작 |
-| 09 mobile-local-dsp-module | [docs/epics/epic-19-local-dsp/impl/09-mobile-local-dsp-module.md](docs/epics/epic-19-local-dsp/impl/09-mobile-local-dsp-module.md) | ⏳ READY |
-| 08 sample-asset-fixtures | [docs/epics/epic-19-local-dsp/impl/08-sample-asset-fixtures.md](docs/epics/epic-19-local-dsp/impl/08-sample-asset-fixtures.md) | ⏳ impl 작성 완료 — engineer 진입 대기 |
+| 07 spike-ns4-candidate-comparison | [docs/epics/epic-19-local-dsp/impl/07-spike-ns4-candidate-comparison.md](docs/epics/epic-19-local-dsp/impl/07-spike-ns4-candidate-comparison.md) | ✅ COMPLETED — **ADOPTED: C3** ([PR #275](https://github.com/alruminum/jajang/pull/275)) |
+| 08 sample-asset-fixtures | [docs/epics/epic-19-local-dsp/impl/08-sample-asset-fixtures.md](docs/epics/epic-19-local-dsp/impl/08-sample-asset-fixtures.md) | ✅ COMPLETED ([PR #280](https://github.com/alruminum/jajang/pull/280)) |
+| 09 mobile-local-dsp-module | [docs/epics/epic-19-local-dsp/impl/09-mobile-local-dsp-module.md](docs/epics/epic-19-local-dsp/impl/09-mobile-local-dsp-module.md) | ✅ COMPLETED ([PR #281](https://github.com/alruminum/jajang/pull/281)) |
+| 10 mobile-screens-hookup | [docs/epics/epic-19-local-dsp/impl/10-mobile-screens-hookup.md](docs/epics/epic-19-local-dsp/impl/10-mobile-screens-hookup.md) | ✅ COMPLETED ([PR #282](https://github.com/alruminum/jajang/pull/282)) |
+| 11 server-path-preserve-and-sync-policy | [docs/epics/epic-19-local-dsp/impl/11-server-path-preserve-and-sync-policy.md](docs/epics/epic-19-local-dsp/impl/11-server-path-preserve-and-sync-policy.md) | ✅ COMPLETED ([PR #283](https://github.com/alruminum/jajang/pull/283)) |
+
+**후속 영역 (별 epic / V2+ 이관)**:
+- mp3 인코딩 (lamejs RN/Hermes 호환 spike)
+- `POST /sessions/{id}/upload-master` 실제 구현 (V2+ sync 진입 시점)
+- 카운터 reconcile 방식 (클라 ↔ 서버, V2+)
+- S11PreviewScreen `isGenerationExhausted=false` 데드 JSX 클린업
+- DSP 출력 wav → mp3 변환 (서버 측 또는 별 task)
