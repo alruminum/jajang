@@ -107,3 +107,32 @@
 **이유**: 음성 = 생체정보 → 개인정보보호법 / GDPR Art.9 적용. 보관 기간 최소화 = 법적 리스크 + 유출 시 피해 범위 최소화. 24h 는 재처리 / 디버깅 / 사용자 변심 후 재생성 요청에 대응 가능한 합리적 윈도우.
 
 **트레이드오프**: 24h 후 유저가 같은 샘플로 재처리 원할 시 재녹음 필요. 분석/개선 목적의 장기 데이터 수집 불가 (자체 학습 모델 도입 시 다시 검토 필요).
+
+> ⚠️ **v1.4.x+ 갱신** (Epic 19 ADR-010): MVP 부터 raw 음성은 *디바이스 영구 로컬* (서버 업로드 0). 본 ADR 의 24h 정책은 미래 sync 기능 도입 시 *완성 mp3 만* (raw 0) 업로드 시점부터 적용. 자세히 = ADR-010.
+
+---
+
+### ADR-010: Local DSP path 도입 + 서버 path 보존 + 미래 sync 정책
+
+**결정**: v1.4.x 부터 mobile 디바이스 로컬 DSP path (`LocalDspService` + `DspPipeline` + `MinimalDspBridgeImpl` + `LocalCounterRepo`) 활성. 서버 DSP path (`/sessions/*` + Celery `dsp_processing` task + `services/dsp/*` + S3) 코드 **보존 (삭제 0 / 변경 0)**, 배포만 stop. 미래 sync 기능 진입 시 *완성 wav 만* (raw 0) 업로드 (`POST /sessions/{id}/upload-master` 신규 엔드포인트, 본 ADR 시점 = 경로명만 박힘).
+
+**이유**:
+- **인프라 비용 절감** — Celery worker + API server + S3 storage 모두 stop. 인프라 비용 0
+- **오프라인** — 새벽 와이파이 끊긴 환경에서도 자장가 생성 가능 (서버 NW 의존 path 의 핵심 UX 약점 제거)
+- **프라이버시** — raw 부모 음성이 디바이스 외 유출 0 (생체정보 안전 우선, ADR-009 강화)
+- **외부 검증된 라이브러리 retire 인지** — `ffmpeg-kit` 본가 2025 retire (Story 1 task 01 spike 측정 NO_GO 재현)
+- **C3 채택** — Story 1 Spike Gate (NS1~NS4) 결과 = afftdn 폐기 + highpass IIR + EQ + echo + crossfade. dep 0 + size 0 + server SSOT 재사용
+
+**트레이드오프**:
+- 서버 dead code 누적 → lint warning 허용. 단 V2+ AI 합성 부활 / sync 기능 진입 시 인프라 재구축 비용 회피 가치 우선
+- mobile-only 한계 — raw 기반 재처리 (예: DSP 파라미터 튜닝 후 재생성) 불가. 다중 디바이스 동기화 = mp3 만
+- 클라 카운터 우회 가능 (re-install / 시간 조작) — BM 손실 ≤ 무시 가능 수용 (sync 진입 시 서버 reconcile, 방식 = V2+ 결정)
+- mp3 인코딩 미루기 — task 09/10 = `.wav` 출력. 미래 sync 진입 시 서버 측 또는 별 task 에서 인코딩 검토
+
+**Epic-local 결정 (자세히)**: [docs/epics/epic-19-local-dsp/adr.md](epics/epic-19-local-dsp/adr.md) ADR-19A~19E.
+
+- ADR-19A: 후보 set + C3 채택 (NS1~NS4 spike 결과)
+- ADR-19B: 서버 path 코드 보존 + 배포 stop 정책
+- ADR-19C: 미래 sync 정책 — raw 영구 로컬 / 완성 wav 만 서버 업로드
+- ADR-19D: spike-driven epic 패턴 (PRD spec 확정을 spike 결과로 미룸)
+- ADR-19E: 통합 브랜치 패턴 (long-lived `feature/local-dsp` + sub-PR + 옵션 c-1 수동 close)

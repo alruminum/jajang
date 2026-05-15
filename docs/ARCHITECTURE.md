@@ -150,7 +150,35 @@ sequenceDiagram
     App->>App: Zustand AuthSlice 업데이트
 ```
 
-### 음원 생성 시퀀스 (DSP 방식)
+### 음원 생성 시퀀스
+
+**MVP (v1.4.x+) — Local DSP path 활성** (Epic 19 채택, ADR-010 / ADR-19A)
+
+```mermaid
+sequenceDiagram
+    participant App
+    participant LocalDspService
+    participant LocalCounterRepo (AsyncStorage)
+    participant MinimalDspBridge (pure-JS Hermes)
+
+    App->>LocalCounterRepo (AsyncStorage): peek()
+    alt count >= 3
+        LocalCounterRepo (AsyncStorage)-->>App: {count, limit}
+        App->>App: S14 UpgradeSheet (variant: generation_exhausted)
+    else count < 3
+        App->>LocalDspService: startJob({inputUri, songKey, outputUri})
+        LocalDspService->>MinimalDspBridge (pure-JS Hermes): execute(steps, inputUri, outputUri)
+        Note over MinimalDspBridge (pure-JS Hermes): 4-step chain<br/>highpass IIR f=80<br/>→ EQ biquad f=2500 g=3<br/>→ echo delay=100ms decay=0.3<br/>→ triangular gain crossfade d=0.3
+        MinimalDspBridge (pure-JS Hermes)-->>LocalDspService: outputUri (.wav)
+        LocalDspService->>LocalCounterRepo (AsyncStorage): increment()
+        LocalDspService-->>App: jobId
+        App->>App: S12 LocalGenerating (polling) → S13 Play
+    end
+```
+
+> ⚠️ **출력 포맷 = `.wav`**. mp3 인코딩은 미래 sync task 이관 (Epic 19 task 10 POLISH 결정 2026-05-15). 자세히 = [docs/epics/epic-19-local-dsp/adr.md](epics/epic-19-local-dsp/adr.md) ADR-19A.
+
+**Server DSP path — 코드 보존, MVP 미호출** (ADR-19B, 미래 sync 활성화 시 복귀)
 
 ```mermaid
 sequenceDiagram
@@ -159,6 +187,8 @@ sequenceDiagram
     participant Counter DB
     participant S3
     participant Celery
+
+    Note over App,Celery: ⚠️ MVP v1.4.x 부터 클라이언트 호출 0 — 코드 보존만<br/>(ADR-010 / ADR-19B, 미래 sync 활성화 시 복귀)
 
     App->>API: POST /sessions/init {user_id, song_key, session_id}
     API->>Counter DB: SELECT FOR UPDATE (횟수 확인)
@@ -182,6 +212,14 @@ sequenceDiagram
         App->>App: S13 재생 화면 이동
     end
 ```
+
+**미래 sync 진입 시 (V2+)** — ADR-19C 정합
+
+- 클라이언트: mobile DSP 완료 wav 만 (raw 0) `POST /sessions/{id}/upload-master` 신규 엔드포인트로 업로드 (사용자 명시 동의 게이트)
+- 서버: DSP 처리 0. S3 저장 + `MasterAudio` 메타 등록만
+- 카운터 reconcile: 클라 카운터 (3회) ↔ 서버 `GenerationCounter` reconcile 방식 = V2+ 결정 미루기
+
+> 본 sync 엔드포인트 = *경로명만* 박힘 (ADR-19C). 실제 라우터 등록 / 함수 구현 = V2+ sync 기능 진입 시점.
 
 ### 생성 횟수 카운터 상태머신
 
