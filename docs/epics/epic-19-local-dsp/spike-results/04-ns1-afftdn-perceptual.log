@@ -1,0 +1,42 @@
+# Epic 19 NS1 — afftdn 강등 perceptual diff
+측정일: 2026-05-13
+환경: ffmpeg version 8.1 Copyright (c) 2000-2026 the FFmpeg developers / Python 3.14.4
+파라미터 소스: hardcoded-fallback (import err: 6 validation errors for Settings
+DATABASE_URL
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+REDIS_URL
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+JWT_PRIVATE_KEY
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+JWT_PUBLIC_KEY
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+S3_ACCESS_KEY
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+S3_SECRET_KEY
+  Field required [type=missing, input_value={}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing)
+
+[full chain]
+raw_floor_db: -32.94 dBFS
+full_chain_floor_db: -54.56 dBFS
+full_chain_snr_improvement: 21.62 dB
+
+[degraded chain (afftdn 제거 + highpass IIR f=80Hz)]
+degraded_chain_floor_db: -54.69 dBFS
+degraded_chain_snr_improvement: 21.75 dB
+
+[비교]
+snr_diff_db: -0.13 dB  (full - degraded; 양수 = full 우위)
+c3_viable_threshold_snr: 15.0 dB
+c3_viable_threshold_diff: 6.0 dB
+degraded_snr_pass: YES  (≥15.0 dB?)
+snr_diff_pass: YES  (≤6.0 dB?)
+
+SKIP_PNG (matplotlib 미설치)
+
+RESULT: C3 viable (SNR diff ≤ 6dB AND degraded SNR ≥ 15dB)

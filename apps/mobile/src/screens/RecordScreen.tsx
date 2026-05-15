@@ -17,11 +17,13 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NavigationProp, RouteProp } from '@react-navigation/native';
 
 import { useAuthStore } from '@store/authSlice';
+import { useFocusEffect } from '@react-navigation/native';
 import { WaveformVisualizer } from '../components/WaveformVisualizer';
 import { LyricsBox } from '../components/LyricsBox';
 import { useBgmPlayer } from '../hooks/useBgmPlayer';
 import { useRecordingStore } from '../store/recordingSlice';
 import { BGM_TRACKS } from '../data/bgmTracks';
+import { LocalCounterRepo } from '../audio/local-dsp/LocalCounterRepo';
 import { Typography } from '../theme/typography';
 import { FontSize } from '../theme/tokens';
 import type { ColorTokens } from '../theme/tokens';
@@ -213,8 +215,25 @@ export function RecordScreen() {
     entitlement: 'free' | 'trial' | 'premium';
     generationCount: number;
   };
-  const { entitlement, generationCount } = authState;
+  const { entitlement } = authState;
   const isFreeUser = entitlement === 'free';
+
+  // task 10: localCount — LocalCounterRepo.peek() 소스로 교체 (서버 generationCount 제거)
+  const [localCount, setLocalCount] = useState(0);
+  // useRef: 테스트에서 mock constructor 가 render 시 호출되어 mock instance 반환
+  const counterRepoRef = useRef<LocalCounterRepo | null>(null);
+  if (!counterRepoRef.current) {
+    counterRepoRef.current = new LocalCounterRepo();
+  }
+
+  // focus 진입 시 peek() 호출 → 카운터 갱신 (화면 복귀 시 재조회)
+  useFocusEffect(
+    useCallback(() => {
+      counterRepoRef.current?.peek().then(({ count }) => {
+        setLocalCount(count);
+      });
+    }, []),
+  );
   const bgmTitle = BGM_TRACKS[songKey as keyof typeof BGM_TRACKS]?.titleKo;
   const loopDurationMs =
     BGM_TRACKS[songKey as keyof typeof BGM_TRACKS]?.loopDurationMs ??
@@ -445,6 +464,12 @@ export function RecordScreen() {
         >
           <Text style={styles.cancelText}>✕ 취소</Text>
         </Pressable>
+        {/* task 10: 카운터 칩 — countdown phase 에서도 표시 */}
+        {isFreeUser && (
+          <View style={styles.counterChip} testID="free-generation-counter-countdown">
+            <Text style={styles.counterText}>생성 {localCount}/{FREE_GENERATION_LIMIT}</Text>
+          </View>
+        )}
         <Text style={styles.countdownNumber}>{countdown}</Text>
         <Text style={styles.countdownLabel}>녹음을 시작해요</Text>
       </View>
@@ -467,8 +492,9 @@ export function RecordScreen() {
 
       {isFreeUser && (
         <View style={styles.counterRow}>
+          {/* testID='free-generation-counter' — 소스: LocalCounterRepo.peek() (task 10 교체) */}
           <View style={styles.counterChip} testID="free-generation-counter">
-            <Text style={styles.counterText}>생성 {generationCount}/{FREE_GENERATION_LIMIT}</Text>
+            <Text style={styles.counterText}>생성 {localCount}/{FREE_GENERATION_LIMIT}</Text>
           </View>
         </View>
       )}
@@ -503,11 +529,14 @@ export function RecordScreen() {
           <Text style={styles.restartText}>다시 시작</Text>
         </Pressable>
 
+        {/* task 10: count >= FREE_GENERATION_LIMIT 시 stop 버튼 disabled */}
         <Pressable
           onPress={handleStopPress}
           accessibilityLabel="녹음 중지"
           testID="stop-recording-button"
           style={styles.stopRing}
+          disabled={localCount >= FREE_GENERATION_LIMIT}
+          accessibilityState={{ disabled: localCount >= FREE_GENERATION_LIMIT }}
         >
           <View style={styles.stopBtn} testID="stop-button-inner" pointerEvents="none">
             <View style={styles.stopIcon} />

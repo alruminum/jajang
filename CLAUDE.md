@@ -194,3 +194,24 @@ PRD/스펙이 크게 바뀌어 새 마일스톤을 시작할 때 아래 순서�
 | `gemini-review.yml` | 자동 코드 리뷰 |
 
 - 로컬 PASS 만으로 머지 금지. `gh pr checks --watch` 또는 dcness `pr-finalize.sh` 사용.
+
+---
+
+## 모듈 계획
+
+### v01
+
+**Epic 19 — Local DSP Migration** · [stories](docs/epics/epic-19-local-dsp/stories.md) · ⚠️ framing 재정의 진행 중 (2026-05-13, port-implementation → port-requirement)
+
+| NN | impl 파일 | 상태 |
+|---|---|---|
+| 01 spike-fork-eval | [docs/epics/epic-19-local-dsp/impl/01-spike-fork-eval.md](docs/epics/epic-19-local-dsp/impl/01-spike-fork-eval.md) | ✅ COMPLETED — RESULT: NO_GO ([log](docs/epics/epic-19-local-dsp/spike-results/01-fork-build.log), [PR #270](https://github.com/alruminum/jajang/pull/270)) |
+| 02 spike-filter-probe | [docs/epics/epic-19-local-dsp/impl/02-spike-filter-probe.md](docs/epics/epic-19-local-dsp/impl/02-spike-filter-probe.md) | ⚠️ DEPRECATED (ffmpeg-kit fork 의존 전제 무효) |
+| 03 spike-device-perf-size-license | [docs/epics/epic-19-local-dsp/impl/03-spike-device-perf-size-license.md](docs/epics/epic-19-local-dsp/impl/03-spike-device-perf-size-license.md) | ⚠️ DEPRECATED (동상) |
+| 04 spike-ns1-afftdn-perceptual | [docs/epics/epic-19-local-dsp/impl/04-spike-ns1-afftdn-perceptual.md](docs/epics/epic-19-local-dsp/impl/04-spike-ns1-afftdn-perceptual.md) | ✅ COMPLETED — C3 viable ([PR #272](https://github.com/alruminum/jajang/pull/272)) |
+| 05 spike-ns2-pure-js-perf | [docs/epics/epic-19-local-dsp/impl/05-spike-ns2-pure-js-perf.md](docs/epics/epic-19-local-dsp/impl/05-spike-ns2-pure-js-perf.md) | ✅ COMPLETED — C1 viable ([PR #273](https://github.com/alruminum/jajang/pull/273)) |
+| 06 spike-ns3-rn-audio-api-integration | [docs/epics/epic-19-local-dsp/impl/06-spike-ns3-rn-audio-api-integration.md](docs/epics/epic-19-local-dsp/impl/06-spike-ns3-rn-audio-api-integration.md) | ✅ COMPLETED — C2 viable ([PR #274](https://github.com/alruminum/jajang/pull/274)) |
+| 07 spike-ns4-candidate-comparison | [docs/epics/epic-19-local-dsp/impl/07-spike-ns4-candidate-comparison.md](docs/epics/epic-19-local-dsp/impl/07-spike-ns4-candidate-comparison.md) | ✅ COMPLETED — **ADOPTED: C3** (Story 1 Spike Gate 완료, 2026-05-14) |
+| 10 mobile-screens-hookup | [docs/epics/epic-19-local-dsp/impl/10-mobile-screens-hookup.md](docs/epics/epic-19-local-dsp/impl/10-mobile-screens-hookup.md) | ⏳ 미시작 |
+| 09 mobile-local-dsp-module | [docs/epics/epic-19-local-dsp/impl/09-mobile-local-dsp-module.md](docs/epics/epic-19-local-dsp/impl/09-mobile-local-dsp-module.md) | ⏳ READY |
+| 08 sample-asset-fixtures | [docs/epics/epic-19-local-dsp/impl/08-sample-asset-fixtures.md](docs/epics/epic-19-local-dsp/impl/08-sample-asset-fixtures.md) | ⏳ impl 작성 완료 — engineer 진입 대기 |

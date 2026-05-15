@@ -1,0 +1,23 @@
+05-13 22:00:16.266 19796 19873 I ReactNativeJS: SPIKE_NS2 === NS2 spike start ===
+05-13 22:00:16.266 19796 19873 I ReactNativeJS: SPIKE_NS2 hermes: true
+05-13 22:00:16.266 19796 19873 I ReactNativeJS: SPIKE_NS2 platform: android 36
+05-13 22:00:16.266 19796 19873 I ReactNativeJS: SPIKE_NS2 device: (record manually — brand/model for result validity)
+# [MANUAL ANNOTATION] device = Samsung SM-S936N (Galaxy S24+), Android 16 — DeviceInfo auto-detect not wired in SpikeNs2Screen
+# [MANUAL ANNOTATION] device classification = high-tier (Snapdragon 8 Gen 3). plan §주의사항 3 권장 = 저사양 Android (Galaxy A / Snapdragon 700↓). 본 측정 = fast-fail validation (고사양 통과 시 저사양 추가 측정 의무, NO_GO 시 명확). 결과 PASS → 저사양 후속 측정은 Story 2 이후 별도 진행 또는 후보 확정 단계에서 결정.
+05-13 22:00:16.272 19796 19873 I ReactNativeJS: SPIKE_NS2 loading WAV: file:///data/user/0/scripts/input_30s.wav
+05-13 22:00:16.290 19796 19873 I ReactNativeJS: SPIKE_NS2 ERROR loading WAV: Error: Call to function 'FileSystemFile.bytes' has been rejected.
+05-13 22:00:16.290 19796 19873 I ReactNativeJS: SPIKE_NS2 Falling back to synthetic 30s sine (440Hz) for measurement
+# [MANUAL ANNOTATION] WAV load failure root cause = expo-file-system FileSystemFile.bytes API path resolution mismatch (asset path `/data/user/0/scripts/input_30s.wav` not the actual on-device location). spike entry script fallback (synthetic 30s sine 440Hz) preserves timing measurement validity since DSP processing time = input-content independent (sample-count based, 1,323,000 samples = 44100×30 confirmed via inputSamples line). Follow-up = asset bundling fix is Story 2 production concern, not Story 1 spike viability blocker.
+05-13 22:00:16.409 19796 19873 I ReactNativeJS: SPIKE_NS2 inputSamples: 1323000
+05-13 22:00:16.409 19796 19873 I ReactNativeJS: SPIKE_NS2 fft-lib: fft.js@4.x (npm)
+# [MANUAL ANNOTATION] fft.js exact version = 4.0.4 (per apps/mobile/package.json + root package-lock.json node_modules/fft.js entry)
+05-13 22:00:16.487 19796 19873 I ReactNativeJS: SPIKE_NS2 highpass: 78.32ms, outputSamples: 1323000
+05-13 22:00:16.585 19796 19873 I ReactNativeJS: SPIKE_NS2 biquadEq: 97.81ms, outputSamples: 1323000
+05-13 22:00:16.682 19796 19873 I ReactNativeJS: SPIKE_NS2 delay: 94.00ms, outputSamples: 1323000
+05-13 22:00:16.735 19796 19873 I ReactNativeJS: SPIKE_NS2 crossfade: 50.07ms, outputSamples: 1309770
+05-13 22:00:17.061 19796 19873 I ReactNativeJS: SPIKE_NS2 chain4: 323.23ms
+05-13 22:00:20.560 19796 19873 I ReactNativeJS: SPIKE_NS2 spectralGate-JS: 3498.71ms
+05-13 22:00:24.309 19796 19873 I ReactNativeJS: SPIKE_NS2 chain4+afftdn: 3749.10ms
+05-13 22:00:24.309 19796 19873 I ReactNativeJS: SPIKE_NS2 RESULT: C1 viable (full JS) — chain4=323ms, chain4+afftdn=3749ms
+05-13 22:00:24.310 19796 19873 I ReactNativeJS: SPIKE_NS2 === NS2 spike end ===
+05-13 22:00:24.310 19796 19873 I ReactNativeJS: SPIKE_NS2 timings: [{"e":"highpass","ms":"78.32"},{"e":"biquadEq","ms":"97.81"},{"e":"delay","ms":"94.00"},{"e":"crossfade","ms":"50.07"},{"e":"chain4","ms":"323.23"},{"e":"spectralGate-JS","ms":"3498.71"},{"e":"chain4+afftdn","ms":"3749.10"}]

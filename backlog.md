@@ -69,12 +69,13 @@
 - [x] Epic 10 — Mobile Test Finalize + PR #149 Merge (Issue #166 완료, PR #149 merged)
 - [x] Epic 11 — Mobile QA Tour Package + Jajang Integration (#181, Story 3 #185 완료)
 - [x] Epic 12 — Theme drift fix (직접 hex → theme token 마이그레이션) — Issue #237 (task 01~09 모두 완료, hex-lint 회귀 방지 인프라 GREEN)
-- [ ] Epic 12 follow-up — RecordModeScreen.tsx 폐기 처리 + hex-lint 보강 — Issue #259 ([impl](docs/epics/epic-12-theme-drift/impl/10-recordmodescreen-cleanup-hex-lint-boost.md))
+- [x] Epic 12 follow-up — RecordModeScreen.tsx 폐기 처리 + hex-lint 보강 — Issue #259 close, PR #260 merged (2026-05-13)
 - [ ] Epic 13 — `mobile-qa-tour` 별도 레포 분리 + npm publish — semver 1.0.0 안정화 후
 - [ ] Epic 14 — QA tour CI 자동화 (GitHub Actions) — PR merge 전 자동 실행
 - [ ] Epic 15 — iOS 시뮬레이터 지원 — iOS QA 필요 시점
 - [ ] Epic 16 — Pencil 노드 매핑 확장 (S10 외 6 화면) — 디자인 폴리시 마무리 단계
 - [ ] Epic 17 — Deep-link 인프라 + Preview/Generating/Play 화면 tour — 30초 녹음 우회 mock 후
 - [ ] Epic 18 — testID 확대 (82 → 19 screens × 5+ avg) — tour 좌표 fallback 의존 제거
+- [ ] Epic 19 — Local DSP migration (server ffmpeg → mobile path 추가, server path 보존 + 미래 sync mp3-only 정책) — [stories](docs/epics/epic-19-local-dsp/stories.md) · 통합 브랜치 `feature/local-dsp` · ⚠️ **framing 재정의 진행 중 (2026-05-13)**. ffmpeg-kit fork 양쪽 NO_GO 측정 확정 ([spike-results/01-fork-build.log](docs/epics/epic-19-local-dsp/spike-results/01-fork-build.log)). 후보 set 을 *port-implementation* → *port-requirement* 로 재정의 (C1 pure-JS / C2 react-native-audio-api 합성 / C3 DSP 강등 + UX 보강 / C4 afftdn-only 자체 native) — [ADR-19A 갱신](docs/epics/epic-19-local-dsp/adr.md#adr-19a) · 새 spike NS1~NS4 미실행
 - [ ] 내부 베타 (TestFlight / Internal Test Track)
 - [ ] 앱스토어 심사 통과 + 공개 출시

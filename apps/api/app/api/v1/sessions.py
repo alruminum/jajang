@@ -1,3 +1,14 @@
+"""Server DSP path — sessions / recordings / masters / generate.
+
+⚠️ MVP v1.4.x 부터 클라이언트 호출 0 (mobile local DSP path 채택, ADR-010).
+
+코드/스키마/마이그레이션 보존 — 미래 sync 기능 진입 시 (다중 디바이스 동기화 /
+가족 공유 등) 재활성화 가능. 신규 엔드포인트 = ``POST /sessions/{id}/upload-master``
+(완성 wav 업로드용, 미구현 — 경로명만 박힘, ADR-19C).
+
+자세히 = docs/epics/epic-19-local-dsp/adr.md ADR-19B.
+"""
+
 import uuid
 
 import structlog

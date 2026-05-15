@@ -4,6 +4,7 @@
 **작성일**: 2026-04-30
 **상태**: 확정 (Option B — Selective) — AI 합성 → DSP 후처리 전환 + 쉬 모드 폐기 반영
 
+> **v1.4.x candidate (2026-05-13, 진행 트랙)**: Epic 19 (Local DSP migration) 진행 중. Story 1 spike (5 measured artifacts — working build / `ffprobe -filters` / 디바이스별 처리시간 / 앱 크기 델타 / LGPL 라이선스) 결과 의존. PASS 시 F4 spec 에 mobile DSP path 추가 (server DSP path 코드 보존 + MVP 비활성), 미래 sync 정책 = raw 녹음 영구 로컬 / 완성 mp3 만 서버 업로드. 상세 = [docs/epics/epic-19-local-dsp/stories.md](epics/epic-19-local-dsp/stories.md). ⚠️ *spec 확정 아님 — spike 결과 의존 진행 트랙 marker*.
 > v1.3.1 (2026-04-30): CR 반영 — 1클립(N=1) 루프 정책 명시, DSP 스택 정정(ffmpeg 단독 DSP / librosa 분석 전용), 구현 순서 Must/Should 그룹 분리.
 > v1.3.0 (2026-04-30): AI 음성 합성 → DSP 후처리(ffmpeg+librosa) 전환. 쉬/허밍 모드 분기 폐기 → 단일 "1 loop 따라부르기" 녹음 흐름. 핵심 가치 재정의. GPU 인프라 삭제. M0 DSP self-test로 대체. V2 백로그 추가.
 > v1.2.1 (2026-04-28): reviewer CR-1/CR-2 보강 — F2 허밍 모드 가사 미리보기·헤드폰 안내 명시, F5 BGM 자산 출처 명시.

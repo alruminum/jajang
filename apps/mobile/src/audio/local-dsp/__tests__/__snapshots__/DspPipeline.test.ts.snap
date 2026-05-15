@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`REQ-001 / REQ-002 — DspPipeline.buildSteps REQ-002: buildSteps snapshot — step array matches stored snapshot 1`] = `
+[
+  {
+    "f": 80,
+    "type": "highpass",
+  },
+  {
+    "f": 2500,
+    "g": 3,
+    "type": "eq",
+    "width": 200,
+    "width_type": "h",
+  },
+  {
+    "decay": 0.3,
+    "delay_ms": 100,
+    "in_gain": 0.6,
+    "out_gain": 0.3,
+    "type": "echo",
+  },
+  {
+    "d_sec": 0.3,
+    "type": "crossfade-tri",
+  },
+]
+`;
