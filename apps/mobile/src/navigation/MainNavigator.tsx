@@ -15,12 +15,17 @@ import { RecordGuideScreen } from '@screens/RecordGuideScreen';
 import { RecordScreen } from '@screens/RecordScreen';
 import S11PreviewScreen from '@screens/S11PreviewScreen';
 import S12GeneratingScreen from '@screens/S12GeneratingScreen';
+import S12LocalGeneratingScreen from '@screens/S12LocalGeneratingScreen';
 import S13PlayScreen from '@screens/S13PlayScreen';
 import S14UpgradeSheet from '@screens/S14UpgradeSheet';
 import S15SubscribeScreen from '@screens/S15SubscribeScreen';
 import S17TrialExpiredScreen from '@screens/S17TrialExpiredScreen'
 import AccountDeletionScreen from '@screens/AccountDeletionScreen';
 import LegalScreen from '@screens/LegalScreen';
+// DevSampleDemoScreen — __DEV__ gate 전용. production build 미포함 (REQ-007)
+const DevSampleDemoScreen = __DEV__
+  ? require('@screens/DevSampleDemoScreen').default
+  : null;
 
 const Tab = createBottomTabNavigator<HomeTabParamList>();
 const Stack = createNativeStackNavigator<MainStackParamList>();
@@ -74,6 +79,7 @@ export default function MainNavigator() {
       <Stack.Screen name="Record" component={RecordScreen} />
       <Stack.Screen name="Preview" component={S11PreviewScreen} />
       <Stack.Screen name="Generating" component={S12GeneratingScreen} />
+      <Stack.Screen name="LocalGenerating" component={S12LocalGeneratingScreen} />
       <Stack.Screen name="Play" component={S13PlayScreen} />
       <Stack.Screen
         name="Upgrade"
@@ -97,6 +103,9 @@ export default function MainNavigator() {
         component={LegalScreen}
         options={legalOptions}
       />
+      {__DEV__ && DevSampleDemoScreen && (
+        <Stack.Screen name="DevSampleDemo" component={DevSampleDemoScreen} />
+      )}
     </Stack.Navigator>
   );
 }

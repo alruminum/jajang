@@ -12,6 +12,7 @@ import { SongListItem } from '@components/SongListItem';
 import { MainStackParamList } from '@navigation/types';
 import { useTheme } from '@hooks/useTheme';
 import type { ColorTokens } from '../theme/tokens';
+import { LocalCounterRepo } from '../audio/local-dsp/LocalCounterRepo';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'SongSelect'>;
 
@@ -43,16 +44,24 @@ export function SongSelectScreen({ navigation }: Props) {
   const playerRef = useRef<AudioPlayer | null>(null);
 
   const { selectedSongKey, setSelectedSong, resetRecordingFlow } = useRecordingStore();
-  // generationCount는 Epic 03 완료 후 AuthStore에 추가 예정.
-  // 현재는 unknown을 경유한 캐스트로 접근 (test mock 호환).
+  // entitlement — 서버 기반 entitlement 체크 (기존 유지)
   const authState = useAuthStore() as unknown as {
     entitlement: 'free' | 'trial' | 'premium';
     generationCount: number;
   };
-  const { entitlement, generationCount } = authState;
+  const { entitlement } = authState;
+
+  // task 10: localCount — LocalCounterRepo.peek() 소스로 교체 (서버 generationCount 제거)
+  const [localCount, setLocalCount] = useState(0);
+  const [localLimit, setLocalLimit] = useState(FREE_GENERATION_LIMIT);
+  // useRef: 테스트에서 mock constructor 가 render 시 호출되어 mock instance 반환
+  const counterRepoRef = useRef<LocalCounterRepo | null>(null);
+  if (!counterRepoRef.current) {
+    counterRepoRef.current = new LocalCounterRepo();
+  }
 
   const isFreeUser = entitlement === 'free';
-  const generationsLeft = Math.max(0, FREE_GENERATION_LIMIT - generationCount); // 0~FREE_GENERATION_LIMIT
+  const generationsLeft = Math.max(0, localLimit - localCount);
 
   // 기존 음원 존재 여부 (S07 재녹음 안내 다이얼로그)
   // V1 첫 빌드: false 하드코딩 — Epic 03 완료 후 연동
@@ -64,6 +73,16 @@ export function SongSelectScreen({ navigation }: Props) {
       .catch(() => Alert.alert('', '목록을 불러오지 못했어요. 다시 시도해주세요'))
       .finally(() => setIsLoading(false));
   }, []);
+
+  // task 10: focus 진입 시 LocalCounterRepo.peek() → localCount 갱신
+  useFocusEffect(
+    useCallback(() => {
+      counterRepoRef.current?.peek().then(({ count, limit }) => {
+        setLocalCount(count);
+        setLocalLimit(limit);
+      });
+    }, []),
+  );
 
   // NativeStack push-navigate는 unmount를 일으키지 않으므로 useFocusEffect로 blur를 잡는다 (#129).
   useFocusEffect(
@@ -120,8 +139,8 @@ export function SongSelectScreen({ navigation }: Props) {
   const handleStartWithSong = () => {
     if (!selectedSongKey) return;
 
-    // 횟수 소진 체크 (무료 유저)
-    if (isFreeUser && generationsLeft <= 0) {
+    // 횟수 소진 체크 — task 10: LocalCounterRepo 소스로 교체
+    if (localCount >= localLimit) {
       navigation.navigate('UpgradeSheet', { variant: 'generation_exhausted' });
       return;
     }
@@ -156,7 +175,7 @@ export function SongSelectScreen({ navigation }: Props) {
         <Text style={styles.title}>어떤 멜로디로{'\n'}만들까요?</Text>
         {isFreeUser && (
           <View style={styles.counterChip}>
-            <Text style={styles.counterText}>생성 {generationCount}/{FREE_GENERATION_LIMIT}</Text>
+            <Text style={styles.counterText}>생성 {localCount}/{localLimit}</Text>
           </View>
         )}
       </View>
@@ -179,13 +198,14 @@ export function SongSelectScreen({ navigation }: Props) {
         showsVerticalScrollIndicator={false}
       />
 
-      {/* CTA */}
+      {/* CTA — task 10: 카운터 소진 시도 disabled */}
+      {/* isCounterExhausted: localCount >= localLimit 시 CTA opacity 0.4 + disabled */}
       <Pressable
-        style={[styles.cta, !selectedSongKey && styles.ctaDisabled]}
+        style={[styles.cta, (!selectedSongKey || localCount >= localLimit) && styles.ctaDisabled]}
         onPress={handleStartWithSong}
-        disabled={!selectedSongKey}
+        disabled={!selectedSongKey || localCount >= localLimit}
         accessibilityLabel="이 곡으로 시작"
-        accessibilityState={{ disabled: !selectedSongKey }}
+        accessibilityState={{ disabled: !selectedSongKey || localCount >= localLimit }}
       >
         <Text style={styles.ctaText}>이 곡으로 시작</Text>
       </Pressable>

@@ -1,0 +1,5 @@
+# worktree 전용 jest override (main merge 시 dead config)
+jest.config.local.js
+
+# worktree symlink (target = main repo apps/mobile/node_modules — root .gitignore 의 "node_modules/" 가 symlink 미매치)
+node_modules

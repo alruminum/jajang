@@ -13,18 +13,21 @@ import { useAudioPlayer, useAudioPlayerStatus, setAudioModeAsync } from 'expo-au
 import * as FileSystem from 'expo-file-system/legacy';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import { recordingsApi } from '@services/api/recordings';
-import { validateFromMetadata, QUALITY_FAIL_MESSAGES } from '@utils/audio-quality';
+// recordingsApi import 제거 — 호출 site 0 (task 10 local path 교체, REQ-003)
 import { WaveformVisualizer } from '@components/WaveformVisualizer';
 import { useRecordingStore } from '@store/recordingSlice';
 import { useAuthStore } from '@store/authSlice';
 import type { MainStackParamList } from '@navigation/types';
 import { useTheme } from '@hooks/useTheme';
 import type { ColorTokens } from '../theme/tokens';
+import { LocalDspService } from '../audio/local-dsp/LocalDspService';
+import { LocalCounterRepo } from '../audio/local-dsp/LocalCounterRepo';
+import { defaultDspBridge } from '../audio/local-dsp/MinimalDspBridge';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Preview'>;
 
-type UploadPhase = 'idle' | 'validating_client' | 'uploading' | 'validating_server' | 'error';
+// task 10: local path 교체 후 phase 타입 갱신
+type UploadPhase = 'idle' | 'checking_counter' | 'processing' | 'error';
 
 export default function S11PreviewScreen({ navigation }: Props) {
   const { colors } = useTheme();
@@ -34,16 +37,26 @@ export default function S11PreviewScreen({ navigation }: Props) {
     localAudioUri,
     selectedSongKey,
     recordingLevels,
-    recordingMode,
-    setUploadedSampleId,
-    setQualityValidationPassed,
     resetRecordingFlow,
   } = useRecordingStore();
 
-  const { entitlement } = useAuthStore();
+  // entitlement 는 서버 path 보존용 — 현재 local path 에서는 미사용
+  const { entitlement: _entitlement } = useAuthStore();
 
-  // TODO: generationCount not yet tracked in auth store — always false until auth-store is updated
+  // task 10: isGenerationExhausted 는 LocalCounterRepo.peek() 로 동적 결정 (handleUseRecording 내부)
+  // 화면 렌더 시 배너는 표시하지 않음 — 버튼 탭 시에만 체크
   const isGenerationExhausted = false;
+
+  // useRef: 테스트에서 mock constructor 가 render 시 호출되어 mock instance 반환
+  const localCounterRef = React.useRef<LocalCounterRepo | null>(null);
+  if (!localCounterRef.current) {
+    localCounterRef.current = new LocalCounterRepo();
+  }
+  // LocalDspService instance — tests mock LocalDspService constructor
+  const localServiceRef = React.useRef<LocalDspService | null>(null);
+  if (!localServiceRef.current) {
+    localServiceRef.current = new LocalDspService(defaultDspBridge, localCounterRef.current);
+  }
 
   const [phase, setPhase] = useState<UploadPhase>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -108,104 +121,56 @@ export default function S11PreviewScreen({ navigation }: Props) {
     });
   };
 
-  // 사용하기 → 클라이언트 검증 + 업로드 + 서버 검증
+  // 사용하기 → local DSP path (task 10 교체)
+  // 기존 서버 path (recordingsApi.initUpload / uploadToS3 / completeUpload / validateSample) 는
+  // Story 3 보존 정책으로 주석 처리 — 실행 경로에서 완전 제거 (impl §주의사항 §6)
   const handleUseRecording = async () => {
     if (!localAudioUri || !selectedSongKey) return;
-
-    if (isGenerationExhausted) {
-      navigation.navigate('UpgradeSheet', { variant: 'generation_exhausted' });
-      return;
-    }
-
-    setPhase('validating_client');
     setErrorMessage(null);
 
-    // ── 1. 클라이언트 1차 검증 ──────────
-    // recordingLevels(0~1) → dBFS 근사 변환: level=1 → 0dBFS, level=0 → -60dBFS
-    const meteringLevels = recordingLevels.map(l => l * 60 - 60);
-    const clientResult = validateFromMetadata(durationSec, meteringLevels);
-
-    if (!clientResult.passed && clientResult.reason) {
-      setPhase('error');
-      setErrorMessage(QUALITY_FAIL_MESSAGES[clientResult.reason]);
+    // ── 1. 카운터 체크 ──────────────────
+    setPhase('checking_counter');
+    const counter = await localCounterRef.current!.peek();
+    if (counter.count >= counter.limit) {
+      navigation.navigate('UpgradeSheet', { variant: 'generation_exhausted' });
+      setPhase('idle');
       return;
     }
 
-    // ── 2. S3 업로드 presigned URL 요청 ─
-    setPhase('uploading');
-    let sampleId: string;
-    let uploadUrl: string;
-
+    // ── 2. LocalDspService.startJob ─────
+    setPhase('processing');
+    const outputUri = `${FileSystem.documentDirectory}lullaby_${Date.now()}.wav`;
     try {
-      // WAV 16kHz 16bit mono 기준 파일 크기 추정 (실제 파일 크기 접근 불필요)
-      const estimatedFileSize = Math.round(durationSec * 16000 * 2);
-
-      const initRes = await recordingsApi.initUpload({
-        song_key: selectedSongKey,
-        file_size_bytes: estimatedFileSize,
-        content_type: 'audio/wav',
-      });
-      sampleId = initRes.sample_id;
-      uploadUrl = initRes.upload_url;
-    } catch {
-      setPhase('error');
-      setErrorMessage('업로드 준비에 실패했어요. 네트워크를 확인해주세요');
-      return;
-    }
-
-    // ── 3. S3 직접 업로드 ───────────────
-    try {
-      await recordingsApi.uploadToS3(uploadUrl, localAudioUri, 'audio/wav');
-    } catch {
-      setPhase('error');
-      setErrorMessage('파일 업로드에 실패했어요. 다시 시도해주세요');
-      return;
-    }
-
-    // ── 4. 업로드 완료 통보 ─────────────
-    try {
-      await recordingsApi.completeUpload(sampleId, {
-        sample_id: sampleId,
-        duration_seconds: durationSec,
-        rms_db: -20, // TODO: replace with actual PCM RMS after expo-audio migration
-        peak_count: 0,
-      });
-    } catch {
-      // 통보 실패는 치명적이지 않음 — 계속 진행
-    }
-
-    // ── 5. 서버 2차 검증 (SNR) ──────────
-    setPhase('validating_server');
-    try {
-      const validateRes = await recordingsApi.validateSample(sampleId);
-      if (!validateRes.passed) {
-        setPhase('error');
-        setErrorMessage(validateRes.message ?? '다시 녹음해주세요');
-        return;
-      }
-
-      setUploadedSampleId(sampleId);
-      setQualityValidationPassed(true);
-
-      // Epic 03 연동: Generating 화면으로 이동
-      // Generating 타입 정의는 Epic 03 완료 후 추가 예정 — 현재는 jobId 미정 (as any 임시)
-      navigation.navigate('Generating' as any, {
-        sampleId,
+      const jobId = await localServiceRef.current!.startJob({
+        inputUri: localAudioUri,
         songKey: selectedSongKey,
+        outputUri,
       });
+      navigation.navigate('LocalGenerating', { jobId });
     } catch {
       setPhase('error');
-      setErrorMessage('네트워크를 확인해주세요');
+      setErrorMessage('생성에 실패했어요. 다시 시도해주세요');
     }
+
+    // ── 기존 서버 path (보존 — 실행 경로 외) ──────────────────────────────────
+    // if (false) {
+    //   const meteringLevels = recordingLevels.map(l => l * 60 - 60);
+    //   const clientResult = validateFromMetadata(durationSec, meteringLevels);
+    //   if (!clientResult.passed && clientResult.reason) { ... }
+    //   const initRes = await recordingsApi.initUpload({ ... });
+    //   await recordingsApi.uploadToS3(uploadUrl, localAudioUri, 'audio/wav');
+    //   await recordingsApi.completeUpload(sampleId, { ... });
+    //   const validateRes = await recordingsApi.validateSample(sampleId);
+    //   navigation.navigate('Generating' as any, { sampleId, songKey: selectedSongKey });
+    // }
   };
 
   const isProcessing = phase !== 'idle' && phase !== 'error';
 
   const phaseMessages: Record<UploadPhase, string> = {
     idle: '',
-    validating_client: '녹음 품질을 확인하고 있어요',
-    uploading: '목소리를 업로드하고 있어요',
-    validating_server: '샘플을 분석하고 있어요…',
+    checking_counter: '카운터를 확인하고 있어요',
+    processing: '목소리를 처리하고 있어요',
     error: '',
   };
 
